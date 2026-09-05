@@ -1123,7 +1123,7 @@ async function checkBackendAuthentication(){
   try{
 
     const response=await fetch(
-      'http://localhost:8000/auth/me',
+      'http://https://tracemail-ai-service.onrender.com/auth/me',
       {
         method:'GET',
         credentials:'include'
@@ -1172,7 +1172,7 @@ async function logoutTraceMail(){
   try{
 
     await fetch(
-      'http://localhost:8000/auth/logout',
+      'http://https://tracemail-ai-service.onrender.com/auth/logout',
       {
         method:'POST',
         credentials:'include'
