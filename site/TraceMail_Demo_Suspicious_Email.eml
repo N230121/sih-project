@@ -1,0 +1,24 @@
+From: Microsoft Account Team <security-alert@example.test>
+To: demo.user@example.test
+Subject: Urgent: Verify your account within 24 hours
+Date: Fri, 04 Sep 2026 04:45:00 +0000
+Message-ID: <demo-tracemail-20260904-001@example.test>
+Received: from mail.example.test (185.91.24.17) by mx.example.test; Fri, 04
+ Sep 2026 04:45:00 +0000
+Authentication-Results: mx.example.test; spf=fail smtp.mailfrom=example.test;
+ dkim=fail header.d=example.test; dmarc=fail header.from=example.test
+X-Originating-IP: [185.91.24.17]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+
+Hello,
+
+We detected unusual activity on your account. To prevent temporary suspension,
+please verify your account within 24 hours using the link below:
+
+http://account-verify.example.test/login
+
+If you did not request this, contact your security administrator.
+
+This is a FICTIONAL DEMO EMAIL created for TraceMail AI prototype testing.

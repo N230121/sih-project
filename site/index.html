@@ -1,0 +1,1399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TraceMail AI | Email Forensic Intelligence</title>
+<style>
+:root{--bg:#050b11;--p:#0b141d;--p2:#101c27;--line:#1c303f;--txt:#eaf3f7;--mut:#8298a7;--cyan:#35d7ff;--red:#ff5268;--amber:#ffbd59;--green:#3de39a;--blue:#789cff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#123447 0,#050b11 42%);color:var(--txt);font:13px Inter,Segoe UI,Arial,sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}.app{display:flex;min-height:100vh}.side{width:250px;position:fixed;top:0;bottom:0;background:#060d14;border-right:1px solid var(--line);padding:20px 14px;z-index:5}.logo{display:flex;gap:10px;align-items:center;font-size:19px;font-weight:800;padding:7px 9px 26px}.logoIcon{width:34px;height:34px;border:1px solid var(--cyan);border-radius:9px;display:grid;place-items:center;color:var(--cyan);box-shadow:0 0 22px #35d7ff20}.nav{display:grid;gap:4px}.nav button{border:0;background:transparent;color:#8da3b1;text-align:left;padding:11px 12px;border-radius:8px}.nav button:hover,.nav button.on{background:#102330;color:#fff}.nav button.on{box-shadow:inset 2px 0 var(--cyan)}.status{position:absolute;bottom:18px;left:14px;right:14px;padding:12px;border:1px solid #245166;border-radius:9px;background:#0a1a24;font-size:11px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);margin-right:6px}.main{margin-left:250px;width:calc(100% - 250px);padding:24px 28px}.page{display:none}.page.active{display:block}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:18px}.ey{color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px}.title{font-size:27px;font-weight:800;margin:4px 0}.sub{color:var(--mut)}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{background:#0d1822;color:#dbe9ee;border:1px solid var(--line);padding:9px 13px;border-radius:7px}.btn:hover{border-color:#35677b}.primary{background:#0b8eaf;border-color:#2fd5f7;color:#fff}.danger{background:#391923;border-color:#73313f;color:#ff9aa6}.card{background:linear-gradient(145deg,#0d1923,#09121a);border:1px solid var(--line);border-radius:11px;padding:16px;box-shadow:0 10px 35px #0004}.grid{display:grid;gap:13px}.stats{grid-template-columns:repeat(5,1fr)}.stat .lbl{font-size:10px;color:var(--mut);letter-spacing:.7px}.stat .n{font-size:26px;font-weight:800;margin-top:7px}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.muted{color:var(--mut)}.hero{display:grid;grid-template-columns:1.25fr .75fr;gap:13px}.heroMain{padding:28px;min-height:250px;background:linear-gradient(145deg,#102637,#08121a);position:relative;overflow:hidden}.heroMain:after{content:"";position:absolute;width:400px;height:400px;border:1px solid #35d7ff1c;border-radius:50%;right:-150px;top:-170px}.heroMain h1{font-size:39px;line-height:1.04;margin:8px 0 12px;position:relative;z-index:1}.heroMain p{max-width:680px;color:#9eb3c0;position:relative;z-index:1}.flow{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:20px}.pill{font-size:9px;padding:6px 8px;border:1px solid #244657;border-radius:15px;background:#0b1b25}.risk{display:flex;gap:18px;align-items:center}.ring{width:112px;height:112px;border-radius:50%;background:conic-gradient(var(--red) 0 94%,#24323b 94%);display:grid;place-items:center;position:relative;flex:none}.ring:after{content:"";position:absolute;inset:10px;background:#09141d;border-radius:50%}.ring b{z-index:1;font-size:29px}.find{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1a2934}.badge{display:inline-block;border-radius:16px;padding:4px 8px;font-size:9px;font-weight:800}.critical{background:#411923;color:#ff8493}.high{background:#3b2a17;color:#ffc467}.medium{background:#303719;color:#d3e995}.safe{background:#123426;color:#65e7ac}.unknown{background:#252c32;color:#a5b1b8}.obs{background:#123944;color:#6ee1f4}.enr{background:#263b28;color:#a8df91}.inf{background:#3c2d1e;color:#ffc674}.tableWrap{overflow:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:12px 9px;border-bottom:1px solid #1a2934;font-size:12px}.table th{color:#718795;font-size:9px;text-transform:uppercase;letter-spacing:.7px}.table tr.click:hover td{background:#0e1d27;cursor:pointer}.table td:last-child{white-space:normal}.table td:last-child .btn{margin:2px 4px 2px 0}.two{display:grid;grid-template-columns:1.1fr .9fr;gap:13px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.section{margin-top:13px}.sectionHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:11px}.sectionHead h2{font-size:14px;margin:0}.search{background:#08131b;border:1px solid var(--line);color:#fff;border-radius:7px;padding:9px 11px;width:240px}.map{height:360px;position:relative;overflow:hidden;background:#07131b;border-radius:9px}.map svg{width:100%;height:100%}.marker{position:absolute;width:11px;height:11px;background:var(--red);border-radius:50%;box-shadow:0 0 16px var(--red)}.m1{left:48%;top:55%}.m2{left:58%;top:45%}.m3{left:27%;top:40%}.m4{left:72%;top:32%}.mapLegend{position:absolute;left:12px;bottom:12px;background:#061018e8;border:1px solid var(--line);padding:8px;border-radius:6px;font-size:10px}.graph{height:350px;position:relative;background:radial-gradient(circle,#0c2634,#071119);overflow:hidden;border-radius:8px}.node{position:absolute;min-width:116px;text-align:center;padding:10px;border:1px solid #286075;background:#0c202b;border-radius:9px;box-shadow:0 0 22px #35d7ff0b;font-size:10px}.node b{display:block;margin-bottom:3px}.node small{color:#78aabd}.n1{left:3%;top:43%}.n2{left:23%;top:15%}.n3{left:43%;top:43%}.n4{left:61%;top:15%}.n5{left:61%;top:68%}.n6{right:3%;top:43%}.edge{position:absolute;height:1px;background:#35d7ff99;transform-origin:left}.e1{left:15%;top:48%;width:16%;transform:rotate(-25deg)}.e2{left:37%;top:44%;width:10%;transform:rotate(25deg)}.e3{left:54%;top:47%;width:10%;transform:rotate(-24deg)}.e4{left:54%;top:50%;width:10%;transform:rotate(24deg)}.e5{left:75%;top:47%;width:10%}.tabs{display:flex;border-bottom:1px solid var(--line);gap:3px;margin-bottom:13px}.tab{border:0;background:none;color:#79909e;padding:9px 11px}.tab.on{color:#fff;border-bottom:2px solid var(--cyan)}.tabbody{display:none}.tabbody.on{display:block}.kv{display:grid;grid-template-columns:140px 1fr;border-bottom:1px solid #1a2934;padding:9px 0;font-size:12px}.kv span{color:#718795}.source{font-style:normal;font-size:8px;padding:3px 5px;border-radius:4px;margin-left:5px}.drop{border:1px dashed #326078;border-radius:10px;padding:35px;text-align:center;background:#091720}.drop.drag{border-color:var(--cyan);background:#0b202b}.drop input{display:none}.uploadIcon{font-size:30px;color:var(--cyan)}textarea{width:100%;min-height:220px;background:#071119;border:1px solid var(--line);color:#dce9ef;border-radius:8px;padding:12px;font-family:ui-monospace,monospace;font-size:11px}.input{background:#08131b;color:#fff;border:1px solid var(--line);padding:10px;border-radius:7px}.chat{height:360px;overflow:auto;padding:3px}.msg{padding:11px;border:1px solid var(--line);border-radius:9px;margin:8px 0;line-height:1.5}.msg.ai{background:#0d202a}.msg.user{background:#0b1720}.composer{display:flex;gap:7px;margin-top:10px}.composer input{flex:1}.progress{height:6px;background:#1c2a33;border-radius:6px;overflow:hidden}.progress i{height:100%;display:block;background:var(--cyan);width:0;transition:width .25s}.timeline{border-left:1px solid #315160;margin:8px 0 0 8px;padding-left:18px}.event{position:relative;margin:0 0 18px}.event:before{content:"";position:absolute;left:-24px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 9px #35d7ff}.modal{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;z-index:20;padding:20px}.modal.show{display:flex}.modalBox{max-width:720px;width:100%;max-height:90vh;overflow:auto;background:#0b161f;border:1px solid #2a4858;border-radius:12px;padding:20px}.toast{position:fixed;right:20px;bottom:20px;background:#0e202a;border:1px solid #2a5a6d;padding:12px 15px;border-radius:8px;display:none;z-index:30}.toast.show{display:block}.small{font-size:10px}.empty{padding:35px;text-align:center;color:var(--mut)} .awareness{border:1px solid #3b5664;background:linear-gradient(145deg,#0d202a,#0a151d);position:relative;overflow:hidden}.awareness:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cyan)}.awGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.awBox{background:#08141c;border:1px solid #203642;border-radius:8px;padding:12px}.awBox b{display:block;margin-bottom:5px;color:#eaf3f7}.awBox p{margin:0;color:#91a8b5;line-height:1.5;font-size:11px}.awLearn{margin-top:10px;padding:10px;border-radius:8px;background:#0b1c25;border:1px solid #254a5b;color:#cceaf2;font-size:11px}.modelTag{font-size:9px;letter-spacing:.6px;padding:4px 7px;border:1px solid #2d6072;border-radius:12px;color:#7fe3f5}.@media(max-width:1050px){.side{width:72px}.logo span,.nav span,.status{display:none}.nav button{text-align:center}.main{margin-left:72px;width:calc(100% - 72px)}.stats{grid-template-columns:repeat(2,1fr)}.hero,.two,.three{grid-template-columns:1fr}}@media(max-width:650px){.main{padding:15px}.top{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr}.heroMain h1{font-size:31px}}
+
+.rbac{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);background:#0b151e;border-radius:10px}.rbac select{background:#0b151e;color:var(--txt);border:0;outline:0;font-weight:700}.accessBadge{font-size:10px;padding:3px 6px;border-radius:5px;border:1px solid var(--line);color:var(--cyan);font-weight:800}.restricted{filter:blur(4px);user-select:none}.rbacNote{font-size:11px;color:var(--mut);margin-top:7px}.rolePanel{border:1px solid var(--line);background:#0b151e;border-radius:10px;padding:12px;margin-bottom:12px}.rolePanel b{color:var(--cyan)}
+
+/* TRACE MAIL — FINAL SPATIAL + DISTINCTIVE POLISH */
+:root{--tm-navy:#17324d;--tm-blue:#1769aa;--tm-indigo:#536bd1;--tm-bg:#f4f7fa;--tm-line:#d9e3eb}
+html,body{background:#f4f7fa!important}
+body:before{background:radial-gradient(circle at 82% -8%,rgba(37,99,235,.055),transparent 24%),radial-gradient(circle at 5% 75%,rgba(83,107,209,.035),transparent 22%)!important}
+/* eliminate the visual gutter between navigation rail and workspace */
+.side{width:220px!important;box-shadow:1px 0 0 #dbe4ed,8px 0 22px rgba(28,57,84,.025)!important}
+.main{margin-left:220px!important;width:calc(100% - 220px)!important;padding:22px 24px 42px!important}
+.top{max-width:none!important}
+.page{max-width:1540px;margin:0 auto}
+/* distinctive enterprise navigation */
+.side:after{content:"";position:absolute;right:-1px;top:82px;width:2px;height:96px;background:linear-gradient(#2d7fba,#536bd1,transparent);border-radius:2px}
+.logo{padding-bottom:22px!important}
+.nav{gap:5px!important}
+.nav button{position:relative;overflow:hidden}
+.nav button.on:before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;background:linear-gradient(#1769aa,#536bd1);border-radius:0 3px 3px 0}
+/* restrained depth, no floating-card look */
+.card{border-radius:10px!important;box-shadow:0 3px 14px rgba(25,55,84,.045)!important}
+.card:hover{transform:none!important;box-shadow:0 6px 20px rgba(25,55,84,.065)!important}
+/* command-center header */
+.top{position:relative;padding-bottom:14px!important;border-bottom:1px solid #e0e7ed!important}
+.top:after{content:"";position:absolute;left:0;bottom:-1px;width:72px;height:2px;background:linear-gradient(90deg,#1769aa,#536bd1);border-radius:2px}
+.title{letter-spacing:-.025em!important}
+/* unique status chips */
+.badge{letter-spacing:.04em!important}
+.modelTag{background:#f2f6fb!important}
+/* compact premium metric treatment */
+.stats{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+.stat{position:relative;overflow:hidden}
+.stat:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(#1769aa,#536bd1);opacity:.9}
+.stat .n{letter-spacing:-.03em}
+/* clean intake zone */
+.intakeChoice{border-radius:10px!important;min-height:78px!important}
+.intakeChoice:hover{transform:translateY(-2px)!important}
+/* unique investigation signal strip */
+.judge-step{position:relative;overflow:hidden}
+.judge-step:before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,#1769aa,#536bd1);opacity:.65}
+/* tables feel like real enterprise software */
+.tableWrap{background:#fff!important}
+.table th{font-weight:800!important}
+.table td:first-child{font-weight:600}
+/* calm interactive controls */
+.btn,.tab,.nav button,.intakeChoice{transition:background-color .18s ease,border-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease!important}
+/* map and graph get a recognizable TraceMail canvas */
+.map,.graph{box-shadow:inset 0 0 0 1px rgba(23,105,170,.025)!important}
+.map:after{content:"TRACE / INFRASTRUCTURE";position:absolute;right:12px;top:10px;font-size:8px;letter-spacing:.12em;color:#8295a5;background:rgba(255,255,255,.86);border:1px solid #dce5eb;padding:5px 7px;border-radius:5px}
+.graph:after{content:"ATTACK RELATIONSHIP GRAPH";position:absolute;right:12px;top:10px;font-size:8px;letter-spacing:.12em;color:#8295a5;background:rgba(255,255,255,.88);border:1px solid #dce5eb;padding:5px 7px;border-radius:5px}
+/* avoid large animation; keep only functional feedback */
+.page.active{animation:tmSoftPage .18s ease-out both!important}
+.marker{animation:tmGentleMarker 3.8s ease-out infinite!important}
+@media(max-width:1050px){.side{width:74px!important}.main{margin-left:74px!important;width:calc(100% - 74px)!important;padding:20px!important}.stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:650px){.side{width:0!important;border:0!important;box-shadow:none!important;overflow:hidden}.main{margin-left:0!important;width:100%!important;padding:16px 14px 28px!important}.stats{grid-template-columns:1fr!important}}
+</style>
+<style>
+.evidence-taxonomy{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.evidence-taxonomy span{font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid #334155}
+.evidence-taxonomy .obs{color:#86efac}.evidence-taxonomy .enr{color:#93c5fd}
+.evidence-taxonomy .inf{color:#c4b5fd}.evidence-taxonomy .unk{color:#fbbf24}
+</style>
+
+
+<style id="tm-geolocation-upgrade">
+.tm-geo-overlay{position:fixed;inset:0;background:rgba(2,6,23,.92);backdrop-filter:blur(8px);z-index:9999;display:none;overflow:auto}
+.tm-geo-shell{max-width:1380px;margin:28px auto;background:#0b1220;border:1px solid #263449;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.55);overflow:hidden}
+.tm-geo-top{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #223047}
+.tm-geo-title{font-size:20px;font-weight:800}.tm-geo-sub{font-size:12px;color:#94a3b8;margin-top:4px}
+.tm-geo-body{display:grid;grid-template-columns:1.65fr .95fr;min-height:650px}
+.tm-map{position:relative;background:radial-gradient(circle at 55% 45%,#16243a 0,#09111f 48%,#050b14 100%);overflow:hidden}
+.tm-map svg{width:100%;height:100%;min-height:650px}
+.tm-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(148,163,184,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.06) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+.tm-trace{stroke-dasharray:9 8;animation:tmDash 1.2s linear infinite}
+@keyframes tmDash{to{stroke-dashoffset:-34}}
+.tm-pulse{animation:tmPulse 1.6s ease-out infinite}
+@keyframes tmPulse{0%{r:5;opacity:1}100%{r:25;opacity:0}}
+.tm-map-label{font-size:11px;fill:#cbd5e1;font-weight:700}
+.tm-map-note{position:absolute;left:16px;bottom:16px;background:rgba(15,23,42,.9);border:1px solid #334155;border-radius:10px;padding:10px 12px;font-size:11px;color:#94a3b8;max-width:370px}
+.tm-geo-side{padding:18px;background:#0a111e;border-left:1px solid #223047;overflow:auto}
+.tm-card{border:1px solid #263449;background:#0f1726;border-radius:12px;padding:13px;margin-bottom:12px}
+.tm-card h4{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8}
+.tm-big{font-size:25px;font-weight:850}.tm-muted{color:#94a3b8;font-size:11px}
+.tm-kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tm-kv div{background:#0b1321;border:1px solid #202d40;border-radius:8px;padding:8px}.tm-kv b{display:block;font-size:12px}.tm-kv span{font-size:10px;color:#94a3b8}
+.tm-conf{height:7px;background:#1e293b;border-radius:99px;overflow:hidden;margin-top:8px}.tm-conf i{display:block;height:100%;width:81%;background:linear-gradient(90deg,#38bdf8,#a78bfa)}
+.tm-hop{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #1e293b;font-size:11px}.tm-hop:last-child{border-bottom:0}.tm-dot{width:8px;height:8px;border-radius:50%;background:#60a5fa;box-shadow:0 0 12px #60a5fa}
+.tm-close{border:1px solid #334155;background:#111c2d;color:#e2e8f0;border-radius:8px;padding:8px 12px;cursor:pointer}
+.tm-actions{display:flex;gap:8px;flex-wrap:wrap}.tm-action{border:1px solid #334155;background:#101b2d;color:#e2e8f0;border-radius:8px;padding:8px 10px;font-size:11px;cursor:pointer}.tm-action.primary{background:#172554;border-color:#3b82f6}
+@media(max-width:900px){.tm-geo-body{grid-template-columns:1fr}.tm-geo-side{border-left:0;border-top:1px solid #223047}.tm-map svg{min-height:420px}}
+</style>
+
+<style id="tm-geo-button-fix">
+#tmGeoFab{transition:opacity .2s,transform .2s}
+#tmGeoFab:hover{opacity:1!important;transform:translateY(-2px)}
+@media(max-width:700px){
+  #tmGeoFab{right:10px;bottom:10px;font-size:10px;padding:7px 9px}
+}
+</style>
+
+<style id="tm-judge-upgrade">
+.judge-strip{display:grid;grid-template-columns:1.2fr repeat(4,1fr);gap:8px;margin-top:13px}.judge-step{border:1px solid var(--line);background:#091720;border-radius:9px;padding:11px}.judge-step b{display:block;font-size:11px}.judge-step span{font-size:10px;color:var(--mut)}
+.conf-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.conf-box{padding:12px;border:1px solid var(--line);border-radius:8px;background:#08131b}.conf-box b{display:block;font-size:18px;margin-top:5px}.mini-bar{height:5px;background:#1c2a33;border-radius:5px;margin-top:8px;overflow:hidden}.mini-bar i{display:block;height:100%;background:var(--cyan)}
+.response-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}.response-card{border:1px solid var(--line);border-radius:8px;padding:11px;background:#08131b}.response-card b{display:block;margin-bottom:5px}.response-card small{color:var(--mut)}
+.case-head{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px;border:1px solid #244657;border-radius:9px;background:#0a1a24}.case-head .score{font-size:34px;font-weight:900}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.authorize{padding:10px;border:1px solid #6b4b1d;background:#211a0e;border-radius:8px;color:#f7d58a;font-size:11px;margin-top:10px}
+@media(max-width:900px){.judge-strip,.conf-grid,.response-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.judge-strip,.conf-grid,.response-grid{grid-template-columns:1fr}}
+</style>
+
+<style>
+:root{--bg:#f5f7fb;--surface:#fff;--surface2:#f8fafc;--line:#dbe3ec;--txt:#17212b;--mut:#667585;--cyan:#1769aa;--green:#138a5b;--red:#c73b45;--amber:#b87912;--shadow:0 8px 24px rgba(31,49,70,.07)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{background:var(--bg)!important;color:var(--txt)!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;letter-spacing:.01em}
+#signatureStrip{background:#fff!important;border-bottom:1px solid var(--line)!important;color:var(--mut)!important;box-shadow:0 1px 4px rgba(31,49,70,.04);position:sticky!important;top:0;z-index:60}
+.app{min-height:calc(100vh - 45px)}.side{width:232px!important;background:#fff!important;border-right:1px solid var(--line)!important;padding:18px 12px!important;box-shadow:3px 0 18px rgba(31,49,70,.04)}
+.logo{padding:5px 10px 22px!important;color:#17324d}.logoIcon{width:35px!important;height:35px!important;border:1px solid #a9c5dc!important;border-radius:9px!important;color:#1769aa!important;box-shadow:none!important;background:#edf6fc}.nav{gap:5px!important}.nav button{color:#617080!important;padding:11px 12px!important;border-radius:8px!important;display:flex;align-items:center;gap:10px;position:relative;transition:background .2s ease,color .2s ease,transform .2s ease,box-shadow .2s ease}
+.nav button:hover{background:#f0f6fb!important;color:#185d91!important;transform:translateX(3px)}.nav button.on{background:#eaf4fb!important;color:#125c91!important;box-shadow:inset 3px 0 #1769aa!important}.navIcon{width:22px;height:22px;border:1px solid #cbd9e5;border-radius:6px;display:grid;place-items:center;font-size:13px;background:#f9fbfd;color:#35647f;transition:all .2s}.nav button:hover .navIcon,.nav button.on .navIcon{border-color:#9fc3dc;background:#fff;color:#1769aa;transform:scale(1.05)}
+.status{background:#f7fafc!important;border:1px solid var(--line)!important;color:#30475a!important;box-shadow:none!important}.dot{box-shadow:none!important}
+.main{padding:26px 30px!important}.ey{color:#1769aa!important}.title{color:#17212b!important}.sub,.muted{color:var(--mut)!important}
+.card{background:#fff!important;border:1px solid var(--line)!important;border-radius:10px!important;box-shadow:var(--shadow)!important}.heroMain{background:linear-gradient(135deg,#f8fbfe,#eef6fb)!important;min-height:250px}.heroMain h1{color:#17324d}.heroMain h1 span{color:#1769aa!important}.heroMain p{color:#637487!important}.heroMain:after{border-color:#1769aa18!important}
+.pill{background:#fff!important;border-color:#cfdde8!important;color:#466176}.btn{background:#fff!important;color:#294153!important;border-color:#ccd8e3!important;transition:transform .2s,box-shadow .2s,border-color .2s}.btn:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(31,49,70,.08);border-color:#9bbbd1}.primary{background:#1769aa!important;border-color:#1769aa!important;color:#fff!important}.danger{background:#fff1f2!important;border-color:#e4b5ba!important;color:#b52f3b!important}
+.ring{background:conic-gradient(#c73b45 0 94%,#e7edf2 94%)!important}.ring:after{background:#fff!important}.table th{color:#738294!important}.table th,.table td{border-bottom-color:#e6ebf0!important}.table tr.click:hover td{background:#f6f9fc!important}.search,.input{background:#fff!important;color:#17212b!important;border-color:#ccd8e3!important}.search::placeholder,.input::placeholder{color:#98a6b4}
+.map{background:#eef5f8!important}.graph{background:radial-gradient(circle,#f0f7fa,#f7fafc)!important}.node{background:#fff!important;border-color:#bcd0de!important;box-shadow:0 5px 15px rgba(31,49,70,.08)!important;color:#294153}.node small{color:#6d8798}.edge{background:#7aa8c4!important}.mapLegend{background:#fff!important;color:#536a7b!important;border-color:#d4dfe8!important;box-shadow:0 4px 12px rgba(31,49,70,.06)}
+.tabs{border-bottom-color:#e0e7ee!important}.tab{color:#718091!important;transition:color .2s,border .2s}.tab.on{color:#1769aa!important;border-bottom-color:#1769aa!important}.kv{border-bottom-color:#e6ebf0!important}.drop{border-color:#b8cad8!important;background:#f8fbfd!important;transition:all .2s}.drop:hover,.drop.drag{border-color:#1769aa!important;background:#eef7fc!important;transform:translateY(-1px)}textarea{background:#fbfcfd!important;color:#17212b!important;border-color:#ccd8e3!important}.modal{background:rgba(19,33,47,.42)!important}.modalBox{background:#fff!important;border-color:#d6e0e8!important;box-shadow:0 18px 55px rgba(22,42,60,.2)!important}.toast{background:#fff!important;color:#294153!important;border-color:#cbd8e2!important;box-shadow:var(--shadow)!important}
+.alert{background:#fffaf5!important;border-color:#efd8ba!important}.judge-strip{background:#fff!important;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important}.judge-step{transition:transform .2s,background .2s}.judge-step:hover{transform:translateY(-2px);background:#f8fbfd}.conf-box,.rolePanel,.awareness,.awBox,.awLearn{background:#fff!important;border-color:#d7e1e9!important}.awareness:before{background:#1769aa!important}.modelTag{color:#1769aa!important;border-color:#b9d2e3!important}.progress{background:#e6edf2!important}.progress i{background:#1769aa!important}.badge{border:1px solid transparent}.obs{background:#edf8fb!important;color:#14728b!important;border-color:#c9e7ef!important}.enr{background:#eff8f0!important;color:#34734a!important;border-color:#cce3d1!important}.inf{background:#fff6e8!important;color:#98630c!important;border-color:#ecd8ae!important}.critical{background:#fff0f1!important;color:#b52f3b!important;border-color:#edc3c7!important}.high{background:#fff6e8!important;color:#98630c!important;border-color:#ecd8ae!important}.medium{background:#f5f9e8!important;color:#5c771f!important;border-color:#dbe8b8!important}.safe{background:#edf9f3!important;color:#19734f!important;border-color:#c9e7d7!important}.unknown{background:#f2f5f7!important;color:#6a7885!important;border-color:#d8e0e6!important}
+.rbac{background:#fff!important;border-color:#d6e0e8!important}.rbac select{background:#fff!important;color:#294153!important}.accessBadge{color:#1769aa!important;border-color:#bcd3e3!important}.restricted{filter:blur(4px)}
+/* purposeful, restrained motion: each major navigation/view enters cleanly */
+.page.active{animation:pageIn .28s ease both}.card{animation:cardIn .35s ease both}.nav button{animation:navIn .35s ease both}.nav button:nth-child(2){animation-delay:.02s}.nav button:nth-child(3){animation-delay:.04s}.nav button:nth-child(4){animation-delay:.06s}.nav button:nth-child(5){animation-delay:.08s}.nav button:nth-child(6){animation-delay:.1s}.nav button:nth-child(7){animation-delay:.12s}.nav button:nth-child(8){animation-delay:.14s}@keyframes pageIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}@keyframes cardIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@keyframes navIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:none}}
+@media(max-width:1050px){.side{width:76px!important}.logo span,.nav span:not(.navIcon),.status{display:none!important}.nav button{justify-content:center}.main{margin-left:76px!important;width:calc(100% - 76px)!important}}@media(max-width:650px){.main{padding:15px!important}#signatureStrip span{display:none!important}}
+</style>
+<style>
+.sideRole{padding:10px;margin:0 0 10px;border:1px solid #dce5ec;border-radius:9px;background:#f8fafc}.sideRoleLabel{font-size:9px;font-weight:800;letter-spacing:1px;color:#7a8997;margin-bottom:7px}.sideRoleRow{display:flex;align-items:center;gap:7px}.sideRoleIcon{width:22px;height:22px;display:grid;place-items:center;border:1px solid #c9d8e4;border-radius:6px;background:#fff;color:#1769aa}.sideRole select{min-width:0;width:100%;border:0;outline:0;background:transparent;color:#294153;font-size:11px;font-weight:700}
+</style><style>
+:root{--bg:#f4f7fa;--surface:#fff;--surface2:#f8fafc;--line:#dbe3ea;--text:#1b2a3a;--muted:#667788;--blue:#1769aa;--blue2:#eaf3fa;--cyan:#1769aa;--shadow:0 4px 18px rgba(27,42,58,.07);--red:#c43d4b;--amber:#a56b13;--green:#28734d}
+*{box-sizing:border-box} body{background:var(--bg)!important;color:var(--text)!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
+.side{background:#fff!important;border-right:1px solid var(--line)!important;box-shadow:2px 0 12px rgba(27,42,58,.035)}.logoIcon{background:#1769aa!important;box-shadow:none!important}.logo{color:#18324a!important}.nav button{border-radius:7px!important;color:#536575!important;margin:3px 10px!important;transition:all .18s ease}.nav button:hover{background:#f3f7fa!important;color:#1769aa!important;transform:translateX(2px)}.nav button.on{background:#eaf3fa!important;color:#1769aa!important;border-left:3px solid #1769aa!important}.navIcon{font-size:16px!important}.status{border-top:1px solid var(--line)!important}
+.main{background:var(--bg)!important}.page{max-width:1380px}.top{border-bottom:1px solid transparent!important}.title{color:#19344c!important;letter-spacing:-.025em}.ey{color:#1769aa!important}.sub,.muted{color:var(--muted)!important}.card,.heroMain,.rolePanel,.conf-box,.judge-step{background:#fff!important;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important;border-radius:10px!important}.btn{background:#fff!important;color:#30485b!important;border:1px solid #cbd7e1!important;border-radius:7px!important;box-shadow:none!important;transition:all .18s ease}.btn:hover{transform:translateY(-1px);border-color:#9db5c7!important;box-shadow:0 5px 14px rgba(27,42,58,.08)!important}.btn.primary{background:#1769aa!important;color:#fff!important;border-color:#1769aa!important}.hero{gap:18px}.heroMain{background:#fff!important}.flow .pill{background:#f3f7fa!important;border:1px solid #d9e3ea!important;color:#3f5669!important}.judge-strip{background:transparent!important;box-shadow:none!important;border:0!important;padding:0!important}.judge-step{padding:14px 15px!important}.judge-step b{color:#23445e}.input,.search,textarea{background:#fff!important;border:1px solid #cbd7e1!important;color:#1b2a3a!important;border-radius:7px!important}.drop{background:#fbfdfe!important;border:1.5px dashed #b9cbd8!important;border-radius:9px!important}.tableWrap{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}.table th{background:#f6f8fa!important;color:#617386!important;font-size:10px!important;letter-spacing:.06em}.table td{border-top:1px solid #edf1f4!important}.table tr.click:hover{background:#f7fafc!important}.alert{background:#fff8f0!important;border-color:#efd9bb!important}.rbac{background:#fff!important;border-color:#d3dee7!important}.accessBadge{background:#edf5fa!important}.restricted{filter:blur(4px);user-select:none}
+.intakeGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 18px}.intakeChoice{display:grid;grid-template-columns:42px 1fr 20px;align-items:center;text-align:left;gap:13px;padding:17px 18px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);cursor:pointer;color:var(--text);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}.intakeChoice:hover{transform:translateY(-2px);border-color:#a8c1d2;box-shadow:0 8px 22px rgba(27,42,58,.09)}.intakeIcon{width:38px;height:38px;display:grid;place-items:center;border-radius:8px;background:#eaf3fa;color:#1769aa;font-size:21px;font-weight:700}.intakeChoice b{display:block;font-size:14px;color:#1e3b53}.intakeChoice small{display:block;margin-top:4px;color:#6a7a89;font-size:11px}.chev{font-size:22px;color:#8aa0b1}
+.page.active{animation:pageIn .24s ease both}.card{animation:cardIn .26s ease both}@keyframes pageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@keyframes cardIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media(max-width:760px){.intakeGrid{grid-template-columns:1fr}.hero{grid-template-columns:1fr!important}.side{width:70px!important}.side .logo span,.side .nav span:not(.navIcon),.side .status,.sideRole{display:none!important}.main{margin-left:70px!important;width:calc(100% - 70px)!important}}
+</style><style id="tm-reviewed-polish">
+/* TraceMail AI reviewed design system: clean enterprise security UI */
+:root{--bg:#f4f7fa;--surface:#fff;--surface2:#f8fafc;--line:#dbe3ea;--text:#1b2a3a;--muted:#667788;--blue:#1769aa;--blue-soft:#eaf3fa;--red:#c43d4b;--amber:#a56b13;--green:#28734d;--shadow:0 4px 18px rgba(27,42,58,.07)}
+body{background:var(--bg)!important;color:var(--text)!important}
+.tm-geo-overlay{background:rgba(18,35,51,.48)!important;backdrop-filter:blur(5px)!important}
+.tm-geo-shell{background:#fff!important;border:1px solid var(--line)!important;border-radius:12px!important;box-shadow:0 20px 55px rgba(27,42,58,.18)!important}
+.tm-geo-top{border-bottom:1px solid var(--line)!important}.tm-geo-title{color:#19344c}.tm-geo-sub{color:var(--muted)!important}
+.tm-map{background:#eef5f8!important}.tm-grid{opacity:.35}.tm-geo-side{background:#f8fafc!important;border-left:1px solid var(--line)!important}
+.tm-card{background:#fff!important;border-color:var(--line)!important;border-radius:9px!important;box-shadow:0 3px 12px rgba(27,42,58,.045)!important}.tm-card h4{color:#718091!important}
+.tm-kv div{background:#f8fafc!important;border-color:#e1e8ee!important}.tm-muted{color:var(--muted)!important}.tm-close,.tm-action{background:#fff!important;color:#30485b!important;border-color:#cbd7e1!important;border-radius:7px!important}.tm-action.primary{background:#1769aa!important;color:#fff!important;border-color:#1769aa!important}
+#tmToast{background:#fff!important;color:#294153!important;border-color:#cbd8e2!important;box-shadow:0 8px 24px rgba(27,42,58,.12)!important}
+.spamBtn{font-weight:700!important}
+.spamConfirm{color:#28734d;font-weight:700}
+@media(max-width:900px){.tm-geo-shell{margin:10px}.tm-geo-body{min-height:auto}}
+</style>
+
+<style id="tm-visual-upgrade">
+:root{--bg:#f3f7fc;--surface:#ffffff;--surface2:#f7faff;--line:#d9e4ef;--text:#16283d;--muted:#687b90;--blue:#2563eb;--blue2:#4f46e5;--cyan:#06b6d4;--violet:#7c3aed;--red:#e04455;--amber:#d58a18;--green:#159669;--shadow:0 12px 32px rgba(30,65,100,.09);--shadow-lg:0 22px 60px rgba(24,63,105,.14)}
+html{scroll-behavior:smooth}body{background:linear-gradient(135deg,#f4f8fc 0%,#eef5fb 48%,#f7f5ff 100%)!important;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(circle at 88% 8%,rgba(79,70,229,.10),transparent 24%),radial-gradient(circle at 12% 76%,rgba(6,182,212,.07),transparent 22%)}
+#signatureStrip{height:48px!important;padding:0 20px!important;background:rgba(255,255,255,.88)!important;backdrop-filter:blur(14px);border-bottom:1px solid rgba(207,220,233,.85)!important;box-shadow:0 2px 16px rgba(24,55,86,.06)!important}
+#signatureStrip b{letter-spacing:.08em!important;background:linear-gradient(90deg,#1d4ed8,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+#signatureStrip:before{content:"";width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 5px rgba(34,197,94,.12),0 0 14px rgba(34,197,94,.35);animation:tmPulse 2s infinite}
+
+.side{background:rgba(255,255,255,.94)!important;backdrop-filter:blur(16px);border-right:1px solid #dce6f0!important;box-shadow:8px 0 30px rgba(35,72,110,.05)!important}
+.logo{padding-top:11px!important}.logoIcon{position:relative!important;border:0!important;background:linear-gradient(135deg,#2563eb,#7c3aed)!important;color:#fff!important;border-radius:10px!important;box-shadow:0 8px 20px rgba(79,70,229,.24)!important;animation:tmFloat 4s ease-in-out infinite}
+.logoIcon:after{content:"";position:absolute;inset:-4px;border-radius:13px;border:1px solid rgba(79,70,229,.18);animation:tmRing 2.8s ease-out infinite}
+.nav button{position:relative!important;overflow:hidden!important;transition:transform .22s ease,background .22s ease,color .22s ease,box-shadow .22s ease!important}
+.nav button:after{content:"";position:absolute;left:-100%;top:0;width:55%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);transform:skewX(-20deg);transition:left .55s ease}
+.nav button:hover:after,.nav button.on:after{left:130%}.nav button:hover{transform:translateX(4px)!important;background:linear-gradient(90deg,#edf5ff,#f7f3ff)!important;box-shadow:0 5px 15px rgba(37,99,235,.08)}
+.nav button.on{background:linear-gradient(90deg,#eaf3ff,#f0edff)!important;color:#2455b7!important;border-left:3px solid transparent!important;border-image:linear-gradient(#2563eb,#7c3aed) 1!important;box-shadow:inset 0 0 0 1px rgba(37,99,235,.06),0 5px 16px rgba(79,70,229,.07)}
+.main{padding-top:25px!important}.page.active{animation:tmPage .48s cubic-bezier(.2,.8,.2,1) both!important}
+.title{font-size:30px!important;background:linear-gradient(100deg,#162f49,#2456a5 55%,#6941b9);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.ey{color:#2563eb!important;position:relative}.ey:before{content:"";display:inline-block;width:22px;height:2px;margin:0 7px 3px 0;background:linear-gradient(90deg,#06b6d4,#2563eb);border-radius:2px}
+.card,.heroMain,.rolePanel,.conf-box,.judge-step{border:1px solid rgba(210,224,237,.92)!important;box-shadow:var(--shadow)!important;transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease!important;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-3px);box-shadow:0 18px 42px rgba(35,75,115,.12)!important;border-color:#c5d9eb!important}
+.card:before{content:"";position:absolute;left:0;top:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,#2563eb,#7c3aed,transparent);opacity:0;transition:opacity .25s}.card:hover:before{opacity:.9}
+.hero{gap:20px!important}.heroMain{min-height:285px!important;background:linear-gradient(135deg,#fff 0%,#f8fbff 58%,#f5f1ff 100%)!important;box-shadow:0 18px 48px rgba(37,79,124,.10)!important}
+.heroMain:before{content:"";position:absolute;width:340px;height:340px;right:-90px;top:-150px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.15),rgba(124,58,237,.05) 45%,transparent 68%);animation:tmFloat 6s ease-in-out infinite}
+.heroMain:after{width:500px!important;height:500px!important;right:-230px!important;top:-245px!important;border-color:rgba(37,99,235,.10)!important;animation:tmSpin 18s linear infinite}
+.heroMain h1{font-size:43px!important;letter-spacing:-.04em!important;line-height:1.02!important}.heroMain p{color:#61758a!important;font-size:14px!important;line-height:1.65}
+.flow .pill{transition:transform .2s,box-shadow .2s;border-color:#d4e2ef!important;background:#fff!important;box-shadow:0 3px 10px rgba(37,99,235,.05)}.flow .pill:hover{transform:translateY(-2px);box-shadow:0 7px 15px rgba(37,99,235,.10)}
+.stats{gap:14px!important}.stat{min-height:118px}.stat .n{font-size:30px!important;color:#183653}.stat:nth-child(1){border-top:3px solid #2563eb!important}.stat:nth-child(2){border-top:3px solid #e04455!important}.stat:nth-child(3){border-top:3px solid #d58a18!important}.stat:nth-child(4){border-top:3px solid #159669!important}.stat:nth-child(5){border-top:3px solid #7c3aed!important}
+.stat .n{animation:tmNumber .7s ease both}.stat:nth-child(2) .n{animation-delay:.06s}.stat:nth-child(3) .n{animation-delay:.12s}.stat:nth-child(4) .n{animation-delay:.18s}.stat:nth-child(5) .n{animation-delay:.24s}
+.btn{position:relative;overflow:hidden!important;transition:transform .2s,box-shadow .2s,border-color .2s!important}.btn:after{content:"";position:absolute;inset:0;transform:translateX(-110%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transition:transform .45s}.btn:hover:after{transform:translateX(110%)}.btn:hover{transform:translateY(-2px)!important}.btn.primary{background:linear-gradient(135deg,#2563eb,#4f46e5)!important;border-color:#2563eb!important;box-shadow:0 8px 20px rgba(37,99,235,.22)!important}.btn.primary:hover{box-shadow:0 12px 26px rgba(79,70,229,.27)!important}
+.badge{transition:transform .2s,box-shadow .2s}.badge:hover{transform:scale(1.04);box-shadow:0 4px 10px rgba(27,55,82,.08)}
+.tableWrap{box-shadow:0 8px 24px rgba(30,65,100,.06)!important}.table th{background:linear-gradient(90deg,#f5f8fb,#faf8ff)!important}.table tr.click{transition:transform .18s}.table tr.click:hover td{background:linear-gradient(90deg,#f6faff,#fbf9ff)!important}.table tr.click:hover{box-shadow:inset 3px 0 #2563eb}
+.search:focus,.input:focus,textarea:focus{outline:none!important;border-color:#6b9de8!important;box-shadow:0 0 0 4px rgba(37,99,235,.10)!important;transition:.2s}
+.drop{transition:.25s!important;background:linear-gradient(135deg,#fbfdff,#f7f4ff)!important}.drop:hover,.drop.drag{border-color:#6b8ee8!important;box-shadow:0 10px 28px rgba(79,70,229,.10)!important;transform:translateY(-2px)}.uploadIcon{animation:tmFloat 3s ease-in-out infinite}
+.progress{background:#e9eff5!important;height:7px!important}.progress i{background:linear-gradient(90deg,#06b6d4,#2563eb,#7c3aed)!important;background-size:200% 100%;animation:tmProgress 1.5s linear infinite}
+.ring{box-shadow:0 10px 30px rgba(224,68,85,.13);animation:tmRingGlow 2.5s ease-in-out infinite}.ring:after{background:#fff!important}
+.find{transition:background .2s,padding-left .2s}.find:hover{background:#f7faff;padding-left:7px}
+.awareness{background:linear-gradient(135deg,#f7fcff,#f8f5ff)!important;border-color:#d5e2ee!important}.awareness:before{background:linear-gradient(#06b6d4,#2563eb,#7c3aed)!important;width:4px!important}.awBox{background:rgba(255,255,255,.8)!important;border-color:#dce6ef!important;transition:.22s}.awBox:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(37,99,235,.07)}
+.map{background:linear-gradient(135deg,#eaf4f8,#edf2ff)!important;box-shadow:inset 0 0 40px rgba(37,99,235,.07)}.marker{animation:tmMarker 1.8s ease-out infinite}.m2{animation-delay:.3s}.m3{animation-delay:.6s}.m4{animation-delay:.9s}
+.graph{background:radial-gradient(circle at 50% 50%,#eef7ff,#f5f3ff)!important}.node{background:rgba(255,255,255,.92)!important;border-color:#c9dced!important;color:#24445f!important;box-shadow:0 8px 22px rgba(37,99,235,.09)!important;transition:.25s}.node:hover{transform:translateY(-4px) scale(1.02);border-color:#8cb0df!important}.edge{background:linear-gradient(90deg,#06b6d4,#2563eb,#7c3aed)!important;box-shadow:0 0 6px rgba(37,99,235,.18)}
+.modal{background:rgba(16,31,48,.42)!important;backdrop-filter:blur(7px)}.modal.show .modalBox{animation:tmModal .35s cubic-bezier(.2,.8,.2,1) both}.modalBox{background:#fff!important;border-color:#d3e0eb!important;box-shadow:var(--shadow-lg)!important}
+.toast,#tmToast{box-shadow:0 15px 40px rgba(24,57,92,.18)!important;border-color:#c8d9e8!important;animation:tmToast .28s ease both}
+.rbac{box-shadow:0 5px 15px rgba(37,99,235,.05)!important}.accessBadge{color:#2563eb!important;background:#eff6ff!important}
+@keyframes tmPage{from{opacity:0;transform:translateY(14px) scale(.992)}to{opacity:1;transform:none}}@keyframes tmNumber{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes tmFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}@keyframes tmRing{0%{transform:scale(.85);opacity:.7}80%,100%{transform:scale(1.25);opacity:0}}@keyframes tmSpin{to{transform:rotate(360deg)}}@keyframes tmPulse{0%,100%{opacity:1}50%{opacity:.45}}@keyframes tmProgress{to{background-position:200% 0}}@keyframes tmRingGlow{0%,100%{filter:drop-shadow(0 0 0 rgba(224,68,85,0))}50%{filter:drop-shadow(0 0 10px rgba(224,68,85,.18))}}@keyframes tmMarker{0%{box-shadow:0 0 0 0 rgba(224,68,85,.35)}70%{box-shadow:0 0 0 14px rgba(224,68,85,0)}100%{box-shadow:0 0 0 0 rgba(224,68,85,0)}}@keyframes tmModal{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}@keyframes tmToast{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}}
+@media(max-width:760px){.heroMain h1{font-size:34px!important}.card:hover{transform:none}.stats{gap:10px!important}}
+</style>
+
+<style id="tracemail-fullstack-ui">
+:root{
+ --bg:#07111f;--bg2:#0b1630;--panel:rgba(13,25,48,.82);--panel2:rgba(16,31,58,.9);
+ --line:rgba(112,145,198,.20);--line2:rgba(77,163,255,.34);--txt:#eef6ff;--mut:#8fa4c1;
+ --cyan:#42d9ff;--blue:#5b8cff;--violet:#9b7cff;--green:#3de6a0;--red:#ff5d76;--amber:#ffc857;
+}
+html{background:#07111f}body{
+ background:
+ radial-gradient(900px 500px at 76% -8%,rgba(66,120,255,.24),transparent 60%),
+ radial-gradient(700px 500px at 20% 105%,rgba(151,80,255,.15),transparent 60%),
+ linear-gradient(135deg,#050b16 0%,#09152a 48%,#07101f 100%);
+ color:var(--txt);overflow-x:hidden;
+}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.25;background-image:linear-gradient(rgba(95,140,210,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(95,140,210,.055) 1px,transparent 1px);background-size:38px 38px;mask-image:linear-gradient(to bottom,#000,transparent 90%);z-index:0}
+.app,.main,.side{position:relative;z-index:1}.side{
+ background:linear-gradient(180deg,rgba(7,15,31,.96),rgba(5,11,24,.96));border-right:1px solid rgba(101,137,196,.22);box-shadow:16px 0 50px rgba(0,0,0,.20);backdrop-filter:blur(18px)
+}
+.logo{padding-top:10px}.logoIcon{background:linear-gradient(145deg,rgba(66,217,255,.16),rgba(155,124,255,.18));border-color:rgba(66,217,255,.55);box-shadow:0 0 28px rgba(66,217,255,.18),inset 0 0 20px rgba(155,124,255,.08);animation:logoPulse 3s ease-in-out infinite}
+@keyframes logoPulse{50%{box-shadow:0 0 36px rgba(66,217,255,.28),inset 0 0 24px rgba(155,124,255,.14)}}
+.nav button{color:#91a5c2;position:relative;transition:all .22s ease}.nav button:before{content:"";position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:4px;background:linear-gradient(var(--cyan),var(--violet));transform:scaleY(0);transition:.22s}.nav button:hover,.nav button.on{background:linear-gradient(90deg,rgba(66,217,255,.10),rgba(155,124,255,.06));color:#fff;transform:translateX(2px);box-shadow:inset 0 0 22px rgba(66,217,255,.035)}.nav button.on:before{transform:scaleY(1)}
+.status{background:linear-gradient(135deg,rgba(14,30,56,.92),rgba(9,19,38,.92));border-color:rgba(61,230,160,.18);box-shadow:0 12px 30px rgba(0,0,0,.2)}
+.main{padding:28px 32px}.top{background:linear-gradient(90deg,rgba(10,22,43,.50),rgba(10,20,40,.18));border:1px solid rgba(107,143,199,.14);padding:14px 16px;border-radius:16px;backdrop-filter:blur(12px);box-shadow:0 12px 35px rgba(0,0,0,.12)}
+.title{letter-spacing:-.7px}.ey{color:var(--cyan);text-shadow:0 0 18px rgba(66,217,255,.25)}
+.card{background:linear-gradient(145deg,rgba(16,30,57,.88),rgba(8,18,36,.88));border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 45px rgba(0,0,0,.20),inset 0 1px rgba(255,255,255,.025);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;position:relative;overflow:hidden}.card:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,rgba(66,217,255,.035),transparent 38%,rgba(155,124,255,.035));opacity:.7}.card:hover{transform:translateY(-3px);border-color:rgba(91,140,255,.38);box-shadow:0 20px 55px rgba(0,0,0,.28),0 0 25px rgba(66,217,255,.055)}
+.hero{gap:16px}.heroMain{background:linear-gradient(135deg,rgba(19,44,82,.96),rgba(11,22,48,.96) 55%,rgba(43,24,75,.92));border-color:rgba(91,140,255,.30);box-shadow:0 22px 70px rgba(30,80,180,.16)}.heroMain:before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;right:-210px;top:-260px;border:1px solid rgba(66,217,255,.16);box-shadow:0 0 0 45px rgba(66,217,255,.025),0 0 0 90px rgba(155,124,255,.018);animation:orbit 12s linear infinite}.heroMain:after{border-color:rgba(155,124,255,.18);animation:orbit 8s linear infinite reverse}@keyframes orbit{to{transform:rotate(360deg)}}
+.heroMain h1{font-size:43px;background:linear-gradient(90deg,#fff 15%,#bfefff 52%,#cdbfff 90%);-webkit-background-clip:text;background-clip:text;color:transparent}.heroMain p{color:#a9bad3}.flow .pill{background:rgba(8,21,42,.72);border-color:rgba(83,150,224,.25);transition:.2s}.flow .pill:hover{border-color:rgba(66,217,255,.55);transform:translateY(-2px)}
+.stats{gap:15px}.stat{min-height:112px}.stat .n{font-size:30px}.stat:before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet));opacity:.7}.stat:nth-child(2):before{background:linear-gradient(90deg,var(--red),var(--violet))}.stat:nth-child(3):before{background:linear-gradient(90deg,var(--amber),var(--red))}.stat:nth-child(4):before{background:linear-gradient(90deg,var(--green),var(--cyan))}
+.btn{background:linear-gradient(145deg,rgba(21,38,68,.92),rgba(11,22,43,.92));border-color:rgba(105,141,198,.25);border-radius:10px;transition:all .2s ease;box-shadow:0 5px 18px rgba(0,0,0,.12)}.btn:hover{transform:translateY(-2px);border-color:rgba(66,217,255,.52);box-shadow:0 8px 25px rgba(66,217,255,.10)}.primary{background:linear-gradient(135deg,#147fbe,#6954d9);border-color:rgba(143,214,255,.55);box-shadow:0 8px 26px rgba(56,112,255,.25)}.primary:hover{box-shadow:0 12px 35px rgba(91,140,255,.34)}
+.search,.input,.rbac,.rolePanel{background:rgba(8,18,37,.78);border-color:rgba(105,141,198,.24)}.search:focus,.input:focus,textarea:focus{outline:none;border-color:rgba(66,217,255,.65);box-shadow:0 0 0 3px rgba(66,217,255,.08),0 0 25px rgba(66,217,255,.08)}
+.table tr.click:hover td{background:linear-gradient(90deg,rgba(66,217,255,.07),rgba(155,124,255,.035));color:#fff}.table th{color:#7188aa}.table td{border-color:rgba(112,145,198,.13)}
+.badge{box-shadow:inset 0 1px rgba(255,255,255,.08)}.critical{background:rgba(255,63,92,.14);border:1px solid rgba(255,93,118,.28)}.high{background:rgba(255,200,87,.13);border:1px solid rgba(255,200,87,.25)}.safe{background:rgba(61,230,160,.12);border:1px solid rgba(61,230,160,.25)}
+.ring{box-shadow:0 0 35px rgba(255,93,118,.13);animation:ringFloat 3s ease-in-out infinite}@keyframes ringFloat{50%{transform:translateY(-4px);filter:brightness(1.08)}}
+.map{background:radial-gradient(circle at 50% 45%,rgba(29,72,117,.55),rgba(5,15,30,.95) 68%);border:1px solid rgba(91,140,255,.18)}.map:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 49.7%,rgba(66,217,255,.10) 50%,transparent 50.3%),linear-gradient(transparent 49.7%,rgba(66,217,255,.07) 50%,transparent 50.3%);background-size:90px 90px;pointer-events:none}.marker{animation:markerPulse 1.8s ease-out infinite}@keyframes markerPulse{0%,100%{box-shadow:0 0 8px var(--red),0 0 0 0 rgba(255,93,118,.35)}50%{box-shadow:0 0 20px var(--red),0 0 0 10px rgba(255,93,118,0)}}
+.graph{background:radial-gradient(circle at center,rgba(26,65,105,.72),rgba(5,14,28,.98) 70%);border:1px solid rgba(91,140,255,.16)}.node{background:linear-gradient(145deg,rgba(16,39,68,.96),rgba(9,23,44,.96));border-color:rgba(66,217,255,.30);box-shadow:0 0 30px rgba(66,217,255,.08);animation:nodeFloat 3.5s ease-in-out infinite}.node:nth-of-type(2n){animation-delay:-1.2s}@keyframes nodeFloat{50%{transform:translateY(-5px)}}.edge{background:linear-gradient(90deg,rgba(66,217,255,.15),rgba(155,124,255,.9));box-shadow:0 0 8px rgba(66,217,255,.35)}
+.drop{background:linear-gradient(145deg,rgba(11,28,53,.80),rgba(10,18,38,.80));border-color:rgba(91,140,255,.36);transition:.25s}.drop:hover,.drop.drag{border-color:var(--cyan);background:linear-gradient(145deg,rgba(18,48,79,.88),rgba(22,25,58,.88));box-shadow:0 0 35px rgba(66,217,255,.08);transform:translateY(-2px)}
+textarea{background:#071325;border-color:rgba(105,141,198,.25)}.progress{background:#16243b}.progress i{background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet));box-shadow:0 0 14px rgba(66,217,255,.45)}
+.tabs{border-color:rgba(112,145,198,.16)}.tab{transition:.2s}.tab:hover{color:#cfeaff}.tab.on{color:#fff;border-color:var(--cyan);text-shadow:0 0 14px rgba(66,217,255,.25)}
+.awareness{background:linear-gradient(135deg,rgba(11,38,54,.94),rgba(22,27,59,.92));border-color:rgba(66,217,255,.25)}.awareness:before{background:linear-gradient(var(--cyan),var(--violet))}.awBox{background:rgba(6,18,35,.58);border-color:rgba(91,140,255,.18);transition:.2s}.awBox:hover{transform:translateY(-2px);border-color:rgba(66,217,255,.34)}
+.modal{background:rgba(2,7,16,.76);backdrop-filter:blur(10px)}.modalBox{background:linear-gradient(145deg,#0d1d37,#081226);border-color:rgba(91,140,255,.35);box-shadow:0 30px 100px rgba(0,0,0,.55);animation:modalIn .3s cubic-bezier(.2,.8,.2,1)}@keyframes modalIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+.toast{background:linear-gradient(135deg,#102746,#171d3c);border-color:rgba(66,217,255,.35);box-shadow:0 15px 45px rgba(0,0,0,.35)}
+.page.active{animation:pageIn .35s ease}@keyframes pageIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@media(max-width:1050px){.main{padding:20px}.top{border-radius:13px}.heroMain h1{font-size:37px}}
+@media(max-width:650px){.main{padding:12px}.heroMain{padding:22px}.heroMain h1{font-size:30px}.top{padding:11px}.card{border-radius:13px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+
+<style id="tm-auth-gate">
+.authGate{position:fixed;inset:0;z-index:100000;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 20% 20%,rgba(37,99,235,.22),transparent 30%),radial-gradient(circle at 80% 75%,rgba(124,58,237,.20),transparent 32%),linear-gradient(135deg,#071426 0%,#0a1830 48%,#120d2b 100%);color:#edf5ff}
+.authGate:before{content:"";position:absolute;inset:0;opacity:.32;background-image:linear-gradient(rgba(105,145,255,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(105,145,255,.10) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,black,transparent 85%);animation:authGrid 18s linear infinite}
+.authGlow{position:absolute;border-radius:50%;filter:blur(2px);pointer-events:none}.authGlowA{width:360px;height:360px;left:-120px;top:-90px;background:radial-gradient(circle,rgba(37,99,235,.28),transparent 68%);animation:authFloat 8s ease-in-out infinite}.authGlowB{width:420px;height:420px;right:-130px;bottom:-150px;background:radial-gradient(circle,rgba(124,58,237,.25),transparent 68%);animation:authFloat 10s ease-in-out infinite reverse}
+.authShell{position:relative;width:min(470px,calc(100vw - 32px));display:flex;flex-direction:column;align-items:center;animation:authIn .65s cubic-bezier(.2,.8,.2,1) both}.authBrand{display:flex;align-items:center;gap:12px;margin-bottom:22px;align-self:flex-start}.authLogo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#38bdf8,#2563eb 48%,#7c3aed);box-shadow:0 12px 32px rgba(37,99,235,.32),0 0 0 1px rgba(255,255,255,.15);animation:authLogo 3.5s ease-in-out infinite}.authBrand strong{display:block;font-size:18px;letter-spacing:-.02em}.authBrand span{display:block;color:#91a8c5;font-size:11px;margin-top:2px}
+.authPanel{width:100%;padding:32px;border:1px solid rgba(148,163,184,.20);border-radius:24px;background:linear-gradient(145deg,rgba(15,29,53,.91),rgba(10,19,36,.86));box-shadow:0 35px 90px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(24px)}.authEy{font-size:10px;letter-spacing:.16em;font-weight:800;color:#67e8f9;margin-bottom:9px}.authPanel h1{font-size:27px;line-height:1.14;margin:0 0 9px;letter-spacing:-.035em}.authPanel>p{margin:0 0 25px;color:#91a4bd;font-size:12px;line-height:1.6}.authLabel{display:block;font-size:11px;font-weight:700;color:#b7c7da;margin-bottom:7px}.authInput{width:100%;height:48px;padding:0 14px;border:1px solid #29415e;border-radius:12px;background:#081427;color:#fff;outline:none;transition:.2s}.authInput::placeholder{color:#5e728d}.authInput:focus{border-color:#4f8cff;box-shadow:0 0 0 4px rgba(79,140,255,.12)}.authPrimary,.authSecondary{width:100%;height:48px;border-radius:12px;margin-top:12px;border:1px solid transparent;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;transition:.22s;position:relative;overflow:hidden}.authPrimary{background:linear-gradient(100deg,#2563eb,#4f46e5,#7c3aed);color:white;box-shadow:0 12px 28px rgba(37,99,235,.25)}.authPrimary:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(79,70,229,.34)}.authPrimary b{position:absolute;right:15px;font-size:18px}.authSecondary{background:#fff;color:#18273a;border-color:#dbe5f0}.authSecondary:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.15)}.googleMark{font-weight:900;color:#4285f4;font-size:16px}.authDivider{display:flex;align-items:center;gap:10px;color:#61758f;font-size:9px;font-weight:800;letter-spacing:.15em;margin:18px 0}.authDivider:before,.authDivider:after{content:"";height:1px;flex:1;background:#263951}.authFile{margin-top:12px;min-height:58px;padding:10px 12px;border:1px dashed #385574;border-radius:12px;background:rgba(13,29,50,.65);display:grid;grid-template-columns:34px 1fr 16px;align-items:center;gap:10px;cursor:pointer;transition:.22s}.authFile:hover{border-color:#5b8cff;background:rgba(25,43,73,.8);transform:translateY(-2px)}.authFile input{display:none}.fileMark{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:#102544;color:#6dd3ff;font-size:20px}.authFile b{display:block;font-size:11px}.authFile small{display:block;color:#7187a2;font-size:9px;margin-top:3px}.authFile>strong{font-size:19px;color:#7187a2}.authFoot{margin-top:20px;text-align:center;color:#667b95;font-size:9px}.secureDot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.7);margin-right:6px}
+body.authLocked #signatureStrip,body.authLocked .app{visibility:hidden;pointer-events:none}.authGate.hidden{display:none}@keyframes authIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}@keyframes authFloat{50%{transform:translate3d(25px,-20px,0) scale(1.08)}}@keyframes authGrid{to{background-position:44px 44px}}@keyframes authLogo{50%{transform:translateY(-3px);box-shadow:0 16px 36px rgba(37,99,235,.38),0 0 0 1px rgba(255,255,255,.18)}}
+@media(max-width:520px){.authPanel{padding:24px;border-radius:20px}.authPanel h1{font-size:24px}.authBrand{margin-bottom:16px}}
+</style>
+
+<style id="tm-layout-fix">
+.main{min-width:0}.page{width:100%;max-width:1440px;margin:0 auto}.top{min-height:64px}.top .sub{max-width:820px;line-height:1.55}.hero,.two,.three{align-items:stretch}.card{min-width:0}.tableWrap{min-width:0}.table{min-width:720px}.actions{align-items:center}.heroMain{display:flex;flex-direction:column;justify-content:center}.stats .card{min-height:112px}@media(min-width:1400px){.main{padding-left:42px;padding-right:42px}}@media(max-width:1050px){.page{max-width:none}.top .actions{width:100%}}
+</style>
+
+<style id="tm-jury-premium">
+:root{
+ --bg:#070b17;--bg2:#0b1020;--surface:#10172a;--surface2:#131c32;--surface3:#0c1426;
+ --line:#25324a;--line2:#33415e;--txt:#edf4ff;--mut:#8d9bb2;--cyan:#43d9ff;--blue:#4f7cff;
+ --violet:#8b5cf6;--green:#35d399;--red:#ff5d73;--amber:#f6bd60;
+ --shadow:0 18px 55px rgba(0,0,0,.24)
+}
+html{background:var(--bg)}body{background:
+ radial-gradient(900px 500px at 78% -10%,rgba(79,124,255,.16),transparent 60%),
+ radial-gradient(700px 500px at 10% 70%,rgba(139,92,246,.09),transparent 62%),
+ linear-gradient(180deg,#070b17 0%,#0a0f1d 100%)!important;color:var(--txt)!important}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.18;background-image:linear-gradient(rgba(100,130,180,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(100,130,180,.08) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,black,transparent 90%)}
+#signatureStrip{height:56px!important;padding:0 26px!important;background:rgba(9,14,28,.78)!important;border-bottom:1px solid rgba(83,104,145,.28)!important;backdrop-filter:blur(18px);box-shadow:0 8px 28px rgba(0,0,0,.18)!important}
+#signatureStrip b{font-size:13px!important;letter-spacing:.12em!important;background:linear-gradient(90deg,#67e8f9,#60a5fa,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+#signatureStrip span{color:#74849e!important}.side{width:256px!important;background:rgba(8,13,27,.86)!important;border-right:1px solid rgba(83,104,145,.25)!important;box-shadow:10px 0 45px rgba(0,0,0,.12);backdrop-filter:blur(18px);padding:22px 14px!important}
+.logo{padding:4px 12px 26px!important;color:#fff!important}.logoIcon{width:38px!important;height:38px!important;border-radius:12px!important;background:linear-gradient(135deg,#1e3a8a,#2563eb 50%,#7c3aed)!important;border:1px solid rgba(147,197,253,.32)!important;color:#fff!important;box-shadow:0 10px 28px rgba(37,99,235,.25)!important;animation:tmLogoFloat 4s ease-in-out infinite}
+.sideRole{margin:0 5px 20px!important;padding:10px!important;background:linear-gradient(145deg,rgba(19,29,52,.9),rgba(11,19,36,.9))!important;border:1px solid rgba(83,104,145,.28)!important;border-radius:12px!important}.sideRoleLabel{color:#6f82a1!important;font-size:9px!important;letter-spacing:.14em!important}.sideRoleRow{margin-top:7px!important}.sideRoleRow select{background:transparent!important;color:#dbe7f7!important;border:0!important;outline:0!important;width:100%!important}
+.nav{gap:6px!important}.nav button{color:#8292aa!important;border:1px solid transparent!important;border-radius:11px!important;padding:12px 12px!important;transition:.22s cubic-bezier(.2,.8,.2,1)!important}.nav button:hover{background:rgba(79,124,255,.08)!important;color:#eaf2ff!important;transform:translateX(4px)!important;border-color:rgba(79,124,255,.15)!important}.nav button.on{background:linear-gradient(90deg,rgba(79,124,255,.18),rgba(139,92,246,.07))!important;color:#fff!important;border-color:rgba(79,124,255,.22)!important;box-shadow:inset 3px 0 #4f7cff,0 7px 24px rgba(37,99,235,.08)!important}.navIcon{width:25px!important;height:25px!important;border-radius:8px!important;background:#111a2d!important;border-color:#2a3955!important;color:#89a8d8!important}.nav button.on .navIcon{background:linear-gradient(135deg,#1d4ed8,#7c3aed)!important;border-color:rgba(147,197,253,.35)!important;color:#fff!important;box-shadow:0 6px 16px rgba(79,124,255,.22)}
+.status{background:linear-gradient(145deg,#0f1a2f,#0b1426)!important;border:1px solid rgba(83,104,145,.3)!important;color:#c8d5e8!important;border-radius:12px!important}.status .muted{color:#72839d!important}.dot{background:#35d399!important;box-shadow:0 0 0 5px rgba(53,211,153,.08),0 0 15px rgba(53,211,153,.45)!important}
+.main{margin-left:256px!important;width:calc(100% - 256px)!important;padding:30px 38px 48px!important;max-width:none!important}.page{animation:tmPageIn .4s ease both}.top{max-width:1500px;margin:0 auto 20px!important}.ey{color:#62d9ff!important;letter-spacing:.18em!important}.title{font-size:31px!important;letter-spacing:-.035em;color:#f5f8ff!important}.sub{color:#8493aa!important;max-width:780px}
+.card{background:linear-gradient(145deg,rgba(17,26,46,.94),rgba(12,19,35,.94))!important;border:1px solid rgba(83,104,145,.26)!important;border-radius:16px!important;box-shadow:var(--shadow)!important;position:relative;overflow:hidden}.card:before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(103,232,249,.25),rgba(139,92,246,.18),transparent);pointer-events:none}.card:hover{border-color:rgba(96,133,196,.42)!important;box-shadow:0 22px 65px rgba(0,0,0,.28)!important}
+.hero{grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr)!important;gap:18px!important}.heroMain{min-height:300px!important;padding:34px!important;background:radial-gradient(circle at 82% 18%,rgba(67,217,255,.12),transparent 25%),radial-gradient(circle at 65% 80%,rgba(139,92,246,.12),transparent 28%),linear-gradient(145deg,#111c35,#0c1426)!important}.heroMain h1{font-size:46px!important;line-height:1.02!important;color:#f7fbff!important}.heroMain h1 span{background:linear-gradient(90deg,#43d9ff,#5b8cff,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent!important}.heroMain p{color:#91a0b8!important;line-height:1.7!important}.heroMain:after{width:480px!important;height:480px!important;border:1px solid rgba(67,217,255,.13)!important;box-shadow:0 0 0 70px rgba(79,124,255,.025),0 0 0 140px rgba(139,92,246,.02);animation:tmOrbit 12s linear infinite}
+.pill{background:#0c172b!important;border-color:#2b3d5b!important;color:#9db1cd!important;border-radius:999px!important;padding:7px 10px!important}.btn{background:#111b2e!important;color:#dce8f8!important;border-color:#2a3b58!important;border-radius:10px!important;padding:10px 14px!important;transition:.22s!important}.btn:hover{transform:translateY(-2px)!important;border-color:#4c6792!important;box-shadow:0 10px 24px rgba(0,0,0,.2)!important}.primary{background:linear-gradient(100deg,#2563eb,#4f46e5,#7c3aed)!important;border-color:#5f7cff!important;box-shadow:0 9px 24px rgba(79,70,229,.22)!important}.primary:hover{box-shadow:0 14px 32px rgba(79,70,229,.3)!important}.danger{background:rgba(255,93,115,.09)!important;border-color:rgba(255,93,115,.35)!important;color:#ff93a3!important}
+.stats{gap:14px!important}.stat{min-height:118px;display:flex;flex-direction:column;justify-content:center}.stat .lbl{color:#71819b!important}.stat .n{font-size:30px!important;color:#f4f8ff}.stat:after{content:"";position:absolute;right:-22px;bottom:-28px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(67,217,255,.10),transparent 68%)}
+.intakeGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}.intakeChoice{display:grid;grid-template-columns:42px 1fr 20px;align-items:center;gap:13px;text-align:left;padding:18px;border:1px solid rgba(83,104,145,.28);border-radius:15px;background:linear-gradient(145deg,#111c32,#0d1628);color:#eaf2ff;transition:.25s;cursor:pointer;position:relative;overflow:hidden}.intakeChoice:after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent,rgba(79,124,255,.08),transparent);transform:translateX(-100%);transition:.5s}.intakeChoice:hover{transform:translateY(-3px);border-color:rgba(79,124,255,.5);box-shadow:0 16px 40px rgba(0,0,0,.2)}.intakeChoice:hover:after{transform:translateX(100%)}.intakeIcon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(135deg,#173b88,#342078);color:#75e4ff;font-size:22px;box-shadow:0 8px 20px rgba(37,99,235,.18)}.intakeChoice small{display:block;color:#7788a1;margin-top:4px;line-height:1.45}.chev{color:#7890b1;font-size:22px}.judge-strip{gap:10px!important}.judge-step{background:linear-gradient(145deg,#10192c,#0c1424)!important;border-color:#263752!important;border-radius:12px!important;transition:.22s}.judge-step:hover{transform:translateY(-3px);border-color:#415a84}.judge-step b{color:#dce8f8!important}.judge-step span{color:#73839d!important}
+.conf-grid,.response-grid,.three{gap:14px!important}.conf-box,.response-card{background:#0c1527!important;border-color:#273752!important;border-radius:12px!important}.conf-box b{color:#f3f7ff}.mini-bar{background:#1b2740!important}.mini-bar i{background:linear-gradient(90deg,#43d9ff,#4f7cff,#8b5cf6)!important}
+.tableWrap{border:1px solid rgba(83,104,145,.2);border-radius:12px;overflow:auto}.table th{background:#0c1527;color:#70819c!important}.table td{border-bottom-color:#202d44!important;color:#d3dfef}.table tr.click:hover td{background:rgba(79,124,255,.065)!important}.badge{border:1px solid transparent}.critical{background:rgba(255,93,115,.12)!important;color:#ff8b9a!important;border-color:rgba(255,93,115,.25)}.high{background:rgba(246,189,96,.12)!important;color:#ffd17f!important;border-color:rgba(246,189,96,.24)}.safe{background:rgba(53,211,153,.1)!important;color:#6ce5b4!important;border-color:rgba(53,211,153,.2)}.unknown{background:rgba(125,141,166,.1)!important;color:#aab6c8!important;border-color:#33425d}.obs{background:rgba(67,217,255,.09)!important;color:#74e4ff!important;border-color:rgba(67,217,255,.2)}.enr{background:rgba(53,211,153,.09)!important;color:#7be7ba!important;border-color:rgba(53,211,153,.18)}.inf{background:rgba(139,92,246,.1)!important;color:#c5adff!important;border-color:rgba(139,92,246,.2)}
+.search,.input,textarea{background:#0a1324!important;color:#edf4ff!important;border-color:#2b3c58!important;border-radius:10px!important}.search:focus,.input:focus,textarea:focus{border-color:#527dff!important;box-shadow:0 0 0 4px rgba(79,124,255,.1)!important;outline:0}.drop{background:radial-gradient(circle at 50% 0,rgba(67,217,255,.08),transparent 55%),#0b1527!important;border:1px dashed #3b557a!important;border-radius:15px!important;padding:48px 30px!important}.drop:hover,.drop.drag{background:#0d1a30!important;border-color:#43d9ff!important;box-shadow:inset 0 0 40px rgba(67,217,255,.05),0 10px 30px rgba(0,0,0,.16)}
+.map{height:430px!important;background:radial-gradient(circle at 50% 50%,#112743,#091324 70%)!important;border-radius:16px!important}.map svg path{fill:#10243b!important;stroke:#2c5273!important}.marker{animation:tmMarker 2s ease-out infinite}.graph{height:390px!important;background:radial-gradient(circle at center,#112642,#091223)!important;border:1px solid #263752;border-radius:14px!important}.node{background:linear-gradient(145deg,#14233c,#0c172a)!important;border-color:#35547d!important;color:#e7f0fc!important;border-radius:11px!important;box-shadow:0 10px 28px rgba(0,0,0,.25),0 0 20px rgba(67,217,255,.05)!important;animation:tmNodeFloat 4s ease-in-out infinite}.node small{color:#75a1c5!important}.edge{background:linear-gradient(90deg,#43d9ff,#8b5cf6)!important;box-shadow:0 0 8px rgba(67,217,255,.2)}
+.tabs{border-bottom-color:#25334c!important}.tab{color:#71829c!important}.tab.on{color:#72ddff!important;border-bottom-color:#4f7cff!important}.kv{border-bottom-color:#223047!important}.modal{background:rgba(2,6,18,.78)!important;backdrop-filter:blur(10px)}.modalBox{background:linear-gradient(145deg,#101a2e,#0c1425)!important;border-color:#334763!important;border-radius:18px!important;box-shadow:0 35px 100px rgba(0,0,0,.55)!important;animation:tmModal .32s ease both}.toast{background:#111c31!important;color:#eaf2ff!important;border-color:#354967!important;box-shadow:0 18px 45px rgba(0,0,0,.3)!important}
+.awareness{background:radial-gradient(circle at 85% 10%,rgba(139,92,246,.1),transparent 30%),linear-gradient(145deg,#101a2e,#0c1526)!important;border-color:#334763!important}.awBox{background:#0b1527!important;border-color:#263752!important}.awBox p{color:#8496b0!important}.awLearn{background:#0d1a30!important;border-color:#2b4770!important}.rolePanel{background:linear-gradient(145deg,#0e192d,#0b1425)!important;border-color:#2c405e!important;border-radius:13px!important}.rbac{background:#0c1527!important;border-color:#2b3c58!important}.rbac select{background:#0c1527!important;color:#dce8f8!important}
+/* specialized geolocation panel remains dark, but aligned with the new visual system */
+.tm-geo-shell{border-radius:20px!important;background:#0a1222!important;border-color:#30435f!important}.tm-geo-top{padding:20px 24px!important}.tm-geo-side{background:#0b1425!important;border-left-color:#263752!important}.tm-card{background:#101a2e!important;border-color:#2a3c59!important;border-radius:13px!important}.tm-action.primary{background:linear-gradient(100deg,#2563eb,#7c3aed)!important;border-color:#5b7fff!important}
+@keyframes tmPageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes tmLogoFloat{50%{transform:translateY(-3px) rotate(-1deg)}}@keyframes tmOrbit{to{transform:rotate(360deg)}}@keyframes tmMarker{0%,100%{box-shadow:0 0 0 0 rgba(255,93,115,.35),0 0 16px rgba(255,93,115,.6)}50%{box-shadow:0 0 0 10px rgba(255,93,115,0),0 0 24px rgba(255,93,115,.8)}}@keyframes tmNodeFloat{50%{transform:translateY(-4px)}}@keyframes tmModal{from{opacity:0;transform:translateY(15px) scale(.985)}to{opacity:1;transform:none}}
+@media(max-width:1050px){.side{width:78px!important}.main{margin-left:78px!important;width:calc(100% - 78px)!important;padding:25px!important}.logo span,.nav span:not(.navIcon),.status,.sideRole{display:none!important}.nav button{justify-content:center}.hero,.two,.three,.intakeGrid{grid-template-columns:1fr!important}.heroMain h1{font-size:38px!important}}
+@media(max-width:650px){#signatureStrip{padding:0 14px!important}.main{padding:18px 14px 30px!important}.title{font-size:25px!important}.heroMain{padding:25px!important}.heroMain h1{font-size:34px!important}.judge-strip,.conf-grid,.response-grid{grid-template-columns:1fr!important}.search{width:100%!important}.actions{width:100%}.actions .btn{flex:1}.map{height:320px!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition:none!important}}
+</style>
+
+<style id="tm-final-professional-theme">
+/* FINAL TRACE MAIL AI THEME — light enterprise SOC / jury presentation */
+:root{
+  --bg:#f3f6fa!important;
+  --surface:#ffffff!important;
+  --surface2:#f8fafc!important;
+  --line:#d9e2ec!important;
+  --txt:#172b3d!important;
+  --mut:#66788a!important;
+  --cyan:#1769aa!important;
+  --blue:#2563eb!important;
+  --violet:#6750c9!important;
+  --green:#16845a!important;
+  --red:#c53d4a!important;
+  --amber:#a96d0c!important;
+  --shadow:0 8px 28px rgba(25,55,84,.07)!important;
+}
+html,body{background:#f3f6fa!important;color:#172b3d!important}
+body{font-size:13px!important}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(circle at 92% 0,rgba(37,99,235,.07),transparent 25%),radial-gradient(circle at 8% 70%,rgba(103,80,201,.045),transparent 22%);}
+#signatureStrip{background:rgba(255,255,255,.94)!important;color:#6b7d8f!important;border-bottom:1px solid #dce5ee!important;box-shadow:0 2px 14px rgba(30,61,90,.05)!important;backdrop-filter:blur(10px)!important}
+#signatureStrip b{background:none!important;color:#17324d!important;-webkit-text-fill-color:#17324d!important}
+#signatureStrip span{color:#708195!important}
+.app{background:transparent!important}
+.side{width:236px!important;background:#fff!important;border-right:1px solid #dbe4ed!important;box-shadow:5px 0 22px rgba(28,57,84,.045)!important;backdrop-filter:none!important}
+.logo{color:#17324d!important}
+.logoIcon{background:linear-gradient(135deg,#1769aa,#4f46e5)!important;box-shadow:0 7px 18px rgba(37,99,235,.18)!important;animation:none!important}
+.logoIcon:after{display:none!important}
+.sideRole{background:#f7f9fc!important;border:1px solid #dce5ed!important;box-shadow:none!important}
+.sideRoleLabel{color:#8090a0!important}
+.sideRoleRow select{color:#294153!important}
+.nav button{color:#627486!important;border:1px solid transparent!important;background:transparent!important;box-shadow:none!important;transform:none!important}
+.nav button:hover{background:#f1f6fb!important;color:#1769aa!important;transform:translateX(2px)!important;box-shadow:none!important}
+.nav button.on{background:#edf5fc!important;color:#145e95!important;border:1px solid #d9e8f4!important;box-shadow:inset 3px 0 #1769aa!important}
+.nav button:after{display:none!important}
+.navIcon{background:#f7fafc!important;border-color:#d5e0e9!important;color:#557086!important;box-shadow:none!important}
+.nav button.on .navIcon{background:#e4f0fa!important;color:#1769aa!important;border-color:#bcd5e7!important;box-shadow:none!important}
+.status{background:#f7fafc!important;border-color:#dce5ed!important;color:#40566a!important}
+.status .muted{color:#748596!important}
+.main{margin-left:236px!important;width:calc(100% - 236px)!important;padding:28px 34px 48px!important}
+.page.active{animation:tmSoftPage .24s ease-out both!important}
+.top{max-width:1500px!important;margin:0 auto 20px!important}
+.ey{color:#1769aa!important;letter-spacing:.14em!important}
+.title{color:#172b3d!important;background:none!important;-webkit-text-fill-color:#172b3d!important;font-size:29px!important}
+.sub{color:#6b7c8d!important}
+.card,.heroMain,.rolePanel,.conf-box,.judge-step,.response-card{background:#fff!important;border:1px solid #dbe4ec!important;border-radius:12px!important;box-shadow:0 7px 24px rgba(25,55,84,.055)!important}
+.card:before{background:linear-gradient(90deg,transparent,#8bb9db,transparent)!important;opacity:0!important}
+.card:hover{border-color:#cbd9e5!important;box-shadow:0 10px 30px rgba(25,55,84,.075)!important}
+.heroMain{background:linear-gradient(135deg,#fff,#f5f9fd)!important;min-height:285px!important}
+.heroMain:after,.heroMain:before{animation:none!important}
+.heroMain h1{color:#17324d!important}
+.heroMain h1 span{background:linear-gradient(90deg,#1769aa,#4f46e5)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important}
+.heroMain p{color:#66798b!important}
+.pill{background:#f7fafc!important;border-color:#d6e1ea!important;color:#50677a!important;box-shadow:none!important}
+.btn{background:#fff!important;color:#294153!important;border-color:#ccd8e3!important;box-shadow:none!important}
+.btn:hover{transform:translateY(-1px)!important;box-shadow:0 5px 13px rgba(31,49,70,.08)!important}
+.btn.primary,.primary{background:linear-gradient(135deg,#1769aa,#315fc2)!important;color:#fff!important;border-color:#1769aa!important;box-shadow:0 6px 16px rgba(23,105,170,.16)!important}
+.btn.primary:hover{box-shadow:0 8px 20px rgba(23,105,170,.2)!important}
+.intakeGrid{grid-template-columns:1fr!important;margin-top:16px!important}
+.intakeChoice{background:linear-gradient(135deg,#fff,#f8fbfe)!important;color:#294153!important;border:1px solid #d7e2eb!important;border-radius:12px!important;box-shadow:0 6px 20px rgba(25,55,84,.045)!important;min-height:74px!important}
+.intakeChoice:after{display:none!important}.intakeChoice:hover{transform:translateY(-1px)!important;border-color:#a9c5da!important;box-shadow:0 9px 24px rgba(25,55,84,.08)!important}
+.intakeIcon{background:#eaf4fb!important;color:#1769aa!important;box-shadow:none!important}
+.intakeChoice small{color:#718292!important}
+.judge-step{background:#fff!important;border-color:#dbe4ec!important}.judge-step:hover{transform:translateY(-1px)!important;background:#fbfdff!important;border-color:#c8d8e5!important}.judge-step b{color:#294153!important}.judge-step span{color:#738494!important}
+.conf-box,.response-card{background:#fbfcfe!important}.conf-box b{color:#223b50!important}.mini-bar{background:#e8eef3!important}.mini-bar i{background:linear-gradient(90deg,#2a83bd,#536bd1)!important}
+.tableWrap{border:1px solid #dbe4ec!important;border-radius:10px!important;box-shadow:none!important}.table th{background:#f6f8fa!important;color:#6d7d8d!important}.table td{color:#294153!important;border-bottom-color:#e7edf2!important}.table tr.click:hover td{background:#f5f9fc!important}
+.search,.input,textarea{background:#fff!important;color:#1d3346!important;border-color:#ccd9e3!important}.search::placeholder,.input::placeholder{color:#99a7b4!important}
+.search:focus,.input:focus,textarea:focus{border-color:#6d9fc2!important;box-shadow:0 0 0 3px rgba(23,105,170,.08)!important}
+.drop{background:linear-gradient(135deg,#fbfdff,#f7f8fd)!important;border-color:#b9cad8!important}.drop:hover,.drop.drag{background:#f2f8fc!important;border-color:#1769aa!important;box-shadow:0 7px 22px rgba(23,105,170,.07)!important;transform:none!important}.uploadIcon{animation:none!important}
+.progress i{background:#1769aa!important;animation:none!important}
+.ring{box-shadow:none!important;animation:none!important}.ring:after{background:#fff!important}
+.map{background:#eef5f8!important;box-shadow:none!important}.marker{animation:tmGentleMarker 2.8s ease-out infinite!important}
+.graph{background:radial-gradient(circle at center,#f4f8fb,#fafbfd)!important;border:1px solid #dbe4ec!important}.node{background:#fff!important;border-color:#c9d9e5!important;color:#294153!important;box-shadow:0 5px 14px rgba(25,55,84,.07)!important;animation:none!important}.node:hover{transform:translateY(-2px)!important}.edge{background:#7ca9c4!important;box-shadow:none!important}
+.tabs{border-bottom-color:#dce5ed!important}.tab{color:#748493!important}.tab.on{color:#1769aa!important;border-bottom-color:#1769aa!important}
+.kv{border-bottom-color:#e5ebf0!important}
+.modal{background:rgba(23,43,61,.28)!important;backdrop-filter:blur(4px)!important}.modalBox{background:#fff!important;border-color:#d7e2eb!important;box-shadow:0 20px 60px rgba(22,42,60,.18)!important}
+.toast{background:#fff!important;color:#294153!important;border-color:#cbd8e2!important;box-shadow:0 8px 24px rgba(27,50,70,.12)!important}
+.awareness{background:linear-gradient(135deg,#f8fcff,#faf9ff)!important;border-color:#d8e3eb!important}.awBox{background:#fff!important;border-color:#dce5ed!important}.awBox p{color:#6d7e8d!important}.awLearn{background:#f4f8fc!important;border-color:#d3e1eb!important;color:#405c70!important}
+.rbac{background:#fff!important;border-color:#d6e0e8!important}.rbac select{background:#fff!important;color:#294153!important}.accessBadge{color:#1769aa!important;background:#edf5fb!important;border-color:#cfe0ec!important}
+.restricted{filter:blur(3px)!important}
+.obsolete-link-page{display:none!important}
+/* Keep the specialized geolocation command center readable and light */
+.tm-geo-overlay{background:rgba(24,39,55,.36)!important;backdrop-filter:blur(4px)!important}.tm-geo-shell{background:#fff!important;border-color:#d4e0e9!important;box-shadow:0 22px 60px rgba(25,55,84,.18)!important}.tm-geo-side{background:#f7f9fc!important;border-left-color:#dce5ed!important}.tm-card{background:#fff!important;border-color:#d9e3eb!important;color:#294153!important}.tm-card h4,.tm-muted{color:#728393!important}.tm-kv div{background:#f7fafc!important;border-color:#dfe7ed!important}.tm-kv span{color:#718292!important}.tm-close,.tm-action{background:#fff!important;color:#294153!important;border-color:#ccd9e3!important}.tm-action.primary{background:#1769aa!important;color:#fff!important;border-color:#1769aa!important}.tm-map-label{fill:#516a7c!important}.tm-map-note{background:rgba(255,255,255,.94)!important;color:#627586!important;border-color:#d5e0e8!important}.tm-hop{border-bottom-color:#e2e9ee!important}.tm-dot{box-shadow:none!important}
+@keyframes tmSoftPage{from{opacity:.75;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes tmGentleMarker{0%,100%{box-shadow:0 0 0 0 rgba(197,61,74,.20),0 0 8px rgba(197,61,74,.25)}50%{box-shadow:0 0 0 6px rgba(197,61,74,0),0 0 13px rgba(197,61,74,.35)}}
+@media(max-width:1050px){.side{width:76px!important}.main{margin-left:76px!important;width:calc(100% - 76px)!important;padding:24px!important}}
+@media(max-width:650px){.main{padding:18px 14px 30px!important}.title{font-size:25px!important}.heroMain h1{font-size:34px!important}.actions .btn{flex:1}.side{width:68px!important}.main{margin-left:68px!important;width:calc(100% - 68px)!important}}
+</style>
+
+<style id="trace-final-unified-theme">
+/* FINAL UNIFIED PROFESSIONAL THEME */
+body:not(.authLocked){background:#eef4f8!important;color:#183247!important;}
+body:not(.authLocked) .app{background:linear-gradient(135deg,#f7fbfd 0%,#edf4f8 52%,#f4f1fa 100%)!important;min-height:calc(100vh - 45px)!important;}
+body:not(.authLocked) .side{position:fixed!important;left:0!important;top:45px!important;bottom:0!important;width:238px!important;background:linear-gradient(180deg,#f8fbfd 0%,#eef5f8 100%)!important;border-right:1px solid #d5e0e7!important;box-shadow:none!important;padding:20px 14px!important;}
+body:not(.authLocked) .main{margin-left:238px!important;width:calc(100% - 238px)!important;padding:28px 34px 48px!important;background:transparent!important;min-height:calc(100vh - 45px)!important;}
+body:not(.authLocked) .page{max-width:1450px!important;margin:0 auto!important;}
+body:not(.authLocked) .logo{color:#173a55!important;border-bottom:1px solid #dfe8ee!important;padding-bottom:22px!important;}
+body:not(.authLocked) .logoIcon{background:linear-gradient(145deg,#1769aa,#4f46e5)!important;color:#fff!important;border:0!important;box-shadow:0 8px 20px rgba(37,99,235,.20)!important;}
+body:not(.authLocked) .nav{margin-top:16px!important;gap:5px!important;}
+body:not(.authLocked) .nav button{color:#587083!important;border:1px solid transparent!important;border-radius:9px!important;padding:11px 12px!important;transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease!important;}
+body:not(.authLocked) .nav button:hover{background:#e7f1f7!important;color:#1c5f8f!important;transform:translateX(2px)!important;}
+body:not(.authLocked) .nav button.on{background:linear-gradient(90deg,#e5f1fa,#f0f5ff)!important;color:#125b91!important;border-color:#cfe1ed!important;box-shadow:inset 3px 0 #1769aa,0 4px 12px rgba(26,79,116,.05)!important;}
+body:not(.authLocked) .status{background:#fff!important;border:1px solid #d8e3ea!important;color:#355369!important;box-shadow:0 5px 16px rgba(29,64,88,.05)!important;}
+body:not(.authLocked) #signatureStrip{background:rgba(255,255,255,.92)!important;color:#536b7c!important;border-bottom:1px solid #d8e3ea!important;box-shadow:0 1px 8px rgba(30,64,88,.04)!important;backdrop-filter:blur(10px)!important;}
+body:not(.authLocked) #signatureStrip b{color:#173a55!important;}
+body:not(.authLocked) .top{background:rgba(255,255,255,.72)!important;border:1px solid #dce6ec!important;border-radius:12px!important;padding:17px 19px!important;box-shadow:0 8px 25px rgba(34,69,92,.045)!important;}
+body:not(.authLocked) .ey{color:#2875ad!important;}
+body:not(.authLocked) .title{color:#173a55!important;}
+body:not(.authLocked) .sub,.muted{color:#667d8d!important;}
+body:not(.authLocked) .card,body:not(.authLocked) .rolePanel,body:not(.authLocked) .judge-step,body:not(.authLocked) .conf-box{background:rgba(255,255,255,.94)!important;border:1px solid #d9e4ea!important;color:#213d52!important;box-shadow:0 8px 25px rgba(35,69,91,.055)!important;border-radius:11px!important;}
+body:not(.authLocked) .heroMain{background:linear-gradient(135deg,#ffffff 0%,#f3f8fc 65%,#f4f2fb 100%)!important;}
+body:not(.authLocked) .heroMain h1{color:#183b55!important;}
+body:not(.authLocked) .heroMain p{color:#60788a!important;}
+body:not(.authLocked) .flow .pill{background:#eef5f9!important;border-color:#d5e3eb!important;color:#426276!important;}
+body:not(.authLocked) .sectionHead h2,body:not(.authLocked) h2,body:not(.authLocked) h3{color:#21445c!important;}
+body:not(.authLocked) .tableWrap{background:#fff!important;border:1px solid #d9e4ea!important;}
+body:not(.authLocked) .table th{background:#f3f7fa!important;color:#617889!important;}
+body:not(.authLocked) .table td{color:#29485c!important;border-bottom:1px solid #e9eff3!important;}
+body:not(.authLocked) .table tr.click:hover td{background:#f4f9fc!important;}
+body:not(.authLocked) .btn{background:#fff!important;color:#315268!important;border-color:#cddbe4!important;box-shadow:0 2px 7px rgba(30,65,89,.04)!important;}
+body:not(.authLocked) .btn:hover{background:#f5f9fb!important;color:#1769aa!important;border-color:#9fc0d4!important;transform:translateY(-1px)!important;}
+body:not(.authLocked) .btn.primary{background:linear-gradient(100deg,#1769aa,#365fc5)!important;color:#fff!important;border-color:#1769aa!important;box-shadow:0 7px 17px rgba(23,105,170,.18)!important;}
+body:not(.authLocked) .input,body:not(.authLocked) .search,body:not(.authLocked) textarea{background:#fff!important;color:#213d52!important;border-color:#cbd9e2!important;}
+body:not(.authLocked) .drop{background:linear-gradient(135deg,#fbfdff,#f4f9fc)!important;border-color:#abc4d4!important;color:#315268!important;}
+body:not(.authLocked) .map{background:linear-gradient(135deg,#edf6fa,#e8eef8)!important;border:1px solid #d3e1e8!important;}
+body:not(.authLocked) .mapLegend{background:rgba(255,255,255,.93)!important;color:#496476!important;border-color:#d5e1e7!important;}
+body:not(.authLocked) .graph{background:radial-gradient(circle at center,#eaf5fa,#e9eef6)!important;border:1px solid #d3e1e8!important;}
+body:not(.authLocked) .node{background:#fff!important;color:#23445b!important;border-color:#b8cfdd!important;box-shadow:0 7px 18px rgba(38,78,103,.08)!important;}
+body:not(.authLocked) .node small{color:#688293!important;}
+body:not(.authLocked) .edge{background:#4c91b8!important;opacity:.7!important;}
+body:not(.authLocked) .alert{background:#fff8ed!important;border-color:#ecd7b5!important;color:#4d3b21!important;}
+body:not(.authLocked) .awareness,body:not(.authLocked) .awBox,body:not(.authLocked) .awLearn{background:#fff!important;color:#29485c!important;border-color:#d7e3ea!important;}
+body:not(.authLocked) .awBox p{color:#637b8b!important;}
+body:not(.authLocked) .tabs{border-color:#d8e3e9!important;}
+body:not(.authLocked) .tab{color:#688090!important;}
+body:not(.authLocked) .tab.on{color:#1769aa!important;border-color:#1769aa!important;}
+body:not(.authLocked) .kv{border-color:#e3ebf0!important;}
+body:not(.authLocked) .kv span{color:#6a8190!important;}
+body:not(.authLocked) .progress{background:#e6edf1!important;}
+body:not(.authLocked) .progress i{background:linear-gradient(90deg,#2a82b7,#4f63c9)!important;}
+body:not(.authLocked) .modal{background:rgba(19,43,60,.45)!important;backdrop-filter:blur(5px)!important;}
+body:not(.authLocked) .modalBox{background:#fff!important;color:#203d52!important;border-color:#d3e0e7!important;box-shadow:0 25px 70px rgba(24,53,72,.22)!important;}
+body:not(.authLocked) .toast{background:#fff!important;color:#29485c!important;border-color:#cbdde7!important;box-shadow:0 10px 30px rgba(28,63,84,.14)!important;}
+body:not(.authLocked) .restricted{filter:blur(4px)!important;}
+body:not(.authLocked) .main .page{display:none;}
+body:not(.authLocked) .main .page.active{display:block!important;}
+@media(max-width:1050px){body:not(.authLocked) .side{width:76px!important}.side .logo span,.side .status,.sideRole{display:none!important}body:not(.authLocked) .nav span:not(.navIcon){display:none!important}body:not(.authLocked) .nav button{text-align:center!important}body:not(.authLocked) .main{margin-left:76px!important;width:calc(100% - 76px)!important;padding:22px!important}}
+@media(max-width:650px){body:not(.authLocked) .side{width:0!important;overflow:hidden!important;border:0!important}body:not(.authLocked) .main{margin-left:0!important;width:100%!important;padding:16px!important}.page{max-width:none!important}}
+</style>
+
+<style id="roleAccessEnhancement">
+.roleCaps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.roleCap{padding:9px 10px;border:1px solid #dbe4ec;border-radius:8px;background:#f8fafc}.roleCap b{display:block;font-size:10px;color:#294153;margin-bottom:4px}.roleCap span{font-size:10px;color:#6b7c8d;line-height:1.35}.roleAction{margin-top:10px;padding:8px 10px;border-radius:8px;font-size:10px;border:1px solid #dbe4ec;background:#fff;color:#425a6e}.roleAction strong{color:#1769aa}.role-hidden{display:none!important}
+@media(max-width:760px){.roleCaps{grid-template-columns:1fr}}
+.roleScopeTable{margin-top:10px;border:1px solid #dbe4ec;border-radius:9px;overflow:hidden;background:#fff}.roleScopeTable .rstHead,.roleScopeTable .rstRow{display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr;gap:0}.roleScopeTable .rstHead{background:#f5f8fa;font-size:9px;font-weight:800;color:#627486;letter-spacing:.05em}.roleScopeTable .rstCell{padding:8px 9px;border-right:1px solid #e5ebf0;border-top:1px solid #e5ebf0;font-size:10px;color:#42586a}.roleScopeTable .rstHead .rstCell{border-top:0}.roleScopeTable .rstRow .rstCell:last-child,.roleScopeTable .rstHead .rstCell:last-child{border-right:0}.roleScopeTable .yes{color:#19734f;font-weight:800}.roleScopeTable .no{color:#8a6b18;font-weight:700}.roleScopeTable .focus{font-weight:800;color:#1d405b}.roleScopeNote{padding:8px 10px;background:#f8fafc;color:#6b7c8d;font-size:9px;border-top:1px solid #e5ebf0}@media(max-width:760px){.roleScopeTable{overflow-x:auto}.roleScopeTable .rstHead,.roleScopeTable .rstRow{min-width:650px}}
+</style>
+<style id="visibleRoleAccess">
+.accessLevelStrip{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 12px;margin:0 0 14px;border:1px solid #dbe4ec;border-radius:10px;background:#f8fafc}.accessLevelMain{display:flex;align-items:center;gap:10px}.accessLevelIcon{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#eaf3f9;color:#1769aa;font-weight:900}.accessLevelStrip h4{margin:0;font-size:11px;color:#294153}.accessLevelStrip p{margin:2px 0 0;font-size:10px;color:#6b7c8d}.accessLevelTag{font-size:9px;font-weight:900;letter-spacing:.06em;padding:5px 8px;border-radius:6px;border:1px solid #cfe0ea;background:#fff;color:#1769aa;white-space:nowrap}.roleDiff{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.roleDiffCard{padding:8px 9px;border:1px solid #dbe4ec;border-radius:8px;background:#fff}.roleDiffCard b{display:block;font-size:9px;color:#294153;margin-bottom:3px}.roleDiffCard span{font-size:9px;color:#6b7c8d;line-height:1.35}.roleLock{font-size:9px;color:#8a6b18;font-weight:800;margin-top:4px}.roleGate{opacity:.7;cursor:not-allowed}.roleGate:hover{transform:none!important;box-shadow:none!important}@media(max-width:760px){.accessLevelStrip{align-items:flex-start}.roleDiff{grid-template-columns:1fr}.accessLevelTag{font-size:8px}}
+</style>
+<style>.authSelect{appearance:auto;cursor:pointer}</style>
+<style id="tm-user-card-style">
+
+.tmUserCard{
+  position:absolute;
+  bottom:82px;
+  left:14px;
+  right:14px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#f8fafc;
+}
+
+.tmUserAvatar{
+  width:32px;
+  height:32px;
+  flex:none;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#1769aa;
+  color:#fff;
+  font-size:12px;
+  font-weight:800;
+  overflow:hidden;
+}
+
+.tmUserAvatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.tmUserInfo{
+  min-width:0;
+}
+
+.tmUserInfo b{
+  display:block;
+  font-size:11px;
+  color:#294153;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.tmUserInfo span{
+  display:block;
+  margin-top:2px;
+  font-size:9px;
+  color:#718091;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+</style>
+<style>
+.tmLogoutBtn{
+  position:absolute;
+  bottom:25px;
+  left:14px;
+  right:14px;
+  width:calc(100% - 28px);
+  padding:8px 10px;
+  border:1px solid #d6dce2;
+  border-radius:7px;
+  background:#fff;
+  color:#b42318;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.tmLogoutBtn:hover{
+  background:#fff5f5;
+}
+</style>
+</head>
+<body class="authLocked">
+<div id="authGate" class="authGate" aria-label="TraceMail AI sign in">
+  <div class="authGlow authGlowA"></div><div class="authGlow authGlowB"></div>
+  <div class="authShell">
+    <div class="authBrand"><div class="authLogo">TM</div><div><strong>TraceMail AI</strong><span>From Inbox to Attack Map</span></div></div>
+    <div class="authPanel">
+      <div class="authEy">SECURE ACCESS</div>
+      <h1>Sign in to your security workspace</h1>
+      <p>Connect a mailbox or open an email evidence file to begin.</p>
+      <label class="authLabel" for="authRole">Role</label>
+      <select id="authRole" class="authInput authSelect">
+        <option value="viewer">Viewer / Guardian</option>
+        <option value="analyst" selected>Security Analyst</option>
+        <option value="admin">Administrator</option>
+      </select>
+      <div id="loginRoleHint" class="roleAction" style="margin:8px 0 12px"><strong>Viewer / Guardian:</strong> understand threats, investigate and upload .EML. Security Analyst adds deep forensic evidence. Administrator adds response and system controls.</div>
+      <label class="authLabel" for="authEmail">Work email</label>
+      <input id="authEmail" class="authInput" type="email" autocomplete="email" placeholder="you@company.com">
+      <button class="authPrimary" type="button" onclick="authEmailLogin()"><span>Continue with Email</span><b>→</b></button>
+      <div class="authDivider"><span>OR</span></div>
+      <button class="authSecondary" type="button" onclick="authGoogleLogin()"><span class="googleMark">G</span><span>Continue with Google</span></button>
+      <label class="authFile" for="authEml"><span class="fileMark">＋</span><span><b>Analyze an .EML file</b><small>Start without connecting a mailbox</small></span><strong>›</strong><input id="authEml" type="file" accept=".eml,message/rfc822,text/plain"></label>
+      <div class="authFoot"><span class="secureDot"></span> Read-only access · Evidence stays untrusted</div>
+    </div>
+  </div>
+</div>
+<div id="signatureStrip" style="display:flex;align-items:center;gap:10px;padding:10px 18px;background:#0b1220;border-bottom:1px solid #1e293b;font-size:12px;position:sticky;top:0;z-index:50">
+  <b style="font-size:13px;color:#e2e8f0">TRACE MAIL AI</b>
+  <span style="color:#64748b">Detect · Explain · Trace · Correlate · Respond</span>
+  
+</div>
+
+<div class="app">
+<aside class="side">
+ <div class="logo"><div class="logoIcon">TM</div><span>TraceMail AI</span></div>
+ <nav class="nav">
+  <button class="on" data-page="dashboard"><span class="navIcon">⌂</span><span>Home</span></button>
+  <button data-page="inbox"><span class="navIcon">▤</span><span>Inbox</span></button>
+  <button data-page="new"><span class="navIcon">⌕</span><span>Investigate</span></button>
+  <button data-page="awareness"><span class="navIcon">◎</span><span>Awareness</span></button>
+  <button data-page="map"><span class="navIcon">⌖</span><span>Geo Location</span></button>
+ </nav>
+ <div class="status"><span class="dot"></span><b>Monitor ACTIVE</b><br><span class="muted">OAuth-ready · read-only mailbox access</span></div>
+ <div class="tmUserCard">
+  <div class="tmUserAvatar" id="tmUserAvatar">U</div>
+
+  <div class="tmUserInfo">
+    <b id="tmUserName">User</b>
+    <span id="tmUserEmail">Not signed in</span>
+  </div>
+</div>
+<button class="tmLogoutBtn" onclick="logoutTraceMail()">
+  Logout
+</button>
+</aside>
+<main class="main">
+
+<section id="dashboard" class="page active">
+ <div class="top"><div><div class="ey">SECURITY OPERATIONS CENTER</div><div class="title">Email Threat Command Center</div></div><div class="actions"><button class="btn" onclick="go('inbox')">Inbox</button><button class="btn primary" onclick="go('new')">Investigate</button></div></div>
+ <div class="hero">
+  <div class="card heroMain"><div class="ey">TRACEMAIL AI</div><h1>From Inbox to<br><span style="color:var(--cyan)">Attack Map.</span></h1><div class="flow"><span class="pill">EMAIL</span>→<span class="pill">FORENSICS</span>→<span class="pill">AI RISK</span>→<span class="pill">GEOLOCATION</span>→<span class="pill">ATTACK GRAPH</span></div></div>
+  <div class="card"><div class="sectionHead"><h2>Threat Snapshot</h2><span class="badge critical">HIGH RISK</span></div><div class="risk"><div class="ring"><b>94</b></div><div><div class="ey">CREDENTIAL PHISHING</div><h3>Urgent: Verify Your Account</h3><div class="muted">support@paypa1-security.com</div><div style="margin-top:9px">Observed infrastructure: <b>Singapore</b></div></div></div></div>
+ </div>
+ <div class="judge-strip">
+  <div class="judge-step"><b>01 · INGEST</b><span>Secure email evidence</span></div>
+  <div class="judge-step"><b>02 · EXPLAIN</b><span>AI + forensic signals</span></div>
+  <div class="judge-step"><b>03 · TRACE</b><span>Infrastructure graph</span></div>
+  <div class="judge-step"><b>04 · CORRELATE</b><span>Attack DNA + mutation</span></div>
+  <div class="judge-step"><b>05 · RESPOND</b><span>Human-authorized action</span></div>
+ </div>
+ <div class="card section"><div class="sectionHead"><h2>Evidence Confidence Matrix</h2><span class="badge obs">EVIDENCE-GROUNDED</span></div><div class="conf-grid">
+  <div class="conf-box"><span class="muted small">THREAT CLASSIFICATION</span><b class="red">94%</b><div class="mini-bar"><i style="width:94%"></i></div></div>
+  <div class="conf-box"><span class="muted small">INFRASTRUCTURE GEO</span><b class="amber">81%</b><div class="mini-bar"><i style="width:81%"></i></div></div>
+  <div class="conf-box"><span class="muted small">CAMPAIGN LINK</span><b class="green">89%</b><div class="mini-bar"><i style="width:89%"></i></div></div>
+  <div class="conf-box"><span class="muted small">ATTACKER LOCATION</span><b class="muted">UNKNOWN</b><div class="small muted">Insufficient evidence</div></div>
+ </div></div>
+<div class="card section"><div class="sectionHead"><h2>Recent Investigations</h2><span class="badge inf">EVIDENCE-DRIVEN</span></div><div class="tableWrap"><table class="table"><thead><tr><th>ID</th><th>Subject</th><th>Threat</th><th>Score</th><th>Infrastructure</th><th>Status</th></tr></thead><tbody id="recentBody"></tbody></table></div></div>
+</section>
+
+<section id="link" class="page obsolete-link-page" aria-hidden="true">
+ <div class="top"><div><div class="ey">MAIL CONNECTION</div><div class="title">Link Your Email</div></div></div>
+ <div class="two">
+  <div class="card">
+   <div class="sectionHead"><h2>Connect a mailbox</h2><span class="badge obs">OAUTH 2.0</span></div>
+   <label class="small muted">Email address</label>
+   <input id="mailAddress" class="input" style="width:100%;margin:7px 0 12px" type="email" placeholder="you@example.com" autocomplete="email">
+   <button class="btn primary" style="width:100%" onclick="startMailLink()">🔐 Continue with Google</button>
+   
+  </div>
+  <div class="card">
+   <h2 style="font-size:14px">What TraceMail AI collects</h2>
+   <div class="find"><span>Message metadata</span><b>Subject · sender · time</b></div>
+   <div class="find"><span>Headers</span><b>Received · Authentication-Results</b></div>
+   <div class="find"><span>Threat indicators</span><b>URLs · domains · IPs</b></div>
+   <div class="find"><span>Attachments</span><b>Metadata / hashes</b></div>
+   <div class="find"><span>Permission</span><b>Gmail read-only</b></div>
+   <div class="authorize" style="margin-top:12px">🔒 Privacy: TraceMail AI does not silently send, delete, or modify mail. Destructive response actions require authorization.</div>
+  </div>
+ </div>
+ <div class="card section" id="mailConnectionStatus">
+   <div class="sectionHead"><h2>Connection status</h2><span class="badge unknown" id="mailStatusBadge">NOT CONNECTED</span></div>
+   <div class="muted" id="mailStatusText">Enter your email and continue with Google to start the secure mailbox connection.</div>
+ </div>
+</section>
+
+<section id="inbox" class="page">
+ <div class="top"><div><div class="ey">EMAIL SECURITY LAYER</div><div class="title">Secure Inbox</div></div></div>
+ <div class="card alert"><b class="red">⚠ HIGH-RISK EMAIL DETECTED</b></div>
+ <div class="card section"><div class="sectionHead"><h2>Inbox</h2><input id="inboxSearch" class="search" placeholder="Search sender, subject, IOC..." oninput="renderInbox()"></div><div class="tableWrap"><table class="table"><thead><tr><th>Sender</th><th>Subject</th><th>Threat</th><th>Risk</th><th>Location</th><th>Action</th></tr></thead><tbody id="inboxBody"></tbody></table></div></div>
+</section>
+
+<section id="new" class="page">
+ <div class="top"><div><div class="ey">FORENSIC INVESTIGATION</div><div class="title">Investigate</div></div></div>
+ <div id="investigationAccessStrip" class="accessLevelStrip" aria-label="Investigation access level"></div>
+ <div class="card section" style="margin-bottom:16px">
+  <div class="sectionHead"><div><h2>Email Evidence</h2><div class="sub" id="currentEvidenceLabel">Add an .EML file to begin the investigation.</div></div><span class="badge obs">UNTRUSTED CONTENT</span></div>
+  <div class="actions"><label class="btn primary" for="investigationEml">＋ Add .EML File<input id="investigationEml" type="file" accept=".eml,message/rfc822,text/plain" style="display:none"></label></div>
+ </div>
+ <div class="card section forensic-report-action" style="margin-top:16px">
+  <div class="sectionHead"><div><h2>Forensic Report</h2></div><span class="badge obs">IN INVESTIGATION</span></div>
+  <div class="actions"><button class="btn primary" onclick="showForensicReportInInvestigation()">📄 Generate Forensic Report</button></div>
+ </div>
+ <div id="investigationReport" class="card section" style="display:none"></div>
+</section>
+
+<section id="awareness" class="page">
+ <div class="top"><div><div class="ey">USER AWARENESS & PREVENTION</div><div class="title">Threat Awareness</div></div><span class="modelTag">🧠 AWARENESS MODEL</span></div>
+ <div id="awarenessPageContent"></div>
+</section>
+
+<section id="map" class="page">
+ <div class="top"><div><div class="ey">GEO LOCATION INTELLIGENCE</div><div class="title">Global Threat Geo Location</div></div><button class="btn primary" onclick="tmOpenGeo()" style="white-space:nowrap">🌍 Trace Geo Location</button></div>
+ <div class="card map"><svg viewBox="0 0 1000 500" preserveAspectRatio="none"><path d="M70 180L160 130 240 150 300 220 380 190 440 230 520 200 600 230 680 160 770 190 900 150 940 260 820 300 750 270 670 330 580 290 510 360 430 320 350 370 260 300 180 330 100 280Z" fill="#132a36" stroke="#2a4d5d"/></svg><div class="marker m1" title="Singapore"></div><div class="marker m2" title="Netherlands"></div><div class="marker m3" title="United States"></div><div class="marker m4" title="United States"></div><div class="mapLegend">● Observed infrastructure nodes · trace a case to inspect the route</div></div>
+ <div class="card section"><table class="table"><thead><tr><th>IP</th><th>Country</th><th>ASN</th><th>Provider</th><th>Reputation</th><th>Confidence</th></tr></thead><tbody><tr><td class="mono">185.91.24.17</td><td>Singapore</td><td>ASXXXXX</td><td>Example Hosting</td><td class="red">Suspicious</td><td>76%</td></tr><tr><td class="mono">45.81.11.8</td><td>Netherlands</td><td>ASYYYYY</td><td>Cloud Provider</td><td class="amber">Watch</td><td>71%</td></tr><tr><td class="mono">104.21.44.9</td><td>United States</td><td>ASZZZZZ</td><td>Cloud Edge</td><td class="amber">Watch</td><td>69%</td></tr></tbody></table></div>
+</section>
+
+
+</main>
+</div>
+<div id="modal" class="modal"><div class="modalBox"><div class="sectionHead"><h2 id="modalTitle">Details</h2><button class="btn" onclick="closeModal()">Close</button></div><div id="modalBody"></div></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+const demoEmail=`From: "PayPal Security" <support@paypa1-security.com>
+To: analyst@company.com
+Reply-To: account@fake-domain.example
+Return-Path: <mailer@relay.example>
+Subject: Urgent: Verify Your Account
+Date: Thu, 03 Sep 2026 09:31:02 +0530
+Message-ID: <9f8a-demo-c31@example>
+Received: from relay.example (185.91.24.17) by recipient.example;
+Authentication-Results: spf=fail; dkim=none; dmarc=fail
+X-Originating-IP: 185.91.24.17
+MIME-Version: 1.0
+Content-Type: text/html
+
+URGENT: Your account will be suspended today. Verify your password immediately at https://paypa1-login.example/verify`;
+
+let cases=[
+{id:"TM-2026-00142",sender:"support@paypa1-security.com",subject:"Urgent: Verify Your Account",threat:"Credential Phishing",score:96,loc:"Singapore",status:"ACTIVE",indicators:8,community:"PayPal Security",raw:demoEmail},
+{id:"TM-2026-00143",sender:"alerts@paypa1-security.com",subject:"Final Notice: Account Verification Required",threat:"Credential Phishing",score:94,loc:"Singapore",status:"ACTIVE",indicators:7,community:"PayPal Security",raw:"From: PayPal Security <alerts@paypa1-security.com>\nTo: analyst@company.com\nReply-To: account@fake-domain.example\nSubject: Final Notice: Account Verification Required\nAuthentication-Results: spf=fail; dkim=none; dmarc=fail\nReceived: from relay.example (185.91.24.17)\n\nYour account requires immediate verification. Sign in now at https://paypa1-login.example/verify"},
+{id:"TM-2026-00139",sender:"security@microsoft-login.co",subject:"Microsoft 365 Password Expiration Notice",threat:"Credential Theft",score:91,loc:"Netherlands",status:"CONTAINED",indicators:7,community:"Microsoft 365",raw:"From: Microsoft Security <security@microsoft-login.co>\nTo: analyst@company.com\nReply-To: login@fake-m365.example\nSubject: Microsoft 365 Password Expiration Notice\nAuthentication-Results: spf=fail; dkim=none; dmarc=fail\nReceived: from 45.81.11.8\n\nYour password expires today. Sign in now."},
+{id:"TM-2026-00135",sender:"accounts@vendor-example.com",subject:"Invoice Attached — Payment Required",threat:"Malicious Attachment",score:88,loc:"United States",status:"REVIEW",indicators:5,community:"Vendor Billing",raw:"From: accounts@vendor-example.com\nTo: analyst@company.com\nSubject: Invoice Attached — Payment Required\nReceived: from 104.21.44.9\n\nInvoice attached."},
+{id:"TM-2026-00128",sender:"updates@newsletter-example.com",subject:"September Product Updates",threat:"Suspicious",score:62,loc:"United Kingdom",status:"REVIEW",indicators:2,community:"Product Newsletter",raw:"From: updates@newsletter-example.com\nTo: analyst@company.com\nSubject: September Product Updates\nReceived: from 198.51.100.24\n\nHere are the latest product updates and links."},
+{id:"TM-2026-00131",sender:"hr@company.com",subject:"Updated employee benefits",threat:"Safe",score:8,loc:"India",status:"ALLOWED",indicators:0,community:"Internal HR",raw:"From: hr@company.com\nTo: analyst@company.com\nSubject: Updated employee benefits\nAuthentication-Results: spf=pass; dkim=pass; dmarc=pass\n\nPlease review the updated benefits."}
+];
+let watch=[
+{v:"fake-domain.example",type:"Domain",matches:4,status:"MATCH FOUND"},
+{v:"185.91.24.17",type:"IP",matches:3,status:"WATCHING"},
+{v:"paypa1-login.example",type:"URL",matches:2,status:"WATCHING"}
+];
+let reports=[{name:"TM-2026-00142 Forensic Report",id:"TM-2026-00142",date:"Just now"}];
+
+function $(id){return document.getElementById(id)}
+function go(id){
+  const page=document.getElementById(id);
+  if(!page){toast("Page unavailable");return false}
+  try{if(id!=="map" && typeof tmCloseGeo==="function")tmCloseGeo()}catch(e){}
+  document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+  page.classList.add("active");
+  document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("on",x.dataset.page===id));
+  if(id==="inbox")renderInbox();
+  if(id==="dashboard")renderRecent();
+  if(id==="awareness")renderAwarenessPage();
+  if(id==="new"){
+    if(!window.currentCase){window.currentCase=cases[0];}
+    const demo=window.currentCase||cases[0];
+    if(demo && $("currentEvidenceLabel"))$("currentEvidenceLabel").textContent=demo.id+" · "+demo.subject+" · sample .EML evidence ready";
+    renderInvestigationAccess();
+  }
+  window.scrollTo(0,0);
+  return false;
+}
+document.querySelectorAll(".nav button").forEach(b=>{b.type="button";b.addEventListener("click",function(e){e.preventDefault();e.stopPropagation();go(this.dataset.page);});});
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function sev(n){return n>=93?"critical":n>=80?"high":n>=50?"medium":"safe"}
+function renderRecent(){ $("recentBody").innerHTML=cases.slice(0,4).map(c=>`<tr class="click" onclick="openCase('${c.id}')"><td class="mono">${c.id}</td><td>${esc(c.subject)}</td><td><span class="badge ${sev(c.score)}">${esc(c.threat.toUpperCase())}</span></td><td><b>${c.score}</b></td><td>${c.loc}</td><td>${c.status}</td></tr>`).join("")}
+function senderCommunity(c){
+  return c.community || ((c.sender||"").split("@")[1] || "Unknown community").toLowerCase();
+}
+function isHarmful(c){
+  return c.score>=80 && !/^(safe|likely safe)$/i.test(c.threat||"");
+}
+function canReportToSpam(c){
+  const community=senderCommunity(c);
+  const repeated=cases.filter(x=>senderCommunity(x)===community).length>=2;
+  return c.score>=93 && isHarmful(c) && repeated;
+}
+function reportToSpam(id){
+  const c=cases.find(x=>x.id===id);
+  if(!c || !canReportToSpam(c)){toast("Report to Spam is available only for repeated, very-high-risk harmful mail");return}
+  c.status="SPAM";
+  renderInbox();
+  renderRecent();
+  toast("Reported to Spam — removed from Inbox (demo)");
+}
+function renderInbox(){
+  let q=($("inboxSearch")?.value||"").toLowerCase();
+  $("inboxBody").innerHTML=cases.filter(c=>c.status!=="SPAM" && (c.sender+c.subject+c.threat+c.loc).toLowerCase().includes(q)).map(c=>{
+    const spamAction=canReportToSpam(c)?`<button class="btn danger" title="Repeated from the same sender community and classified as very-high-risk harmful mail" onclick="event.stopPropagation();reportToSpam('${c.id}')">Report to Spam</button>`:"";
+    return `<tr class="click" onclick="openCase('${c.id}')"><td>${esc(c.sender)}</td><td>${esc(c.subject)}</td><td><span class="badge ${sev(c.score)}">${esc(c.threat.toUpperCase())}</span></td><td><b>${c.score}/100</b></td><td>${c.loc}</td><td><button class="btn" onclick="event.stopPropagation();openCase('${c.id}')">Investigate</button>${spamAction}</td></tr>`;
+  }).join("")
+}
+function getReportCase(){return window.currentCase || cases[0] || null}
+function renderReports(){
+ const c=getReportCase(), el=$("fullReport");
+ if(!el)return;
+ if(!c){el.innerHTML=`<div class="empty"><h3>No forensic investigation available</h3><p class="muted">Complete an investigation first. The report will be populated from the preserved evidence.</p></div>`;return;}
+ const ex=extract(c.raw||""); const h=ex.p.h||{}; const auth=(h["authentication-results"]||"UNKNOWN");
+ const urls=ex.urls.length?ex.urls.map(x=>`<div class="find"><span>URL</span><b class="mono">${esc(x)}</b><i class="source obs">OBSERVED</i></div>`).join(""):`<div class="find"><span>URLs</span><b>NONE OBSERVED</b></div>`;
+ const ips=ex.ips.length?ex.ips.map(x=>`<div class="find"><span>IP</span><b class="mono">${esc(x)}</b><i class="source obs">OBSERVED</i></div>`).join(""):`<div class="find"><span>IP</span><b>UNKNOWN</b></div>`;
+ const domains=ex.domains.length?ex.domains.slice(0,8).map(x=>`<div class="find"><span>Domain</span><b class="mono">${esc(x)}</b><i class="source obs">OBSERVED</i></div>`).join(""):`<div class="find"><span>Domains</span><b>NONE OBSERVED</b></div>`;
+ const reasons=(window.lastAnalysis&&window.lastAnalysis.reasons)||[];
+ el.innerHTML=`<div class="sectionHead"><div><div class="ey">TRACE MAIL AI · FORENSIC CASE</div><h2>${esc(c.id)} · ${esc(c.subject)}</h2><div class="sub">Generated ${esc(c.createdAt?new Date(c.createdAt).toLocaleString():"Available evidence")}</div></div><span class="badge ${sev(c.score)}">${esc(c.threat.toUpperCase())} · ${c.score}/100</span></div>
+ <div class="three" style="margin-top:14px"><div class="card"><div class="ey">CLASSIFICATION</div><h3>${esc(c.threat)}</h3><div class="muted small">Explainable risk score: ${c.score}/100</div></div><div class="card"><div class="ey">SENDER</div><h3 class="mono" style="font-size:14px">${esc(c.sender)}</h3><div class="muted small">OBSERVED from message headers</div></div><div class="card"><div class="ey">INFRASTRUCTURE</div><h3>${esc(c.loc||"UNKNOWN")}</h3><div class="muted small">Observed infrastructure geolocation · confidence ${c.geoConfidence==null?"UNKNOWN":c.geoConfidence+"%"}</div></div></div>
+ <div class="two section"><div><h3>1 · Executive Finding</h3><p class="muted">This email is classified as <b>${esc(c.threat)}</b> with a risk score of <b>${c.score}/100</b>. The assessment is based on preserved email evidence and explainable forensic signals.</p><div class="find"><span>Evidence confidence</span><b>EVIDENCE-GROUNDED</b></div><div class="find"><span>Attacker physical location</span><b>UNKNOWN</b></div><div class="find"><span>User interaction</span><b>UNKNOWN / NOT OBSERVED</b></div></div><div><h3>2 · Authentication Evidence</h3><pre class="mono" style="white-space:pre-wrap;color:#294153;background:#f7fafc;border:1px solid #dbe3ea;padding:12px;border-radius:8px">${esc(auth)}</pre></div></div>
+ <div class="two section"><div><h3>3 · Message Headers</h3><div class="find"><span>From</span><b>${esc(h.from||c.sender||"UNKNOWN")}</b></div><div class="find"><span>Reply-To</span><b>${esc(h["reply-to"]||"UNKNOWN")}</b></div><div class="find"><span>Return-Path</span><b>${esc(h["return-path"]||"UNKNOWN")}</b></div><div class="find"><span>Message-ID</span><b>${esc(h["message-id"]||"UNKNOWN")}</b></div><div class="find"><span>Date</span><b>${esc(h.date||"UNKNOWN")}</b></div></div><div><h3>4 · Indicators of Compromise</h3>${ips}${domains}${urls}</div></div>
+ <div class="section"><h3>5 · Why This Email Is Suspicious</h3>${reasons.length?reasons.map(r=>`<div class="find"><span>${esc(r[0])}</span><b><span class="badge ${r[1]==="Observed"?"obs":"inf"}">${esc(r[1])}</span></b></div>`).join(""):`<div class="find"><span>Analysis signals</span><b>See investigation evidence</b></div>`}</div>
+ <div class="section"><h3>6 · Infrastructure & Geo Location</h3><div class="find"><span>Observed infrastructure location</span><b>${esc(c.loc||"UNKNOWN")}</b></div><div class="find"><span>Geo confidence</span><b>${c.geoConfidence==null?"UNKNOWN":c.geoConfidence+"%"}</b></div><p class="small muted">IP geolocation identifies observable infrastructure, which may be a VPN, proxy, cloud service, relay, mail server or compromised host. It does not establish the attacker\'s physical location.</p></div>
+ <div class="section"><h3>7 · Forensic Evidence Integrity</h3><div class="find"><span>Raw email preserved</span><b>YES</b></div><div class="find"><span>Evidence handling</span><b>Original content retained as untrusted evidence</b></div><div class="find"><span>External response</span><b>Human authorization required</b></div></div>
+ <div class="authorize">REPORT STATUS · Evidence-backed forensic summary. OBSERVED, ENRICHED, INFERRED and UNKNOWN values are kept distinct. No unsupported attacker-location claim is made.</div>`;
+}
+
+function openCase(id){let c=cases.find(x=>x.id===id);if(!c)return;window.currentCase=c;renderInvestigation(c);setTimeout(markSensitive,0)}
+function renderInvestigation(c){const ex=extract(c.raw||"");const h=ex.p.h;const ip=ex.ips[0]||"UNKNOWN";const reply=h["reply-to"]||"UNKNOWN";const geo=(c.geoConfidence==null?"UNKNOWN":String(c.geoConfidence)+"%");const rr=roleAccess[currentRole()]||roleAccess.analyst;$("modalTitle").textContent=`${c.id} · ${c.subject}`;$("modalBody").innerHTML=`
+<div class="accessLevelStrip"><div class="accessLevelMain"><div class="accessLevelIcon">${rr.icon}</div><div><h4>${rr.label} · ${rr.focus.toUpperCase()}</h4><p>${rr.note}</p></div></div><span class="accessLevelTag">${rr.short}</span></div><div class="roleDiff"><div class="roleDiffCard"><b>Viewer / Guardian</b><span>Understand · .EML · findings · report</span></div><div class="roleDiffCard"><b>Security Analyst</b><span>Full forensic evidence · IOCs · correlation</span></div><div class="roleDiffCard"><b>Administrator</b><span>Response · users · settings · audit</span></div></div>
+<div class="two"><div class="card"><div class="sectionHead"><h3>Risk Assessment</h3><span class="badge ${sev(c.score)}">${c.threat.toUpperCase()}</span></div><div class="risk"><div class="ring" style="background:conic-gradient(var(--red) 0 ${c.score}%,#24323b ${c.score}%)"><b>${c.score}</b></div><div style="flex:1"><div class="find"><span>Sender identity</span><b>18/20</b></div><div class="find"><span>Authentication</span><b>20/20</b></div><div class="find"><span>URL</span><b>18/20</b></div><div class="find"><span>Domain</span><b>14/15</b></div></div></div></div>
+<div class="card"><h3>Why?</h3><div class="find"><span>SPF</span><b class="red">FAIL</b></div><div class="find"><span>Reply-To</span><b class="red">MISMATCH</b></div><div class="find"><span>Domain</span><b class="red">LOOKALIKE</b></div><div class="find"><span>URL</span><b class="amber">SUSPICIOUS</b></div><div class="find"><span>Language</span><b class="amber">URGENCY</b></div></div></div>
+<div class="card section"><div class="tabs"><button class="tab on" onclick="switchModalTab(this,'mOverview')">Overview</button><button class="tab" onclick="switchModalTab(this,'mHeaders')">Headers</button><button class="tab" onclick="switchModalTab(this,'mGraph')">Attack Graph</button><button class="tab" onclick="switchModalTab(this,'mTimeline')">Timeline</button></div>
+<div id="mOverview" class="tabbody on"><div class="two"><div><div class="kv"><span>From</span><b>${esc(c.sender)} <i class="source obs">OBSERVED</i></b></div><div class="kv"><span>Reply-To</span><b>${esc(reply)} <i class="source obs">OBSERVED</i></b></div><div class="kv"><span>IP</span><b class="mono">${esc(ip)} <i class="source obs">OBSERVED</i></b></div></div><div><div class="kv"><span>Infrastructure</span><b>${esc(c.loc||"UNKNOWN")} <i class="source enr">ENRICHED</i></b></div><div class="kv"><span>Geo confidence</span><b>${esc(geo)}</b></div><div class="kv"><span>Physical attacker</span><b>UNKNOWN</b></div></div></div></div>
+<div id="mHeaders" class="tabbody"><pre class="mono" style="white-space:pre-wrap;color:#294153;background:#f7fafc;border:1px solid #dbe3ea;padding:12px;border-radius:8px">${esc(c.raw)}</pre></div>
+<div id="mGraph" class="tabbody"><div class="graph"><div class="node n1"><b>EMAIL</b><small>Observed</small></div><div class="node n2"><b>SENDER</b><small>${esc(c.sender.split("@")[1]||"domain")}</small></div><div class="node n3"><b>IP</b><small>${esc(ip)}</small></div><div class="node n4"><b>ASN</b><small>ASXXXXX</small></div><div class="node n5"><b>DOMAIN</b><small>fake-domain.example</small></div><div class="node n6"><b>URL</b><small>login.example</small></div><i class="edge e1"></i><i class="edge e2"></i><i class="edge e3"></i><i class="edge e4"></i><i class="edge e5"></i></div></div>
+<div id="mTimeline" class="tabbody"><div class="timeline"><div class="event"><b>09:31:02</b><br>Email timestamp <span class="badge obs">OBSERVED</span></div><div class="event"><b>09:31:04</b><br>Mail server received message</div><div class="event"><b>09:31:06</b><br>Relay detected</div><div class="event"><b>UNKNOWN</b><br>User interaction <span class="badge unknown">NOT OBSERVED</span></div></div></div></div>
+<div class="section three"><div class="card"><h3 style="font-size:13px">What we know</h3><p>Header anomalies and suspicious link indicators are observed.</p></div><div class="card"><h3 style="font-size:13px">What we infer</h3><p>Credential phishing is the most likely interpretation.</p></div><div class="card"><h3 style="font-size:13px">What we don't know</h3><p>Physical attacker location, clicks and credential theft.</p></div></div>
+<div class="response-grid">
+ <div class="response-card"><b>🔒 Quarantine</b><small>Contain the message after analyst approval.</small></div>
+ <div class="response-card"><b>🚫 Block IOC</b><small>Block confirmed domain, URL or IP in connected controls.</small></div>
+ <div class="response-card"><b>🔎 Hunt Organization</b><small>Search matching indicators across the monitored mailbox.</small></div>
+</div><div class="authorize">⚠ HUMAN AUTHORIZATION REQUIRED · TraceMail recommends actions but does not silently execute destructive changes.</div>
+<div class="actions section"><button class="btn danger" data-analyst-only="1" onclick="authorizeAction('Quarantine')">Quarantine</button><button class="btn" data-analyst-only="1" onclick="addWatchFromCase()">Add IOC to Watchlist</button><button class="btn primary" onclick="downloadReport()">Generate Report</button></div>`;$("modal").classList.add("show")}
+function showForensicReportInInvestigation(){
+ const c=window.currentCase||cases[0];
+ if(!c){toast('No investigation available yet');return;}
+ const el=$('investigationReport');
+ if(!el){toast('Forensic report panel unavailable');return;}
+ const ex=extract(c.raw||''); const h=ex.p.h||{};
+ const role=currentRole();
+ const level=(roleAccess[role]||roleAccess.analyst).level;
+ const roleLabel=level===1?'VIEWER / GUARDIAN':level===2?'SECURITY ANALYST':'ADMINISTRATOR';
+ const roleFocus=level===1?'AWARENESS REPORT':level===2?'FULL FORENSIC REPORT':'FULL FORENSIC + RESPONSE REPORT';
+ const auth=h['authentication-results']||'UNKNOWN';
+ const makeRows=(items,label)=>items.length?items.map(x=>'<div class="find"><span>'+esc(label)+'</span><b class="mono">'+esc(x)+'</b><i class="source obs">OBSERVED</i></div>').join(''):'<div class="find"><span>'+esc(label)+'</span><b>NONE OBSERVED</b></div>';
+ const observedSummary='<div class="two section"><div><h3>Message Summary</h3><div class="find"><span>From</span><b>'+esc(h.from||c.sender||'UNKNOWN')+'</b></div><div class="find"><span>Reply-To</span><b>'+esc(h['reply-to']||'UNKNOWN')+'</b></div><div class="find"><span>Threat</span><b>'+esc(c.threat)+'</b></div><div class="find"><span>Risk Score</span><b>'+c.score+'/100</b></div></div><div><h3>Safety Finding</h3><p class="muted">This report provides the evidence needed to understand the message risk. Technical response controls are available only to authorized roles.</p><div class="find"><span>User interaction</span><b>UNKNOWN / NOT OBSERVED</b></div></div></div>';
+ const analystDetails=level>=2?'<div class="two section"><div><h3>Authentication Evidence</h3><pre class="mono" style="white-space:pre-wrap;color:#294153;background:#f7fafc;border:1px solid #dbe3ea;padding:12px;border-radius:8px">'+esc(auth)+'</pre></div><div><h3>Message Headers</h3><div class="find"><span>Return-Path</span><b>'+esc(h['return-path']||'UNKNOWN')+'</b></div><div class="find"><span>Message-ID</span><b>'+esc(h['message-id']||'UNKNOWN')+'</b></div><div class="find"><span>Date</span><b>'+esc(h.date||'UNKNOWN')+'</b></div><div class="find"><span>Content-Type</span><b>'+esc(h['content-type']||'UNKNOWN')+'</b></div></div></div><div class="section"><div class="sectionHead"><h3>Indicators of Compromise</h3><span class="badge obs">FULL IOC VIEW</span></div>'+makeRows(ex.ips,'IP')+makeRows(ex.domains.slice(0,8),'Domain')+makeRows(ex.urls,'URL')+'</div><div class="section"><h3>Infrastructure & Correlation</h3><div class="three"><div class="card"><div class="ey">SOURCE IP</div><h3 class="mono">'+esc(ex.ips[0]||'UNKNOWN')+'</h3><div class="muted small">Observed infrastructure</div></div><div class="card"><div class="ey">GEO LOCATION</div><h3>'+esc(c.loc||'UNKNOWN')+'</h3><div class="muted small">Confidence '+(c.geoConfidence==null?'UNKNOWN':c.geoConfidence+'%')+'</div></div><div class="card"><div class="ey">CORRELATION</div><h3>Campaign / IOC links</h3><div class="muted small">Available to analyst and administrator</div></div></div></div>':'';
+ const adminDetails=level>=3?'<div class="section"><div class="sectionHead"><h3>Administrator Response & Audit Context</h3><span class="badge critical">ADMIN ONLY</span></div><div class="three"><div class="card"><b>Quarantine</b><div class="muted small">Authorized containment action</div></div><div class="card"><b>Block IOC</b><div class="muted small">Block confirmed IP, domain or URL</div></div><div class="card"><b>Audit Trail</b><div class="muted small">Response and access activity visibility</div></div></div><div class="find"><span>Human authorization</span><b>REQUIRED BEFORE DESTRUCTIVE ACTIONS</b></div></div>':'';
+ const restrictedNote=level===1?'<div class="authorize">🔒 VIEWER / GUARDIAN: Detailed headers, IOC lists, infrastructure correlation and response controls are intentionally limited. The report still provides the complete safety finding and enough evidence to understand the threat.</div>':level===2?'<div class="authorize">🛡️ SECURITY ANALYST: Full forensic evidence is visible. Administrator-only user, configuration and audit controls remain restricted.</div>':'<div class="authorize">🔐 ADMINISTRATOR: Complete forensic and response context is visible. Destructive actions still require explicit human authorization.</div>';
+ el.style.display='block';
+ el.innerHTML='<div class="sectionHead"><div><div class="ey">TRACEMAIL AI · FORENSIC REPORT</div><h2>'+esc(c.id)+' · '+esc(c.subject)+'</h2></div><div class="actions"><span class="accessLevelTag">'+roleLabel+' · '+roleFocus+'</span><button class="btn" type="button" onclick="viewForensicPDF()">Open PDF</button><button class="btn primary" type="button" onclick="downloadReport()">Export PDF</button></div></div>'+
+ '<div class="three" style="margin-top:14px"><div class="card"><div class="ey">THREAT</div><h3>'+esc(c.threat)+'</h3><div class="muted small">Risk score '+c.score+'/100</div></div><div class="card"><div class="ey">SENDER</div><h3 class="mono" style="font-size:13px">'+esc(c.sender)+'</h3><div class="muted small">OBSERVED</div></div><div class="card"><div class="ey">GEO LOCATION</div><h3>'+esc(c.loc||'UNKNOWN')+'</h3><div class="muted small">Observed infrastructure · confidence '+(c.geoConfidence==null?'UNKNOWN':c.geoConfidence+'%')+'</div></div></div>'+observedSummary+analystDetails+adminDetails+restrictedNote;
+ el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function switchModalTab(btn,id){document.querySelectorAll(".modalBox .tab").forEach(x=>x.classList.remove("on"));document.querySelectorAll(".modalBox .tabbody").forEach(x=>x.classList.remove("on"));btn.classList.add("on");$(id).classList.add("on")}
+function closeModal(){$("modal").classList.remove("show")}
+$("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+function loadDemo(){$("raw").value=demoEmail;toast("Demo email loaded")}
+document.getElementById("investigationEml")?.addEventListener("change",async e=>{const f=e.target.files?.[0];if(!f)return;if(!/\.eml$/i.test(f.name)){toast("Please select a valid .eml file");return}try{const raw=await f.text();const parsed=parseEmail(raw);const ex=extract(raw);const sender=normalizeSender(parsed.h.from||"unknown");const subject=parsed.h.subject||f.name.replace(/\.eml$/i,"");const score=ex.ips.length||ex.urls.length?94:20;const threat=score>=80?"High Risk":"Likely Safe";window.currentCase={id:"EML-"+Date.now(),sender,subject,threat,score,loc:"Unknown",geoConfidence:null,status:"ACTIVE",indicators:ex.ips.length+ex.urls.length,raw};$("currentEvidenceLabel").textContent=f.name+" · local email evidence";toast("EML loaded locally — ready for forensic report")}catch(err){toast("Unable to read the EML file")}});
+
+function parseEmail(raw){let lines=raw.replace(/\r/g,"").split("\n"),h={},bodyStart=0;for(let i=0;i<lines.length;i++){if(lines[i].trim()===""){bodyStart=i+1;break}let m=lines[i].match(/^([^:]+):\s*(.*)$/);if(m)h[m[1].toLowerCase()]=(h[m[1].toLowerCase()]?h[m[1].toLowerCase()]+" ":"")+m[2]}return {h,body:lines.slice(bodyStart).join("\n")}}
+function extract(raw){let p=parseEmail(raw),h=p.h;let ips=[...new Set((raw.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g)||[]))];let urls=[...new Set((raw.match(/https?:\/\/[^\s"'<>]+/gi)||[]))];let domains=[...new Set((raw.match(/\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b/gi)||[]))];return {p,ips,urls,domains,raw}}
+function scoreEmail(x){let h=x.p.h,score=5,reasons=[];let auth=(h["authentication-results"]||"").toLowerCase();if(auth.includes("spf=fail")){score+=22;reasons.push(["SPF authentication failed","Observed"])}if(auth.includes("dkim=none")||auth.includes("dkim=fail")){score+=15;reasons.push(["DKIM missing or failed","Observed"])}if(auth.includes("dmarc=fail")){score+=15;reasons.push(["DMARC failed","Observed"])}let from=h["from"]||"",reply=h["reply-to"]||"";if(reply&&from&&reply.split("@")[1]!==from.split("@")[1]){score+=16;reasons.push(["Reply-To domain differs from sender domain","Observed"])}if(x.urls.length){score+=15;reasons.push(["URL detected in message","Observed"])}if(/urgent|suspend|verify|password|payment|immediately|expires|account/i.test(x.p.body)){score+=12;reasons.push(["Urgency or credential/financial pressure detected","Inferred"])}if(/paypa1|micros0ft|microsoft-login|secure-login|verify-account/i.test(from+x.urls.join(" "))){score+=10;reasons.push(["Possible lookalike/brand impersonation pattern","Inferred"])}score=Math.min(99,score);let threat=score>=80?"High Risk":score>=50?"Suspicious":"Likely Safe";if(/invoice|attachment/i.test(h["subject"]||"")&&score>=60)threat="Malicious Attachment";return {score,threat,reasons,x}}
+function loadSelectedCase(){const c=window.currentCase||cases[0];if(!c){toast("No investigation is available");return}window.currentCase=c;$("raw").value=c.raw||"";$("currentEvidenceLabel").textContent=c.id+" · "+c.subject;toast("Investigation evidence loaded")}
+function analyzeInput(){let raw=$("raw").value.trim();if(!raw){toast("Paste an email or load a demo first");return}let stages=["Evidence acquisition","Header forensics","IOC extraction","AI threat analysis","Threat cause & awareness model","Infrastructure enrichment","Risk calculation","Attack-chain reconstruction"];$("analysisStatus").textContent="ANALYZING";$("pipeline").innerHTML=stages.map((s,i)=>`<div style="margin:12px 0"><div class="find"><span>${i+1}. ${s}</span><b id="st${i}">QUEUED</b></div><div class="progress"><i id="pr${i}"></i></div></div>`).join("");let i=0;let timer=setInterval(()=>{if(i>0){$("st"+(i-1)).textContent="COMPLETE";$("pr"+(i-1)).style.width="100%"}if(i<stages.length){$("st"+i).textContent="RUNNING";$("pr"+i).style.width="55%";i++}else{clearInterval(timer);$("analysisStatus").textContent="COMPLETE";let result=scoreEmail(extract(raw)); localStorage.setItem("tmLastAnalysis",JSON.stringify(result)); showNewResult(result);}},420)}
+function awarenessFor(r){
+ let t=(r.threat||'').toLowerCase();
+ if(t.includes('attachment')) return {problem:'Malicious attachment / payload delivery',why:'Attackers disguise executable or weaponized files as invoices, documents or routine attachments to get the victim to open them.',method:'Social engineering creates urgency or trust around the attachment; the malicious file can then attempt code execution or credential theft.',watch:'Unexpected attachments, unusual file types, requests to enable macros/scripts, password-protected archives, and urgent requests from unknown senders.',learn:'Verify the sender through a separate channel and avoid opening unexpected attachments. Treat file type and context as evidence, not proof of safety.'};
+ if(t.includes('phish')||t.includes('credential')||t.includes('high risk')) return {problem:'Credential phishing / account impersonation',why:'Attackers imitate a trusted brand or person and create urgency so the user gives credentials, OTPs or sensitive information to a fake destination.',method:'Lookalike domains, Reply-To manipulation, authentication failures and convincing language are combined to bypass human trust.',watch:'Urgent verification requests, mismatched sender/Reply-To domains, lookalike spellings, unexpected login links and requests for passwords or OTPs.',learn:'Never use links from unexpected security emails to sign in. Open the official site/app directly and verify unusual requests independently.'};
+ return {problem:'Suspicious email activity',why:'Attackers can exploit trust, urgency, impersonation or unsafe links to influence users into taking risky actions.',method:'Multiple weak signals are combined; a single signal alone may be harmless, but their combination can indicate malicious intent.',watch:'Unexpected requests, sender inconsistencies, suspicious URLs, unusual authentication results and pressure to act quickly.',learn:'Pause before acting, verify the sender independently, and report suspicious messages instead of interacting with them.'};
+}
+function renderAwarenessPage(){
+  const el=$("awarenessPageContent"); if(!el)return;
+  let r=null; try{r=JSON.parse(localStorage.getItem("tmLastAnalysis")||"null")}catch(e){}
+  if(!r){r=scoreEmail(extract(demoEmail));}
+  const a=awarenessFor(r);
+  el.innerHTML=`<div class="card awareness"><div class="sectionHead"><h2>Why did this problem occur?</h2><span class="badge ${sev(r.score)}">${esc(r.threat.toUpperCase())}</span></div>
+  <div class="awGrid">
+   <div class="awBox"><b>1 · What is the problem?</b><p>${esc(a.problem)}</p></div>
+   <div class="awBox"><b>2 · Why does it occur?</b><p>${esc(a.why)}</p></div>
+   <div class="awBox"><b>3 · How does the attack work?</b><p>${esc(a.method)}</p></div>
+   <div class="awBox"><b>4 · What should you watch for?</b><p>${esc(a.watch)}</p></div>
+  </div><div class="awLearn"><b>🛡 Future Awareness:</b> ${esc(a.learn)}</div></div>
+  <div class="three section">
+   <div class="card"><div class="ey">THREAT</div><h3>${esc(r.threat)}</h3><div class="muted small">Risk score: ${r.score}/100</div></div>
+   <div class="card"><div class="ey">EVIDENCE</div><h3>${r.reasons.length}</h3><div class="muted small">signals supporting the assessment</div></div>
+   <div class="card"><div class="ey">PURPOSE</div><h3>Prevent recurrence</h3><div class="muted small">Turn investigation findings into user awareness</div></div>
+  </div>`;
+}
+function showNewResult(r){window.lastAnalysis=r;let sender=(r.x.p.h["from"]||"unknown").replace(/^.*</,"").replace(">","");let subject=r.x.p.h.subject||"Untitled";$("newResult").className="";$("newResult").innerHTML=`<div class="card"><div class="sectionHead"><h2>Investigation Complete</h2><span class="badge ${sev(r.score)}">${r.threat.toUpperCase()}</span></div><div class="risk"><div class="ring" style="background:conic-gradient(var(--red) 0 ${r.score}%,#24323b ${r.score}%)"><b>${r.score}</b></div><div><div class="ey">EXPLAINABLE RISK SCORE</div><h3>${esc(subject)}</h3><div class="muted">${esc(sender)}</div></div></div></div><div class="two"><div class="card section"><h3 style="font-size:13px">Why is it dangerous?</h3>${r.reasons.slice(0,4).map(z=>`<div class="find"><span>${esc(z[0])}</span><b><span class="badge ${z[1]==="Observed"?"obs":"inf"}">${z[1]}</span></b></div>`).join("")}</div><div class="card section"><h3 style="font-size:13px">Extracted IOCs</h3><div class="find"><span>IP</span><b>${r.x.ips.length?r.x.ips[0]:"None"}</b></div><div class="find"><span>Domain</span><b>${r.x.domains.length?esc(r.x.domains[0]):"None"}</b></div><div class="find"><span>URL</span><b>${r.x.urls.length?esc(r.x.urls[0]):"None"}</b></div></div></div><div class="card section awareness"><div class="sectionHead"><h3 style="font-size:13px">🧠 Threat Cause & Awareness Model</h3><span class="modelTag">USER AWARENESS</span></div><div id="awarenessContent"></div></div><div class="card section"><div class="sectionHead"><h3 style="font-size:13px">Investigation Intelligence</h3><span class="badge inf">INFERRED</span></div><div class="three"><div class="card"><b>Attack DNA</b><div class="muted small">Campaign fingerprint</div></div><div class="card"><b>Mutation</b><div class="muted small">Infrastructure changes tracked</div></div><div class="card"><b>Blast Radius</b><div class="muted small">Related targets identified</div></div></div><div class="find"><span>Infrastructure</span><b>Observed infrastructure → <span class="badge enr">GEOLOCATION</span></b></div><div class="find"><span>Attacker physical location</span><b>UNKNOWN</b></div></div><div class="card section"><div class="sectionHead"><h3 style="font-size:13px">AI Forensic Copilot</h3><span class="badge obs">EVIDENCE-GROUNDED</span></div><p class="muted" style="margin:0 0 10px">“${r.score >= 90 ? 'High-risk phishing is supported by authentication anomalies, sender mismatch and suspicious infrastructure.' : 'The threat classification is supported by the extracted forensic signals.'}”</p><div class="small muted">Recommended: quarantine if authorized · block confirmed IOC · hunt for matching indicators</div></div><div class="actions section"><button class="btn primary" onclick='saveAnalysis(${JSON.stringify({subject,score:r.score,threat:r.threat,raw:r.x.raw})})'>Save Investigation</button><button class="btn" onclick="go('map')">Trace Geo Location</button><button class="btn" onclick="showForensicReportInInvestigation()">Forensic Report</button></div>`;setTimeout(markSensitive,0)}
+function normalizeSender(v){let s=String(v||"").trim();let m=s.match(/<([^>]+)>/);return (m?m[1]:s).trim().toLowerCase()}
+function saveAnalysis(o){let id="TM-2026-"+String(143+cases.length).padStart(5,"0");let parsed=parseEmail(o.raw),ex=extract(o.raw);cases.unshift({id,sender:normalizeSender(parsed.h.from),subject:o.subject,threat:o.threat,score:o.score,loc:"Unknown",geoConfidence:null,status:"ACTIVE",indicators:ex.ips.length+ex.urls.length,raw:o.raw,createdAt:new Date().toISOString()});renderRecent();window.currentCase=cases[0];renderReports();toast("Investigation "+id+" saved");go("inbox")}
+function currentRole(){return localStorage.getItem('tmRole')||'analyst'}
+function connect(p){
+  if(p==='Gmail'){ go('link'); } else toast(p+' connection is available in demo mode');
+}
+function startMailLink(){
+  const email=($('mailAddress')?.value||'').trim();
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('Enter a valid email address first');return}
+  localStorage.setItem('tmPendingEmail',email);
+  $('mailStatusBadge').textContent='READY FOR OAUTH'; $('mailStatusBadge').className='badge obs';
+  $('mailStatusText').innerHTML='Mailbox <b>'+esc(email)+'</b> is ready. Starting secure Google authorization…';
+  const backend=(window.TRACEMAIL_CONFIG&&window.TRACEMAIL_CONFIG.OAUTH_START)||'/auth/google/start?email='+encodeURIComponent(email);
+  if(window.TRACEMAIL_CONFIG?.DEMO_OAUTH){
+    setTimeout(()=>{ $('mailStatusBadge').textContent='DEMO CONNECTED'; $('mailStatusBadge').className='badge safe'; $('mailStatusText').textContent='Demo mailbox connected. Use Secure Inbox to continue the investigation workflow.'; toast('Demo mailbox connected'); },500);
+  }else{ window.location.href=backend; }
+}
+function authorizeAction(action){
+  if(currentRole()!=='admin'){toast('Administrator role required for response actions');return}
+  const ok=confirm('Authorize '+action+'?\n\nDEMO ACTION: no real mailbox or security control will be changed.');
+  if(ok)toast(action+' approved in demo — no external system changed');
+}
+function addWatchFromCase(){
+  if(currentRole()==='viewer'){toast('Analyst access required to add IOCs to the watchlist');return}
+  const item={v:'185.91.24.17',type:'IP',matches:1,status:'WATCHING'};
+  if(!watch.some(x=>x.v===item.v)){watch.unshift(item);toast('IOC added to watchlist');}else toast('IOC is already on the watchlist');
+}
+
+
+const FORENSIC_PDF="./TraceMail_AI_Forensic_Report_TM-2026-00142.pdf";function viewForensicPDF(){window.open(FORENSIC_PDF,"_blank","noopener,noreferrer")}function downloadReport(){const c=window.currentCase||cases[0];if(!c){toast("No investigation available yet");return}const a=document.createElement("a");a.href=FORENSIC_PDF;a.download=c.id+"_forensic_report.pdf";document.body.appendChild(a);a.click();a.remove();toast("Forensic PDF export started")}
+function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2600)}
+renderRecent();renderInbox();document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();go("inbox");$("inboxSearch")?.focus();}});
+
+</script>
+
+<div id="forensicTrustPanel" style="position:fixed;right:18px;bottom:18px;max-width:330px;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);z-index:100;display:none">
+  <div style="font-weight:700;margin-bottom:6px">Forensic confidence model</div>
+  <div class="evidence-taxonomy">
+    <span class="obs">OBSERVED</span><span class="enr">ENRICHED</span><span class="inf">INFERRED</span><span class="unk">UNKNOWN</span>
+  </div>
+  <div style="font-size:11px;color:#94a3b8">IP geolocation describes observed infrastructure, not the attacker\'s physical location.</div>
+</div>
+
+<div id="tmGeoOverlay" class="tm-geo-overlay" aria-hidden="true">
+  <div class="tm-geo-shell">
+    <div class="tm-geo-top">
+      <div>
+        <div class="tm-geo-title">🌍 Infrastructure Geolocation Command Center</div>
+        <div class="tm-geo-sub">Observed infrastructure • enrichment layer • confidence-aware tracing</div>
+      </div>
+      <button class="tm-close" onclick="tmCloseGeo()">Close</button>
+    </div>
+    <div class="tm-geo-body">
+      <div class="tm-map">
+        <div class="tm-grid"></div>
+        <svg viewBox="0 0 1000 650" role="img" aria-label="Observed infrastructure route">
+          <path d="M55 170 Q170 105 300 180 T540 160 T760 205 T945 150" fill="none" stroke="#24344d" stroke-width="1"/>
+          <path d="M70 280 Q210 230 340 300 T610 270 T900 300" fill="none" stroke="#24344d" stroke-width="1"/>
+          <path d="M90 420 Q230 360 400 430 T650 405 T930 450" fill="none" stroke="#24344d" stroke-width="1"/>
+          <path d="M170 100 Q130 230 175 390 T150 610" fill="none" stroke="#24344d" stroke-width="1"/>
+          <path d="M390 70 Q350 220 400 350 T380 610" fill="none" stroke="#24344d" stroke-width="1"/>
+          <path d="M650 60 Q610 220 670 370 T640 620" fill="none" stroke="#24344d" stroke-width="1"/>
+          <path d="M850 80 Q820 220 870 370 T840 610" fill="none" stroke="#24344d" stroke-width="1"/>
+          <path d="M125 475 C285 410 390 245 510 290 S700 380 865 205" fill="none" stroke="#60a5fa" stroke-width="3" class="tm-trace"/>
+          <path d="M510 290 C600 330 690 360 865 205" fill="none" stroke="#a78bfa" stroke-width="2" class="tm-trace"/>
+          <circle cx="125" cy="475" r="6" fill="#38bdf8"/><circle cx="125" cy="475" r="22" fill="none" stroke="#38bdf8" opacity=".5" class="tm-pulse"/>
+          <circle cx="510" cy="290" r="6" fill="#fbbf24"/><circle cx="510" cy="290" r="22" fill="none" stroke="#fbbf24" opacity=".5" class="tm-pulse"/>
+          <circle cx="865" cy="205" r="7" fill="#f87171"/><circle cx="865" cy="205" r="25" fill="none" stroke="#f87171" opacity=".5" class="tm-pulse"/>
+          <text x="102" y="505" class="tm-map-label">RECIPIENT • INDIA</text>
+          <text x="485" y="320" class="tm-map-label">MAIL RELAY • SINGAPORE</text>
+          <text x="812" y="190" class="tm-map-label">SUSPICIOUS INFRA • US</text>
+        </svg>
+        <div class="tm-map-note"><b>Important:</b> geolocation describes the observed infrastructure path. It does not establish the attacker\'s physical location. VPNs, proxies, cloud relays and compromised systems can obscure origin.</div>
+      </div>
+      <aside class="tm-geo-side">
+        <div class="tm-card">
+          <h4>Trace status</h4>
+          <div class="tm-big">3 hops correlated</div>
+          <div class="tm-muted">Route reconstructed from observable email/header indicators.</div>
+        </div>
+        <div class="tm-card">
+          <h4>Selected infrastructure</h4>
+          <div class="tm-kv">
+            <div><span>IP</span><b>203.0.113.42</b></div>
+            <div><span>Country</span><b>Singapore</b></div>
+            <div><span>ASN</span><b>AS64500</b></div>
+            <div><span>Provider</span><b>Example Cloud</b></div>
+            <div><span>Type</span><b>Mail relay</b></div>
+            <div><span>Reputation</span><b>Suspicious</b></div>
+          </div>
+        </div>
+        <div class="tm-card">
+          <h4>Geolocation confidence</h4>
+          <div class="tm-big">81%</div>
+          <div class="tm-conf"><i></i></div>
+          <div class="tm-muted" style="margin-top:7px">Confidence reflects IP intelligence quality, not certainty about the attacker.</div>
+        </div>
+        <div class="tm-card">
+          <h4>Observed route</h4>
+          <div class="tm-hop"><i class="tm-dot"></i> Recipient • India <span style="margin-left:auto">OBSERVED</span></div>
+          <div class="tm-hop"><i class="tm-dot"></i> Mail relay • Singapore <span style="margin-left:auto">OBSERVED</span></div>
+          <div class="tm-hop"><i class="tm-dot"></i> Suspicious host • US <span style="margin-left:auto">ENRICHED</span></div>
+          <div class="tm-hop"><i class="tm-dot"></i> Physical origin <span style="margin-left:auto;color:#fbbf24">UNKNOWN</span></div>
+        </div>
+        <div class="tm-card">
+          <h4>Infrastructure signals</h4>
+          <div class="tm-kv">
+            <div><span>VPN / Proxy</span><b>Possible</b></div>
+            <div><span>Hosting</span><b>Cloud</b></div>
+            <div><span>Threat reputation</span><b>High</b></div>
+            <div><span>Historical reuse</span><b>3 cases</b></div>
+          </div>
+        </div>
+        <div class="tm-actions">
+          <button class="tm-action primary" onclick="tmToast('Infrastructure node added to investigation')">Add to Investigation</button>
+          <button class="tm-action" onclick="tmToast('IP added to watchlist')">Watch IP</button>
+          <button class="tm-action" onclick="tmToast('IOC copied')">Copy IOC</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+<script>
+function tmOpenGeo(){const e=document.getElementById('tmGeoOverlay'),b=document.getElementById('tmGeoFab');if(e){e.style.display='block';e.setAttribute('aria-hidden','false')}if(b)b.style.display='none'}
+function tmCloseGeo(){const e=document.getElementById('tmGeoOverlay'),b=document.getElementById('tmGeoFab');if(e){e.style.display='none';e.setAttribute('aria-hidden','true')}if(b)b.style.display='block'}
+function tmToast(msg){let t=document.getElementById('tmToast');if(!t){t=document.createElement('div');t.id='tmToast';t.style='position:fixed;right:24px;bottom:24px;background:#111c2d;border:1px solid #334155;color:#e2e8f0;padding:11px 14px;border-radius:9px;z-index:10001;font-size:12px;box-shadow:0 12px 35px rgba(0,0,0,.35)';document.body.appendChild(t)}t.textContent=msg;t.style.display='block';clearTimeout(window._tmT);window._tmT=setTimeout(()=>t.style.display='none',1800)}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')tmCloseGeo()});
+
+const roleAccess={
+ viewer:{label:'VIEWER / GUARDIAN',short:'AWARENESS LEVEL',icon:'👁',note:'Understand threats safely. Investigation stays available, but deep technical evidence and response controls are restricted.',level:1,focus:'Understand',cap:['Inbox + threat assessment','Investigation + .EML upload','Findings + forensic report'],deny:'Deep headers, IOC details and response actions are restricted.'},
+ analyst:{label:'SECURITY ANALYST',short:'FORENSIC LEVEL',icon:'🛡️',note:'Perform full technical investigation across headers, IOCs, infrastructure, geolocation and correlation.',level:2,focus:'Investigate',cap:['Everything in Viewer','Full headers, IOCs + attack graph','Infrastructure, geo + correlation'],deny:'User management and system administration remain restricted.'},
+ admin:{label:'ADMINISTRATOR',short:'RESPONSE & CONTROL',icon:'🔐',note:'Complete investigation visibility plus authorized response and platform administration.',level:3,focus:'Control',cap:['Everything in Analyst','Response: quarantine, block, watchlist','Users, settings + audit controls'],deny:'Destructive actions still require explicit human authorization.'}
+};
+function currentRole(){return localStorage.getItem('tmRole')||'analyst'}
+function renderInvestigationAccess(){
+  const r=roleAccess[currentRole()]||roleAccess.analyst, el=$('investigationAccessStrip');
+  if(!el)return;
+  el.innerHTML=`<div class="accessLevelMain"><div class="accessLevelIcon">${r.icon}</div><div><h4>${r.label} · ${r.focus.toUpperCase()}</h4><p>${r.note}</p></div></div><span class="accessLevelTag">${r.short}</span>`;
+}
+function setRole(role, notify=false){
+  if(role==='guardian')role='viewer';
+  if(!roleAccess[role])role='analyst';
+  localStorage.setItem('tmRole',role);
+  document.body.dataset.role=role;
+  applyRoleAccess();
+  renderInvestigationAccess();
+  if(notify)toast('Access level: '+roleAccess[role].label);
+}
+function applyRoleAccess(){
+  const role=localStorage.getItem('tmRole')||'analyst';
+  const level=(roleAccess[role]||roleAccess.analyst).level;
+  document.querySelectorAll('[data-sensitive]').forEach(el=>{el.classList.toggle('restricted',level<2);el.title=level<2?'Restricted: Security Analyst access required':''});
+  document.querySelectorAll('[data-admin-only]').forEach(el=>{el.style.display=level>=3?'':'none'});
+  document.querySelectorAll('[data-analyst-only]').forEach(el=>{el.style.display=level>=2?'':'none'});
+  document.querySelectorAll('[data-viewer-plus]').forEach(el=>{el.style.display=level>=1?'':'none'});
+  renderInvestigationAccess();
+}
+function markSensitive(){document.querySelectorAll('.kv .mono, .tm-node, .tm-ip, .tm-provider, #mHeaders, #mGraph .node, #mGraph .edge').forEach(el=>el.setAttribute('data-sensitive','1'));document.querySelectorAll('.actions .danger').forEach(el=>el.setAttribute('data-analyst-only','1'));applyRoleAccess()}
+
+document.addEventListener("DOMContentLoaded",()=>{const r=localStorage.getItem("tmRole")||"analyst";setRole(r,false);});
+</script>
+
+
+<script>
+function displayAuthenticatedUser(user){
+
+  const nameEl=document.getElementById('tmUserName');
+  const emailEl=document.getElementById('tmUserEmail');
+  const avatarEl=document.getElementById('tmUserAvatar');
+
+  if(nameEl){
+    nameEl.textContent=user.name || 'TraceMail User';
+  }
+
+  if(emailEl){
+    emailEl.textContent=user.email || '';
+  }
+
+  if(avatarEl){
+
+    if(user.picture){
+
+      avatarEl.innerHTML=
+        '<img src="'+user.picture+'" alt="Profile">';
+
+    }else{
+
+      const initial=
+        (user.name || user.email || 'U')
+        .trim()
+        .charAt(0)
+        .toUpperCase();
+
+      avatarEl.textContent=initial;
+    }
+  }
+}
+function unlockTraceMail(source){
+  const selectedRole=document.getElementById('authRole')?.value||localStorage.getItem('tmRole')||'analyst';
+
+  setRole(selectedRole,false);
+
+  if(source){
+    localStorage.setItem('tmIntakeSource',source);
+  }
+
+  const gate=document.getElementById('authGate');
+
+  if(gate){
+    gate.classList.add('hidden');
+    gate.setAttribute('aria-hidden','true');
+  }
+
+  document.body.classList.remove('authLocked');
+  go('dashboard');
+
+  toast(
+    source==='eml'
+      ? 'EML evidence loaded — welcome to your workspace'
+      : 'Welcome to TraceMail AI'
+  );
+}
+
+document.getElementById('authRole')?.addEventListener('change',function(){
+  const h=document.getElementById('loginRoleHint');
+  const r=roleAccess[this.value]||roleAccess.analyst;
+
+  if(h){
+    h.innerHTML='<strong>'+r.label+':</strong> '+r.note;
+  }
+});
+
+function authEmailLogin(){
+  const el=document.getElementById('authEmail');
+  const email=(el?.value||'').trim();
+
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    toast('Enter a valid work email');
+    el?.focus();
+    return;
+  }
+
+  localStorage.setItem('tmPendingEmail',email);
+
+  // Email authentication is still demo-only for now.
+  unlockTraceMail('email');
+}
+
+function authGoogleLogin(){
+  console.log('Starting real Google OAuth login...');
+  window.location.href='http://localhost:8000/auth/google/login';
+}
+
+async function checkBackendAuthentication(){
+
+  try{
+
+    const response=await fetch(
+      'http://localhost:8000/auth/me',
+      {
+        method:'GET',
+        credentials:'include'
+      }
+    );
+
+    if(!response.ok){
+      return false;
+    }
+
+    const data=await response.json();
+
+    if(data.authenticated && data.user){
+      displayAuthenticatedUser(data.user);
+
+      // Save the real user's display information.
+      localStorage.setItem(
+        'tmUserName',
+        data.user.name || ''
+      );
+
+      localStorage.setItem(
+        'tmUserEmail',
+        data.user.email || ''
+      );
+
+      unlockTraceMail('google');
+
+      return true;
+    }
+
+    return false;
+
+  }catch(error){
+
+    console.error(
+      'Backend authentication check failed:',
+      error
+    );
+
+    return false;
+  }
+}
+async function logoutTraceMail(){
+
+  try{
+
+    await fetch(
+      'http://localhost:8000/auth/logout',
+      {
+        method:'POST',
+        credentials:'include'
+      }
+    );
+
+  }catch(err){
+
+    console.error('Logout request failed:',err);
+
+  }
+
+  sessionStorage.removeItem('tmAuthenticated');
+
+  localStorage.removeItem('tmUserName');
+  localStorage.removeItem('tmUserEmail');
+
+  const gate=document.getElementById('authGate');
+
+  if(gate){
+    gate.classList.remove('hidden');
+    gate.setAttribute('aria-hidden','false');
+  }
+
+  document.body.classList.add('authLocked');
+
+  toast('Logged out successfully');
+
+}
+document.addEventListener('DOMContentLoaded',async ()=>{
+
+  const gate=document.getElementById('authGate');
+
+  // Check the real backend session.
+  const authenticated=await checkBackendAuthentication();
+
+  if(!authenticated){
+
+    if(gate){
+      gate.classList.remove('hidden');
+      gate.setAttribute('aria-hidden','false');
+    }
+
+    document.body.classList.add('authLocked');
+  }
+
+  const af=document.getElementById('authEml');
+
+  af?.addEventListener('change',async e=>{
+
+    const f=e.target.files?.[0];
+
+    if(!f)return;
+
+    try{
+
+      const raw=await f.text();
+
+      const rawEl=document.getElementById('raw');
+
+      if(rawEl){
+        rawEl.value=raw;
+      }
+
+      localStorage.setItem(
+        'tmPendingEml',
+        raw
+      );
+
+      unlockTraceMail('eml');
+
+    }catch(err){
+
+      toast('Unable to read the EML file');
+
+    }
+
+  });
+
+});
+</script>
+<script>window.TRACEMAIL_CONFIG = {
+    OAUTH_START: 'http://localhost:8000/auth/google/login'
+};
+  </script>
+
+<script id="tm-jury-interactions">
+(function(){
+  const q=s=>document.querySelector(s), qa=s=>document.querySelectorAll(s);
+  function addReveal(){
+    qa('.section,.hero,.intakeGrid,.judge-strip,.conf-grid,.tableWrap,.map,.graph').forEach((el,i)=>{el.style.animationDelay=Math.min(i*35,280)+'ms';el.classList.add('tm-reveal')});
+  }
+  const st=document.createElement('style');st.textContent='.tm-reveal{animation:tmReveal .45s cubic-bezier(.2,.8,.2,1) both}@keyframes tmReveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}';document.head.appendChild(st);
+  document.addEventListener('DOMContentLoaded',()=>{
+    addReveal();
+    qa('.nav button').forEach(b=>b.addEventListener('click',()=>setTimeout(addReveal,30)));
+    qa('.stat').forEach(el=>{el.addEventListener('mouseenter',()=>el.style.transform='translateY(-4px)');el.addEventListener('mouseleave',()=>el.style.transform='')});
+  });
+})();
+</script>
+</body>
+</html><style id="trace-final-layout">
+/* TRACE MAIL — UNIFIED ENTERPRISE CANVAS */
+:root{
+  --tm-bg:#f3f7fb;
+  --tm-surface:#ffffff;
+  --tm-surface-2:#f8fbfe;
+  --tm-line:#dbe5ee;
+  --tm-text:#17324d;
+  --tm-muted:#64788b;
+  --tm-blue:#1769aa;
+  --tm-indigo:#5867c9;
+  --tm-cyan:#1497b8;
+  --tm-shadow:0 8px 28px rgba(31,67,99,.055)
+}
+html,body{min-height:100%;background:var(--tm-bg)!important;color:var(--tm-text)!important}
+body{
+  background:
+    radial-gradient(900px 520px at 92% -8%,rgba(88,103,201,.09),transparent 58%),
+    radial-gradient(760px 460px at 4% 82%,rgba(20,151,184,.065),transparent 60%),
+    linear-gradient(135deg,#f4f8fc 0%,#eef5fa 52%,#f7f6fc 100%)!important;
+  overflow-x:hidden
+}
+body:before{
+  background-image:
+    linear-gradient(rgba(43,88,120,.026) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(43,88,120,.026) 1px,transparent 1px),
+    radial-gradient(circle at 82% 12%,rgba(88,103,201,.07),transparent 22%),
+    radial-gradient(circle at 14% 78%,rgba(20,151,184,.05),transparent 20%)!important;
+  background-size:28px 28px,28px 28px,auto,auto!important;
+  opacity:1!important
+}
+/* one continuous workspace: sidebar and content share the same canvas */
+.app{min-height:calc(100vh - 56px)!important;background:transparent!important;display:block!important}
+.side{
+  width:232px!important;
+  top:56px!important;
+  bottom:0!important;
+  left:0!important;
+  padding:18px 12px!important;
+  background:rgba(248,251,253,.94)!important;
+  border-right:1px solid #d9e4ed!important;
+  box-shadow:none!important;
+  backdrop-filter:blur(12px)!important;
+}
+.side:after{right:-1px!important;top:96px!important;width:2px!important;height:82px!important;background:linear-gradient(#2b79b5,#6872cf,transparent)!important}
+.logo{padding:8px 10px 20px!important}
+.nav button{margin:2px 6px!important;border-radius:8px!important;color:#536a7c!important}
+.nav button:hover{background:#eaf3fa!important;color:#1769aa!important;transform:none!important}
+.nav button.on{background:linear-gradient(90deg,#e7f1fa,#f1f5fc)!important;color:#145e98!important;box-shadow:none!important}
+.nav button.on:before{top:7px!important;bottom:7px!important}
+.status{background:#fff!important;border:1px solid #dbe5ee!important;box-shadow:0 3px 12px rgba(31,67,99,.035)!important}
+.main{
+  margin-left:232px!important;
+  width:calc(100% - 232px)!important;
+  min-height:calc(100vh - 56px)!important;
+  padding:24px 34px 48px!important;
+  background:transparent!important;
+}
+.page{max-width:1500px!important;margin:0 auto!important}
+.top{padding-bottom:16px!important;margin-bottom:20px!important;border-bottom:1px solid #dfe7ee!important}
+.top:after{bottom:-1px!important}
+/* softer content surfaces with subtle section tinting */
+.card,.heroMain,.rolePanel,.conf-box,.judge-step{
+  background:rgba(255,255,255,.94)!important;
+  border:1px solid rgba(211,224,234,.95)!important;
+  box-shadow:var(--tm-shadow)!important;
+}
+.card{border-radius:12px!important}
+.card:hover{box-shadow:0 10px 30px rgba(31,67,99,.075)!important}
+.heroMain{background:linear-gradient(135deg,#ffffff 0%,#f7fbff 58%,#f6f4ff 100%)!important}
+.heroMain:after{border-color:rgba(37,99,235,.10)!important}
+.heroMain p{color:#65798b!important}
+.flow .pill{background:#f2f7fb!important;border-color:#d8e4ed!important}
+.stat{position:relative;overflow:hidden}
+.stat:after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(#1769aa,#5867c9);border-radius:3px}
+.stat .lbl{color:#728496!important}
+.stat .n{color:#18344e!important}
+.search,.input,textarea{background:#fff!important;color:#18344e!important;border-color:#cad8e3!important;box-shadow:0 1px 2px rgba(30,60,90,.025)!important}
+.search::placeholder,.input::placeholder,textarea::placeholder{color:#93a3b1!important}
+.btn{background:#fff!important;color:#304b60!important;border-color:#cbd8e3!important}
+.btn.primary{background:linear-gradient(135deg,#1769aa,#315fbd)!important;border-color:#1769aa!important;box-shadow:0 5px 14px rgba(23,105,170,.16)!important}
+.btn.primary:hover{box-shadow:0 7px 18px rgba(23,105,170,.20)!important}
+.tableWrap{box-shadow:var(--tm-shadow)!important}
+.table th{background:#f5f8fb!important;color:#64798b!important}
+.table td{color:#304b60!important}
+.table tr.click:hover td{background:#f6faff!important}
+.sectionHead h2{color:#24445d!important}
+.sub,.muted{color:#687c8e!important}
+.ey{color:#1769aa!important}
+/* light data visualizations */
+.map{background:linear-gradient(145deg,#edf5f8,#e8f1f6)!important}
+.mapLegend{background:rgba(255,255,255,.94)!important;color:#496275!important;border-color:#d5e1e9!important;box-shadow:0 4px 14px rgba(31,67,99,.07)}
+.graph{background:radial-gradient(circle at 50% 50%,#edf6fa,#e8f0f5 72%)!important}
+.node{background:rgba(255,255,255,.96)!important;border-color:#b9d1e0!important;color:#23445d!important;box-shadow:0 5px 18px rgba(35,75,105,.07)!important}
+.node small{color:#668095!important}
+.edge{background:#6ba7c6!important;opacity:.65}
+textarea{font-family:ui-monospace,SFMono-Regular,Consolas,monospace!important}
+.drop{background:linear-gradient(145deg,#fbfdff,#f3f8fb)!important;border-color:#a9c2d3!important}
+.drop.drag{background:#eef8fc!important;border-color:#1769aa!important}
+.tabs{border-color:#dbe5ed!important}
+.tab{color:#728597!important}.tab.on{color:#1769aa!important;border-color:#1769aa!important}
+.kv{border-color:#e2e9ef!important}.kv span{color:#728597!important}
+.timeline{border-color:#c7d9e5!important}.event:before{background:#1769aa!important;box-shadow:0 0 0 3px rgba(23,105,170,.10)!important}
+.awareness{background:linear-gradient(135deg,#ffffff,#f6fbfd)!important;border-color:#d2e1ea!important}
+.awBox{background:#f8fbfd!important;border-color:#dce6ed!important}
+.awBox b{color:#24445d!important}.awBox p{color:#687d8e!important}
+.awLearn{background:#eef7fb!important;border-color:#cfe2ec!important;color:#315b73!important}
+.rbac{background:#fff!important;border-color:#d4e0e8!important}.rbac select{background:#fff!important;color:#294153!important}
+/* unify header and workspace edge — no floating gap */
+#signatureStrip{height:56px!important;background:rgba(255,255,255,.94)!important;border-bottom:1px solid #dce5ed!important;box-shadow:0 2px 12px rgba(31,67,99,.045)!important}
+/* small branded details */
+.title{color:#18344d!important}.title::first-letter{}
+.modelTag{color:#1769aa!important;background:#eef6fb!important;border-color:#c5dbe8!important}
+@media(max-width:1050px){
+  .side{width:76px!important;top:56px!important}
+  .main{margin-left:76px!important;width:calc(100% - 76px)!important;padding:22px 24px 40px!important}
+}
+@media(max-width:650px){
+  .side{width:68px!important;top:56px!important}
+  .main{margin-left:68px!important;width:calc(100% - 68px)!important;padding:16px 14px 30px!important}
+}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style>
