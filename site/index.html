@@ -1115,11 +1115,11 @@ function authEmailLogin(){
 
 function authGoogleLogin(){
   console.log('Starting real Google OAuth login...');
-  window.location.href='http://localhost:8000/auth/google/login';
+  window.location.href='https://tracemail-ai.onrender.com/auth/google/login';
 }
 
 async function checkBackendAuthentication(){
-
+ 
   try{
 
     const response=await fetch(
