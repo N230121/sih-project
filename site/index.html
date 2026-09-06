@@ -766,12 +766,84 @@ function reportToSpam(id){
   renderRecent();
   toast("Reported to Spam — removed from Inbox (demo)");
 }
-function renderInbox(){
-  let q=($("inboxSearch")?.value||"").toLowerCase();
-  $("inboxBody").innerHTML=cases.filter(c=>c.status!=="SPAM" && (c.sender+c.subject+c.threat+c.loc).toLowerCase().includes(q)).map(c=>{
-    const spamAction=canReportToSpam(c)?`<button class="btn danger" title="Repeated from the same sender community and classified as very-high-risk harmful mail" onclick="event.stopPropagation();reportToSpam('${c.id}')">Report to Spam</button>`:"";
-    return `<tr class="click" onclick="openCase('${c.id}')"><td>${esc(c.sender)}</td><td>${esc(c.subject)}</td><td><span class="badge ${sev(c.score)}">${esc(c.threat.toUpperCase())}</span></td><td><b>${c.score}/100</b></td><td>${c.loc}</td><td><button class="btn" onclick="event.stopPropagation();openCase('${c.id}')">Investigate</button>${spamAction}</td></tr>`;
-  }).join("")
+async function renderInbox(){
+  const q=($("inboxSearch")?.value||"").toLowerCase();
+
+  $("inboxBody").innerHTML=
+    `<tr><td colspan="6" class="empty">Loading real Gmail messages...</td></tr>`;
+
+  try{
+    const response=await fetch("/api/emails",{
+      credentials:"include"
+    });
+
+    if(!response.ok){
+      throw new Error("Unable to load Gmail messages");
+    }
+
+    const data=await response.json();
+    const emails=data.emails||[];
+
+    const filtered=emails.filter(email=>
+      (email.from+" "+email.subject+" "+email.snippet)
+      .toLowerCase()
+      .includes(q)
+    );
+
+    if(!filtered.length){
+      $("inboxBody").innerHTML=
+        `<tr><td colspan="6" class="empty">No Gmail messages found.</td></tr>`;
+      return;
+    }
+
+    $("inboxBody").innerHTML=filtered.map(email=>`
+      <tr class="click"
+          onclick='openGmailEmail(${JSON.stringify(email)})'>
+
+        <td>${esc(email.from||"")}</td>
+
+        <td>${esc(email.subject||"(No subject)")}</td>
+
+        <td>
+          <span class="badge obs">GMAIL</span>
+        </td>
+
+        <td>
+          ${esc(email.date||"")}
+        </td>
+
+        <td>
+          ${esc(email.snippet||"")}
+        </td>
+
+        <td>
+          <button class="btn"
+            onclick='event.stopPropagation();openGmailEmail(${JSON.stringify(email)})'>
+            Open
+          </button>
+        </td>
+
+      </tr>
+    `).join("");
+
+  }catch(error){
+    console.error(error);
+
+    $("inboxBody").innerHTML=
+      `<tr><td colspan="6" class="empty">
+        Unable to load Gmail messages. Please log in with Google again.
+      </td></tr>`;
+  }
+}
+function openGmailEmail(email){
+  window.currentGmailEmail=email;
+
+  alert(
+    "From: "+(email.from||"")+
+    "\nSubject: "+(email.subject||"(No subject)")+
+    "\nDate: "+(email.date||"")+
+    "\n\n"+(email.snippet||"")
+  );
 }
 function getReportCase(){return window.currentCase || cases[0] || null}
 function renderReports(){
