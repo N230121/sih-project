@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
 from contextlib import asynccontextmanager
@@ -33,7 +34,7 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
     same_site="lax",
-    https_only=False,  # Change to True when deployed over HTTPS.
+    https_only=True,  # Change to True when deployed over HTTPS.
 )
 
 oauth = OAuth()
@@ -50,11 +51,7 @@ oauth.register(
 
 @app.get("/")
 async def root():
-    return {
-        "app": "TraceMail AI Backend",
-        "status": "running",
-        "message": "Backend is working."
-    }
+    return FileResponse("site/index.html")
 
 @app.get("/health")
 async def health():
@@ -145,6 +142,7 @@ async def logout(request: Request):
 # Simple role-protected example endpoint.
 @app.get("/api/analyst-area")
 async def analyst_area(request: Request):
+    
     user_id = request.session.get("user_id")
     if not user_id:
         raise HTTPException(status_code=401, detail="Not logged in.")
@@ -161,3 +159,29 @@ async def analyst_area(request: Request):
         "message": "You can access the analyst area.",
         "user": user,
     }
+app.mount(
+    "/",
+    StaticFiles(directory="site"),
+    name="site"
+    )
+@app.get("/api/analyst-area")
+async def analyst_area(request: Request):
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not logged in.")
+
+    user = get_user_by_id(user_id)
+
+    if user["role"] not in ("analyst", "admin"):
+        raise HTTPException(
+            status_code=403,
+            detail="Analyst or admin role required."
+        )
+
+    return {
+        "message": "You can access the analyst area.",
+        "user": user,
+    }
+
+
+app.mount("/", StaticFiles(directory="site"), name="site")
