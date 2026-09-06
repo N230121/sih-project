@@ -656,7 +656,9 @@ body:not(.authLocked) .main .page.active{display:block!important;}
 <section id="inbox" class="page">
  <div class="top"><div><div class="ey">EMAIL SECURITY LAYER</div><div class="title">Secure Inbox</div></div></div>
  <div class="card alert"><b class="red">⚠ HIGH-RISK EMAIL DETECTED</b></div>
- <div class="card section"><div class="sectionHead"><h2>Inbox</h2><input id="inboxSearch" class="search" placeholder="Search sender, subject, IOC..." oninput="renderInbox()"></div><div class="tableWrap"><table class="table"><thead><tr><th>Sender</th><th>Subject</th><th>Threat</th><th>Risk</th><th>Location</th><th>Action</th></tr></thead><tbody id="inboxBody"></tbody></table></div></div>
+ <div class="card section"><div class="sectionHead"><h2>Inbox</h2><input id="inboxSearch" class="search" placeholder="Search sender, subject, IOC..." oninput="renderInbox()"></div><div class="tableWrap">
+<table class="table"><thead><tr><th>Sender</th><th>Subject</th><th>Threat</th><th>Risk</th><th>Location</th><th>Action</th></tr></thead>
+<tbody id="inboxBody"></tbody></table></div></div>
 </section>
 
 <section id="new" class="page">
