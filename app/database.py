@@ -18,6 +18,7 @@ def init_db():
             name TEXT,
             picture TEXT,
             role TEXT NOT NULL DEFAULT 'viewer',
+            google_token TEXT,
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             last_login TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
@@ -25,7 +26,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-def upsert_user(google_sub, email, name, picture):
+def upsert_user(google_sub, email, name, picture, google_token=None):
     conn = get_connection()
     existing = conn.execute(
         "SELECT id, role FROM users WHERE google_sub = ?",
@@ -34,19 +35,19 @@ def upsert_user(google_sub, email, name, picture):
 
     if existing:
         conn.execute(
-            """UPDATE users
-               SET email=?, name=?, picture=?, last_login=CURRENT_TIMESTAMP
-               WHERE google_sub=?""",
-            (email, name, picture, google_sub),
+            """UPDATE users 
+            SET email=?, name=?, picture=?, google_token=?, last_login=CURRENT_TIMESTAMP 
+            WHERE google_sub=?""",
+            (email, name, picture, google_token, google_sub),
         )
         user_id = existing["id"]
         role = existing["role"]
     else:
         conn.execute(
-            """INSERT INTO users
-               (google_sub, email, name, picture, role)
-               VALUES (?, ?, ?, ?, 'viewer')""",
-            (google_sub, email, name, picture),
+            """INSERT INTO users 
+            (google_sub, email, name, picture, role, google_token) 
+            VALUES (?, ?, ?, ?, 'viewer', ?)""",
+            (google_sub, email, name, picture, google_token),
         )
         user_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
         role = "viewer"
@@ -64,3 +65,13 @@ def get_user_by_id(user_id):
     ).fetchone()
     conn.close()
     return dict(row) if row else None
+
+def get_google_token_by_user_id(user_id):
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT google_token FROM users WHERE id=?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+
+    return row["google_token"] if row else None
