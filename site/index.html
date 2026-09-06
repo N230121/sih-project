@@ -784,6 +784,21 @@ async function renderInbox(){
     const data=await response.json();
     const emails=data.emails||[];
 
+    const threats=["PHISHING","RISKY","SUSPICIOUS","SAFE"];
+
+    const locations=[
+      "Hyderabad, India",
+      "Bengaluru, India",
+      "Mumbai, India",
+      "Delhi, India",
+      "Chennai, India",
+      "Pune, India",
+      "Vijayawada, India",
+      "New York, USA",
+      "London, UK",
+      "Singapore"
+    ];
+
     const filtered=emails.filter(email=>
       (email.from+" "+email.subject+" "+email.snippet)
       .toLowerCase()
@@ -796,35 +811,61 @@ async function renderInbox(){
       return;
     }
 
-    $("inboxBody").innerHTML=filtered.map(email=>`
-      <tr class="click"
-          onclick='openGmailEmail(${JSON.stringify(email)})'>
+    $("inboxBody").innerHTML=filtered.map((email,index)=>{
 
-        <td>${esc(email.from||"")}</td>
+      const threat=threats[index % threats.length];
+      const location=locations[index % locations.length];
 
-        <td>${esc(email.subject||"(No subject)")}</td>
+      let threatClass="obs";
 
-        <td>
-          <span class="badge obs">GMAIL</span>
-        </td>
+      if(threat==="PHISHING"){
+        threatClass="bad";
+      }else if(threat==="RISKY"){
+        threatClass="warn";
+      }else if(threat==="SUSPICIOUS"){
+        threatClass="unknown";
+      }else if(threat==="SAFE"){
+        threatClass="good";
+      }
 
-        <td>
-          ${esc(email.date||"")}
-        </td>
+      const gmailEmail={
+        ...email,
+        demoThreat:threat,
+        demoLocation:location
+      };
 
-        <td>
-          ${esc(email.snippet||"")}
-        </td>
+      return `
+        <tr class="click"
+            onclick='openGmailEmail(${JSON.stringify(gmailEmail)})'>
 
-        <td>
-          <button class="btn"
-            onclick='event.stopPropagation();openGmailEmail(${JSON.stringify(email)})'>
-            Open
-          </button>
-        </td>
+          <td>${esc(email.from||"")}</td>
 
-      </tr>
-    `).join("");
+          <td>${esc(email.subject||"(No subject)")}</td>
+
+          <td>
+            <span class="badge ${threatClass}">
+              ${esc(threat)}
+            </span>
+          </td>
+
+          <td>
+            ${esc(email.date||"")}
+          </td>
+
+          <td>
+            ${esc(location)}
+          </td>
+
+          <td>
+            <button class="btn"
+              onclick='event.stopPropagation();openGmailEmail(${JSON.stringify(gmailEmail)})'>
+              Investigate
+            </button>
+          </td>
+
+        </tr>
+      `;
+    }).join("");
 
   }catch(error){
     console.error(error);
@@ -841,6 +882,8 @@ function openGmailEmail(email){
   alert(
     "From: "+(email.from||"")+
     "\nSubject: "+(email.subject||"(No subject)")+
+    "\nThreat: "+(email.demoThreat||"UNKNOWN")+
+    "\nLocation: "+(email.demoLocation||"Unknown")+
     "\nDate: "+(email.date||"")+
     "\n\n"+(email.snippet||"")
   );
