@@ -1115,7 +1115,7 @@ function authEmailLogin(){
 
 function authGoogleLogin(){
   console.log('Starting real Google OAuth login...');
-  window.location.href='https://tracemail-ai-service.onrender.com/auth/google/login';
+  window.location.href='/auth/google/login';
 }
 
 async function checkBackendAuthentication(){
@@ -1123,12 +1123,12 @@ async function checkBackendAuthentication(){
   try{
 
     const response=await fetch(
-      'https://tracemail-ai-service.onrender.com/auth/me',
-      {
-        method:'GET',
-        credentials:'include'
-      }
-    );
+  '/auth/me',
+  {
+    method:'GET',
+    credentials:'include'
+  }
+);
 
     if(!response.ok){
       return false;
@@ -1172,7 +1172,7 @@ async function logoutTraceMail(){
   try{
 
     await fetch(
-      'https://tracemail-ai-service.onrender.com/auth/logout',
+      '/auth/logout',
       {
         method:'POST',
         credentials:'include'
@@ -1255,7 +1255,7 @@ document.addEventListener('DOMContentLoaded',async ()=>{
 });
 </script>
 <script>window.TRACEMAIL_CONFIG = {
-    OAUTH_START: 'https://tracemail-ai-service.onrender.com/auth/google/login'
+    OAUTH_START: '/auth/google/login'
 };
   </script>
 
