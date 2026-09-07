@@ -557,6 +557,18 @@ body:not(.authLocked) .main .page.active{display:block!important;}
       <div class="authEy">SECURE ACCESS</div>
       <h1>Sign in to your security workspace</h1>
       <p>Connect a mailbox or open an email evidence file to begin.</p>
+      <p style="font-size:11px;color:#667788;margin-top:10px">
+    By continuing, you acknowledge that TraceMail AI may access
+    Gmail data only after your explicit Google authorization.
+    <a
+        href="/privacy.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="color:#1769aa;font-weight:700;text-decoration:none"
+    >
+        Privacy Policy
+    </a>
+</p>
       <label class="authLabel" for="authRole">Role</label>
       <select id="authRole" class="authInput authSelect">
         <option value="viewer">Viewer / Guardian</option>
@@ -637,15 +649,62 @@ body:not(.authLocked) .main .page.active{display:block!important;}
    <button class="btn primary" style="width:100%" onclick="startMailLink()">🔐 Continue with Google</button>
    
   </div>
-  <div class="card">
-   <h2 style="font-size:14px">What TraceMail AI collects</h2>
-   <div class="find"><span>Message metadata</span><b>Subject · sender · time</b></div>
-   <div class="find"><span>Headers</span><b>Received · Authentication-Results</b></div>
-   <div class="find"><span>Threat indicators</span><b>URLs · domains · IPs</b></div>
-   <div class="find"><span>Attachments</span><b>Metadata / hashes</b></div>
-   <div class="find"><span>Permission</span><b>Gmail read-only</b></div>
-   <div class="authorize" style="margin-top:12px">🔒 Privacy: TraceMail AI does not silently send, delete, or modify mail. Destructive response actions require authorization.</div>
-  </div>
+<div class="card">
+   <h2 style="font-size:14px">Why does TraceMail need Gmail access?</h2>
+
+   <p class="muted" style="line-height:1.6;margin-top:8px">
+      TraceMail AI uses read-only Gmail access to retrieve email messages
+      for security analysis and threat investigation.
+   </p>
+
+   <div class="find">
+      <span>Message metadata</span>
+      <b>Subject · sender · time</b>
+   </div>
+
+   <div class="find">
+      <span>Headers</span>
+      <b>Received · Authentication-Results</b>
+   </div>
+
+   <div class="find">
+      <span>Threat indicators</span>
+      <b>URLs · domains · IPs</b>
+   </div>
+
+   <div class="find">
+      <span>Attachments</span>
+      <b>Metadata / hashes</b>
+   </div>
+
+   <div class="find">
+      <span>Permission</span>
+      <b>Gmail read-only</b>
+   </div>
+
+   <div class="authorize" style="margin-top:12px">
+      <b>TraceMail cannot:</b><br>
+      ✓ Send emails<br>
+      ✓ Delete emails<br>
+      ✓ Modify emails<br>
+      ✓ Forward emails<br>
+      ✓ Change Gmail settings
+   </div>
+
+   <div class="authorize" style="margin-top:10px">
+      🔒 Your Gmail access is used only for the security-analysis
+      functionality described above.
+   </div>
+
+   <div style="margin-top:12px;font-size:11px">
+      <a href="/privacy.html"
+         target="_blank"
+         rel="noopener noreferrer"
+         style="color:#1769aa;font-weight:700;text-decoration:none">
+         Read TraceMail AI Privacy Policy →
+      </a>
+   </div>
+</div>
  </div>
  <div class="card section" id="mailConnectionStatus">
    <div class="sectionHead"><h2>Connection status</h2><span class="badge unknown" id="mailStatusBadge">NOT CONNECTED</span></div>

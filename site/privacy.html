@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TraceMail AI | Privacy Policy</title>
+
+    <style>
+        :root {
+            --bg: #f4f7fa;
+            --surface: #ffffff;
+            --line: #dbe3ea;
+            --text: #1b2a3a;
+            --muted: #667788;
+            --blue: #1769aa;
+            --blue-soft: #eaf3fa;
+            --green: #28734d;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family:
+                Inter,
+                Segoe UI,
+                Arial,
+                sans-serif;
+            line-height: 1.65;
+        }
+
+        .page {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px 60px;
+        }
+
+        .header {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 18px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: var(--blue);
+            color: white;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+        }
+
+        .logo-name {
+            font-size: 20px;
+            font-weight: 800;
+            color: #19344c;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            color: #19344c;
+            font-size: 30px;
+        }
+
+        h2 {
+            color: #19344c;
+            font-size: 19px;
+            margin-top: 30px;
+        }
+
+        h3 {
+            color: #23445e;
+            font-size: 15px;
+            margin-top: 22px;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .updated {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 18px rgba(27, 42, 58, 0.06);
+        }
+
+        .notice {
+            background: var(--blue-soft);
+            border: 1px solid #c9dfef;
+            border-radius: 9px;
+            padding: 15px;
+            margin: 18px 0;
+        }
+
+        .safe {
+            background: #edf7f1;
+            border: 1px solid #cce6d7;
+            border-radius: 9px;
+            padding: 15px;
+            margin: 18px 0;
+        }
+
+        ul {
+            padding-left: 22px;
+        }
+
+        li {
+            margin: 7px 0;
+        }
+
+        .permission-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .permission-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #edf1f4;
+        }
+
+        .permission-list li:last-child {
+            border-bottom: none;
+        }
+
+        .check {
+            color: var(--green);
+            font-weight: 800;
+            margin-right: 7px;
+        }
+
+        a {
+            color: var(--blue);
+            font-weight: 600;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 18px;
+            text-decoration: none;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 600px) {
+            .page {
+                padding: 20px 12px 40px;
+            }
+
+            .header,
+            .card {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <a class="back" href="/">
+        ← Back to TraceMail AI
+    </a>
+
+    <div class="header">
+
+        <div class="logo">
+            <div class="logo-icon">TM</div>
+
+            <div class="logo-name">
+                TraceMail AI
+            </div>
+        </div>
+
+        <h1>Privacy Policy</h1>
+
+        <p class="updated">
+            Last updated: September 7, 2026
+        </p>
+
+        <p class="muted">
+            This Privacy Policy explains how TraceMail AI handles information
+            when you use the TraceMail AI email security and forensic analysis
+            application.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>1. What TraceMail AI Does</h2>
+
+        <p>
+            TraceMail AI is an email security analysis application designed
+            to help users investigate suspicious email messages, identify
+            potential threat indicators, and understand security risks.
+        </p>
+
+        <p>
+            Users may analyze email evidence locally using an
+            <strong>.EML file</strong> or connect a Gmail mailbox for
+            read-only email security analysis.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>2. Why TraceMail Requests Gmail Access</h2>
+
+        <p>
+            TraceMail AI requests Gmail read-only access so that it can
+            retrieve email messages required for security analysis.
+        </p>
+
+        <div class="notice">
+            <strong>
+                TraceMail AI uses Gmail access only for the email security
+                functionality described in this Privacy Policy.
+            </strong>
+        </div>
+
+        <p>
+            The Gmail permission requested by TraceMail AI is:
+        </p>
+
+        <p>
+            <code>
+                https://www.googleapis.com/auth/gmail.readonly
+            </code>
+        </p>
+
+        <p>
+            This permission is read-only. TraceMail AI does not request
+            permission to send, modify, delete, or manage Gmail settings.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>3. What TraceMail AI May Access</h2>
+
+        <p>
+            When a user explicitly connects a Gmail account, TraceMail AI
+            may retrieve email information necessary for security analysis,
+            including:
+        </p>
+
+        <ul>
+            <li>Email subject</li>
+            <li>Sender and recipient information contained in the message</li>
+            <li>Email timestamps</li>
+            <li>Email headers</li>
+            <li>Authentication results</li>
+            <li>URLs and domains contained in messages</li>
+            <li>IP addresses or other threat indicators contained in messages</li>
+            <li>Attachment metadata or hashes when required for analysis</li>
+        </ul>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>4. What TraceMail AI Cannot Do</h2>
+
+        <p>
+            TraceMail AI's Gmail integration is intended to be read-only.
+        </p>
+
+        <ul class="permission-list">
+            <li>
+                <span class="check">✓</span>
+                Cannot send emails
+            </li>
+
+            <li>
+                <span class="check">✓</span>
+                Cannot delete emails
+            </li>
+
+            <li>
+                <span class="check">✓</span>
+                Cannot modify emails
+            </li>
+
+            <li>
+                <span class="check">✓</span>
+                Cannot forward emails
+            </li>
+
+            <li>
+                <span class="check">✓</span>
+                Cannot change Gmail settings
+            </li>
+        </ul>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>5. How Email Data Is Used</h2>
+
+        <p>
+            Email information accessed through Gmail is used to support
+            security analysis and investigation features, including:
+        </p>
+
+        <ul>
+            <li>Threat classification</li>
+            <li>Security indicator extraction</li>
+            <li>Email header analysis</li>
+            <li>Suspicious URL and domain identification</li>
+            <li>Security investigation and forensic reporting</li>
+            <li>User security awareness</li>
+        </ul>
+
+        <p>
+            TraceMail AI does not use Gmail data for advertising or
+            unrelated commercial profiling.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>6. Data Storage and Security</h2>
+
+        <p>
+            TraceMail AI is designed to keep authentication credentials
+            and Google authorization information on the server side rather
+            than exposing them to the browser.
+        </p>
+
+        <p>
+            Access credentials and authentication information are treated
+            as sensitive information and should not be shared publicly,
+            committed to source-control repositories, or exposed in
+            client-side code.
+        </p>
+
+        <div class="safe">
+            <strong>Security principle:</strong>
+            TraceMail AI follows a least-privilege approach and requests
+            only the Gmail permission required for its intended
+            read-only analysis functionality.
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>7. Gmail Authorization and Revocation</h2>
+
+        <p>
+            Gmail access is granted only after the user explicitly
+            authorizes TraceMail AI through Google's OAuth authorization
+            process.
+        </p>
+
+        <p>
+            You can revoke TraceMail AI's access to your Google Account
+            at any time through your Google Account's security and
+            connected-app controls.
+        </p>
+
+        <p>
+            Revoking authorization prevents TraceMail AI from obtaining
+            new Gmail data through that authorization.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>8. .EML File Analysis</h2>
+
+        <p>
+            TraceMail AI also supports analysis of individual
+            <strong>.EML</strong> files.
+        </p>
+
+        <p>
+            This provides an alternative to connecting a mailbox and
+            allows users to provide a specific email message as evidence
+            for investigation.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>9. Third-Party Services</h2>
+
+        <p>
+            TraceMail AI uses third-party services required to provide
+            application functionality, including:
+        </p>
+
+        <ul>
+            <li>
+                <strong>Google OAuth and Gmail API</strong> for user
+                authorization and read-only Gmail access.
+            </li>
+
+            <li>
+                <strong>Railway</strong> for application hosting and
+                deployment.
+            </li>
+        </ul>
+
+        <p>
+            These services have their own privacy policies and terms.
+            Users should review the applicable policies of those services.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>10. No Silent Email Actions</h2>
+
+        <p>
+            TraceMail AI is designed to analyze email evidence and
+            provide security findings.
+        </p>
+
+        <p>
+            TraceMail AI does not silently send, delete, modify, or
+            forward user emails.
+        </p>
+
+        <p>
+            Any future response functionality involving changes to an
+            external system should require explicit user authorization
+            before the action is performed.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>11. Changes to This Privacy Policy</h2>
+
+        <p>
+            This Privacy Policy may be updated when TraceMail AI's
+            functionality, data practices, or integrations change.
+            The updated version will be published on this page.
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>12. Contact</h2>
+
+        <p>
+            If you have questions about this Privacy Policy or how
+            TraceMail AI handles data, please contact the TraceMail AI
+            project team through the support contact associated with
+            the application.
+        </p>
+
+    </div>
+
+
+    <footer>
+        © 2026 TraceMail AI · Email Forensic Intelligence
+    </footer>
+
+</div>
+
+</body>
+</html>
