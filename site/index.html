@@ -255,11 +255,78 @@ textarea{background:#071325;border-color:rgba(105,141,198,.25)}.progress{backgro
 </style>
 
 <style id="tm-auth-gate">
-.authGate{position:fixed;inset:0;z-index:100000;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 20% 20%,rgba(37,99,235,.22),transparent 30%),radial-gradient(circle at 80% 75%,rgba(124,58,237,.20),transparent 32%),linear-gradient(135deg,#071426 0%,#0a1830 48%,#120d2b 100%);color:#edf5ff}
+.authGate{
+    position:fixed;
+    inset:0;
+    z-index:100000;
+    display:grid;
+    place-items:center;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:32px 16px;
+    background:radial-gradient(circle at 20% 20%,rgba(37,99,235,.22),transparent 30%),
+               radial-gradient(circle at 80% 75%,rgba(124,58,237,.20),transparent 32%),
+               linear-gradient(135deg,#071426 0%,#0a1830 48%,#120d2b 100%);
+    color:#edf5ff;
+}
 .authGate:before{content:"";position:absolute;inset:0;opacity:.32;background-image:linear-gradient(rgba(105,145,255,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(105,145,255,.10) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,black,transparent 85%);animation:authGrid 18s linear infinite}
 .authGlow{position:absolute;border-radius:50%;filter:blur(2px);pointer-events:none}.authGlowA{width:360px;height:360px;left:-120px;top:-90px;background:radial-gradient(circle,rgba(37,99,235,.28),transparent 68%);animation:authFloat 8s ease-in-out infinite}.authGlowB{width:420px;height:420px;right:-130px;bottom:-150px;background:radial-gradient(circle,rgba(124,58,237,.25),transparent 68%);animation:authFloat 10s ease-in-out infinite reverse}
-.authShell{position:relative;width:min(470px,calc(100vw - 32px));display:flex;flex-direction:column;align-items:center;animation:authIn .65s cubic-bezier(.2,.8,.2,1) both}.authBrand{display:flex;align-items:center;gap:12px;margin-bottom:22px;align-self:flex-start}.authLogo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#38bdf8,#2563eb 48%,#7c3aed);box-shadow:0 12px 32px rgba(37,99,235,.32),0 0 0 1px rgba(255,255,255,.15);animation:authLogo 3.5s ease-in-out infinite}.authBrand strong{display:block;font-size:18px;letter-spacing:-.02em}.authBrand span{display:block;color:#91a8c5;font-size:11px;margin-top:2px}
+.authShell{position:relative;width:min(470px,calc(100vw - 32px));min-height: min-content;display:flex;flex-direction:column;align-items:center;animation:authIn .65s cubic-bezier(.2,.8,.2,1) both}.authBrand{display:flex;align-items:center;gap:12px;margin-bottom:22px;align-self:flex-start}.authLogo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#38bdf8,#2563eb 48%,#7c3aed);box-shadow:0 12px 32px rgba(37,99,235,.32),0 0 0 1px rgba(255,255,255,.15);animation:authLogo 3.5s ease-in-out infinite}.authBrand strong{display:block;font-size:18px;letter-spacing:-.02em}.authBrand span{display:block;color:#91a8c5;font-size:11px;margin-top:2px}
 .authPanel{width:100%;padding:32px;border:1px solid rgba(148,163,184,.20);border-radius:24px;background:linear-gradient(145deg,rgba(15,29,53,.91),rgba(10,19,36,.86));box-shadow:0 35px 90px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(24px)}.authEy{font-size:10px;letter-spacing:.16em;font-weight:800;color:#67e8f9;margin-bottom:9px}.authPanel h1{font-size:27px;line-height:1.14;margin:0 0 9px;letter-spacing:-.035em}.authPanel>p{margin:0 0 25px;color:#91a4bd;font-size:12px;line-height:1.6}.authLabel{display:block;font-size:11px;font-weight:700;color:#b7c7da;margin-bottom:7px}.authInput{width:100%;height:48px;padding:0 14px;border:1px solid #29415e;border-radius:12px;background:#081427;color:#fff;outline:none;transition:.2s}.authInput::placeholder{color:#5e728d}.authInput:focus{border-color:#4f8cff;box-shadow:0 0 0 4px rgba(79,140,255,.12)}.authPrimary,.authSecondary{width:100%;height:48px;border-radius:12px;margin-top:12px;border:1px solid transparent;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;transition:.22s;position:relative;overflow:hidden}.authPrimary{background:linear-gradient(100deg,#2563eb,#4f46e5,#7c3aed);color:white;box-shadow:0 12px 28px rgba(37,99,235,.25)}.authPrimary:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(79,70,229,.34)}.authPrimary b{position:absolute;right:15px;font-size:18px}.authSecondary{background:#fff;color:#18273a;border-color:#dbe5f0}.authSecondary:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.15)}.googleMark{font-weight:900;color:#4285f4;font-size:16px}.authDivider{display:flex;align-items:center;gap:10px;color:#61758f;font-size:9px;font-weight:800;letter-spacing:.15em;margin:18px 0}.authDivider:before,.authDivider:after{content:"";height:1px;flex:1;background:#263951}.authFile{margin-top:12px;min-height:58px;padding:10px 12px;border:1px dashed #385574;border-radius:12px;background:rgba(13,29,50,.65);display:grid;grid-template-columns:34px 1fr 16px;align-items:center;gap:10px;cursor:pointer;transition:.22s}.authFile:hover{border-color:#5b8cff;background:rgba(25,43,73,.8);transform:translateY(-2px)}.authFile input{display:none}.fileMark{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:#102544;color:#6dd3ff;font-size:20px}.authFile b{display:block;font-size:11px}.authFile small{display:block;color:#7187a2;font-size:9px;margin-top:3px}.authFile>strong{font-size:19px;color:#7187a2}.authFoot{margin-top:20px;text-align:center;color:#667b95;font-size:9px}.secureDot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.7);margin-right:6px}
+.authMode{
+  width:100%;
+}
+
+.authMode[hidden]{
+  display:none;
+}
+
+.authSwitch{
+  margin-top:16px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  color:rgba(237,245,255,.68);
+}
+
+.authSwitch button{
+  border:0;
+  background:none;
+  padding:0;
+  color:#8ab4ff;
+  font:inherit;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.authSwitch button:hover{
+  text-decoration:underline;
+}
+
+.authModeTitle{
+  font-size:24px;
+  line-height:1.2;
+  font-weight:800;
+  letter-spacing:-.03em;
+  margin-bottom:8px;
+}
+
+.authModeSubtitle{
+  color:#91a4bd;
+  font-size:12px;
+  line-height:1.6;
+  margin-bottom:22px;
+}
+
+#registerMode .authPrimary{
+  margin-top:18px;
+}
+
+#registerMode .authSwitch{
+  margin-top:18px;
+}
 body.authLocked #signatureStrip,body.authLocked .app{visibility:hidden;pointer-events:none}.authGate.hidden{display:none}@keyframes authIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}@keyframes authFloat{50%{transform:translate3d(25px,-20px,0) scale(1.08)}}@keyframes authGrid{to{background-position:44px 44px}}@keyframes authLogo{50%{transform:translateY(-3px);box-shadow:0 16px 36px rgba(37,99,235,.38),0 0 0 1px rgba(255,255,255,.18)}}
 @media(max-width:520px){.authPanel{padding:24px;border-radius:20px}.authPanel h1{font-size:24px}.authBrand{margin-bottom:16px}}
 </style>
@@ -569,20 +636,168 @@ body:not(.authLocked) .main .page.active{display:block!important;}
         Privacy Policy
     </a>
 </p>
-      <label class="authLabel" for="authRole">Role</label>
-      <select id="authRole" class="authInput authSelect">
-        <option value="viewer">Viewer / Guardian</option>
-        <option value="analyst" selected>Security Analyst</option>
-        <option value="admin">Administrator</option>
-      </select>
-      <div id="loginRoleHint" class="roleAction" style="margin:8px 0 12px"><strong>Viewer / Guardian:</strong> understand threats, investigate and upload .EML. Security Analyst adds deep forensic evidence. Administrator adds response and system controls.</div>
-      <label class="authLabel" for="authEmail">Work email</label>
-      <input id="authEmail" class="authInput" type="email" autocomplete="email" placeholder="you@company.com">
-      <button class="authPrimary" type="button" onclick="authEmailLogin()"><span>Continue with Email</span><b>→</b></button>
-      <div class="authDivider"><span>OR</span></div>
-      <button class="authSecondary" type="button" onclick="authGoogleLogin()"><span class="googleMark">G</span><span>Continue with Google</span></button>
-      <label class="authFile" for="authEml"><span class="fileMark">＋</span><span><b>Analyze an .EML file</b><small>Start without connecting a mailbox</small></span><strong>›</strong><input id="authEml" type="file" accept=".eml,message/rfc822,text/plain"></label>
-      <div class="authFoot"><span class="secureDot"></span> Read-only access · Evidence stays untrusted</div>
+      
+            <div id="loginMode" class="authMode">
+
+        <label class="authLabel" for="authEmail">Work email</label>
+        <input
+          id="authEmail"
+          class="authInput"
+          type="email"
+          autocomplete="email"
+          placeholder="you@company.com"
+        >
+
+        <label class="authLabel" for="authPassword" style="margin-top:14px">
+          Password
+        </label>
+        <input
+          id="authPassword"
+          class="authInput"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Enter your password"
+        >
+
+        <button
+          class="authPrimary"
+          type="button"
+          onclick="authEmailLogin()"
+        >
+          <span>Login</span>
+          <b>→</b>
+        </button>
+
+        <div class="authDivider"><span>OR</span></div>
+
+        <button
+          class="authSecondary"
+          type="button"
+          onclick="authGoogleLogin()"
+        >
+          <span class="googleMark">G</span>
+          <span>Continue with Google</span>
+        </button>
+
+        <label class="authFile" for="authEml">
+          <span class="fileMark">＋</span>
+          <span>
+            <b>Analyze an .EML file</b>
+            <small>Start without connecting a mailbox</small>
+          </span>
+          <strong>›</strong>
+          <input
+            id="authEml"
+            type="file"
+            accept=".eml,message/rfc822,text/plain"
+          >
+        </label>
+
+        <div class="authSwitch">
+          <span>New to TraceMail?</span>
+          <button type="button" id="showRegisterBtn">
+            Create an account
+          </button>
+        </div>
+
+        <div class="authFoot">
+          <span class="secureDot"></span>
+          Read-only access · Evidence stays untrusted
+        </div>
+
+      </div>
+
+
+      <div id="registerMode" class="authMode" hidden>
+
+        <div class="authModeTitle">Create your account</div>
+
+        <div class="authModeSubtitle">
+          Set up your TraceMail security workspace.
+        </div>
+
+        <label class="authLabel" for="registerName">
+          Full name
+        </label>
+        <input
+          id="registerName"
+          class="authInput"
+          type="text"
+          autocomplete="name"
+          placeholder="Enter your full name"
+        >
+
+        <label class="authLabel" for="registerEmail" style="margin-top:14px">
+          Work email
+        </label>
+        <input
+          id="registerEmail"
+          class="authInput"
+          type="email"
+          autocomplete="email"
+          placeholder="you@company.com"
+        >
+
+        <label class="authLabel" for="registerPassword" style="margin-top:14px">
+          Password
+        </label>
+        <input
+          id="registerPassword"
+          class="authInput"
+          type="password"
+          autocomplete="new-password"
+          placeholder="Create a password"
+        >
+
+        <label class="authLabel" for="registerConfirmPassword" style="margin-top:14px">
+          Confirm password
+        </label>
+        <input
+          id="registerConfirmPassword"
+          class="authInput"
+          type="password"
+          autocomplete="new-password"
+          placeholder="Re-enter your password"
+        >
+
+        <label class="authLabel" for="registerRole" style="margin-top:14px">
+          Role
+        </label>
+
+        <select
+          id="registerRole"
+          class="authInput authSelect"
+        >
+          <option value="viewer">
+            Viewer / Guardian
+          </option>
+
+          <option value="analyst" selected>
+            Security Analyst
+          </option>
+
+          <option value="admin">
+            Administrator
+          </option>
+        </select>
+
+        <button
+          id="registerBtn"
+          class="authPrimary"
+          type="button"
+          onclick="authRegister()"
+        >
+          <span>Create Account</span>
+          <b>→</b>
+        </button>
+
+        <div class="authSwitch">
+          <span>Already have an account?</span>
+          <button type="button" id="showLoginBtn">
+            Login
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1239,9 +1454,10 @@ function displayAuthenticatedUser(user){
   }
 }
 function unlockTraceMail(source){
-  const selectedRole=document.getElementById('authRole')?.value||localStorage.getItem('tmRole')||'analyst';
 
-  setRole(selectedRole,false);
+  const storedRole=localStorage.getItem('tmRole')||'analyst';
+
+  setRole(storedRole,false);
 
   if(source){
     localStorage.setItem('tmIntakeSource',source);
@@ -1255,6 +1471,7 @@ function unlockTraceMail(source){
   }
 
   document.body.classList.remove('authLocked');
+
   go('dashboard');
 
   toast(
@@ -1264,31 +1481,129 @@ function unlockTraceMail(source){
   );
 }
 
-document.getElementById('authRole')?.addEventListener('change',function(){
-  const h=document.getElementById('loginRoleHint');
-  const r=roleAccess[this.value]||roleAccess.analyst;
-
-  if(h){
-    h.innerHTML='<strong>'+r.label+':</strong> '+r.note;
-  }
-});
-
 function authEmailLogin(){
-  const el=document.getElementById('authEmail');
-  const email=(el?.value||'').trim();
+
+  const emailEl=document.getElementById('authEmail');
+  const passwordEl=document.getElementById('authPassword');
+
+  const email=(emailEl?.value||'').trim();
+  const password=passwordEl?.value||'';
 
   if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
     toast('Enter a valid work email');
-    el?.focus();
+    emailEl?.focus();
+    return;
+  }
+
+  if(!password){
+    toast('Enter your password');
+    passwordEl?.focus();
     return;
   }
 
   localStorage.setItem('tmPendingEmail',email);
 
-  // Email authentication is still demo-only for now.
+  // Temporary frontend-only login.
+  // Real email/password authentication will be connected to the backend next.
   unlockTraceMail('email');
 }
+function authRegister(){
 
+  const nameEl=document.getElementById('registerName');
+  const emailEl=document.getElementById('registerEmail');
+  const passwordEl=document.getElementById('registerPassword');
+  const confirmEl=document.getElementById('registerConfirmPassword');
+  const roleEl=document.getElementById('registerRole');
+
+  const name=(nameEl?.value||'').trim();
+  const email=(emailEl?.value||'').trim();
+  const password=passwordEl?.value||'';
+  const confirmPassword=confirmEl?.value||'';
+  const role=roleEl?.value||'';
+
+  if(!name){
+    toast('Enter your full name');
+    nameEl?.focus();
+    return;
+  }
+
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    toast('Enter a valid work email');
+    emailEl?.focus();
+    return;
+  }
+
+  if(!password){
+    toast('Create a password');
+    passwordEl?.focus();
+    return;
+  }
+
+  if(password.length < 8){
+    toast('Password must be at least 8 characters');
+    passwordEl?.focus();
+    return;
+  }
+
+  if(password !== confirmPassword){
+    toast('Passwords do not match');
+    confirmEl?.focus();
+    return;
+  }
+
+  if(!['viewer','analyst','admin'].includes(role)){
+    toast('Select a valid role');
+    roleEl?.focus();
+    return;
+  }
+
+  /*
+    Backend registration will be connected in the next stage.
+
+    For now we only validate the registration form.
+  */
+
+  toast('Account form validated — backend registration comes next');
+}
+function showRegisterMode(){
+
+  const loginMode=document.getElementById('loginMode');
+  const registerMode=document.getElementById('registerMode');
+
+  if(loginMode){
+    loginMode.hidden=true;
+  }
+
+  if(registerMode){
+    registerMode.hidden=false;
+  }
+}
+
+
+function showLoginMode(){
+
+  const loginMode=document.getElementById('loginMode');
+  const registerMode=document.getElementById('registerMode');
+
+  if(registerMode){
+    registerMode.hidden=true;
+  }
+
+  if(loginMode){
+    loginMode.hidden=false;
+  }
+}
+
+
+document.getElementById('showRegisterBtn')?.addEventListener(
+  'click',
+  showRegisterMode
+);
+
+document.getElementById('showLoginBtn')?.addEventListener(
+  'click',
+  showLoginMode
+);
 function authGoogleLogin(){
   console.log('Starting real Google OAuth login...');
   window.location.href='/auth/google/login';

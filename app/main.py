@@ -1,5 +1,6 @@
 import json
 from fastapi import FastAPI, Request, HTTPException
+from pydantic import BaseModel, EmailStr
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -17,8 +18,12 @@ from .config import (
 from .database import (
     init_db,
     upsert_user,
+    create_user,
+    authenticate_user,
+    get_user_by_email,
     get_user_by_id,
     get_google_token_by_user_id,
+    validate_role,
 )
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -44,7 +49,16 @@ app.add_middleware(
     same_site="lax",
     https_only=True,  # Change to True when deployed over HTTPS.
 )
+class RegisterRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    role: str
 
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
 oauth = OAuth()
 
 oauth.register(
@@ -64,6 +78,93 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+@app.post("/auth/register")
+async def register(request: RegisterRequest):
+
+    name = request.name.strip()
+    email = request.email.strip().lower()
+    password = request.password
+    role = request.role.strip().lower()
+
+    if not name:
+        raise HTTPException(
+            status_code=400,
+            detail="Name is required."
+        )
+
+    if len(password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 8 characters."
+        )
+
+    try:
+        validate_role(role)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc)
+        )
+
+    existing_user = get_user_by_email(email)
+
+    if existing_user:
+        raise HTTPException(
+            status_code=409,
+            detail="An account with this email already exists."
+        )
+
+    try:
+        user = create_user(
+            email=email,
+            name=name,
+            password=password,
+            role=role,
+        )
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=str(exc)
+        )
+
+    # Automatically log the newly created user in.
+    request.session["user_id"] = user["id"]
+
+    return {
+        "success": True,
+        "authenticated": True,
+        "user": user,
+    }
+
+
+@app.post("/auth/login")
+async def login(
+    request: Request,
+    credentials: LoginRequest,
+):
+
+    email = credentials.email.strip().lower()
+    password = credentials.password
+
+    user = authenticate_user(
+        email=email,
+        password=password,
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password."
+        )
+
+    request.session["user_id"] = user["id"]
+
+    return {
+        "success": True,
+        "authenticated": True,
+        "user": user,
+    }   
 
 @app.get("/auth/google/login")
 async def google_login(request: Request):
