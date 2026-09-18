@@ -1,5 +1,5 @@
 import json
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
@@ -59,6 +59,88 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    class LoginRequest(BaseModel):
+        email: EmailStr
+        password: str
+
+
+# ---------------------------------------------------------
+# RBAC ROLE HIERARCHY
+# ---------------------------------------------------------
+
+ROLE_LEVELS = {
+    "viewer": 1,
+    "analyst": 2,
+    "admin": 3,
+}
+# ---------------------------------------------------------
+# AUTHENTICATION / RBAC HELPERS
+# ---------------------------------------------------------
+
+def get_current_user(request: Request):
+    """
+    Return the authenticated TraceMail user.
+
+    The user ID comes from the server-side session.
+    The role comes from the database.
+    """
+
+    user_id = request.session.get("user_id")
+
+    if not user_id:
+        raise HTTPException(
+            status_code=401,
+            detail="Not logged in."
+        )
+
+    user = get_user_by_id(user_id)
+
+    if not user:
+        request.session.clear()
+
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication session is invalid."
+        )
+
+    return user
+
+
+def require_role(required_role: str):
+    """
+    Create a reusable dependency that requires
+    the authenticated user to have at least
+    the specified role level.
+    """
+
+    if required_role not in ROLE_LEVELS:
+        raise ValueError(
+            f"Invalid required role: {required_role}"
+        )
+
+    required_level = ROLE_LEVELS[required_role]
+
+    def role_checker(user=Depends(get_current_user)):
+        user_role = user.get("role")
+
+        if user_role not in ROLE_LEVELS:
+            raise HTTPException(
+                status_code=403,
+                detail="User has an invalid or missing role."
+            )
+
+        user_level = ROLE_LEVELS[user_role]
+
+        if user_level < required_level:
+            raise HTTPException(
+                status_code=403,
+                detail=f"{required_role.capitalize()} role or higher required."
+            )
+
+        return user
+
+    return role_checker
+
 oauth = OAuth()
 
 oauth.register(
@@ -260,30 +342,18 @@ async def logout(request: Request):
 
 # Simple role-protected example endpoint.
 @app.get("/api/analyst-area")
-async def analyst_area(request: Request):
-    
-    user_id = request.session.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Not logged in.")
-
-    user = get_user_by_id(user_id)
-
-    if user["role"] not in ("analyst", "admin"):
-        raise HTTPException(
-            status_code=403,
-            detail="Analyst or admin role required."
-        )
-
+async def analyst_area(
+    user=Depends(require_role("analyst"))
+):
     return {
         "message": "You can access the analyst area.",
         "user": user,
     }
 @app.get("/api/emails")
-async def get_emails(request: Request):
-    user_id = request.session.get("user_id")
-
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Not logged in.")
+async def get_emails(
+    user=Depends(get_current_user)
+):
+    user_id = user["id"]
 
     google_token = get_google_token_by_user_id(user_id)
 

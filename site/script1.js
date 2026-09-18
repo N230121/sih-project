@@ -5,8 +5,72 @@ function tmToast(msg){let t=document.getElementById('tmToast');if(!t){t=document
 document.addEventListener('keydown',e=>{if(e.key==='Escape')tmCloseGeo()});
 
 const roleAccess={viewer:{label:'VIEWER',note:'Viewer / Guardian access: threat status and safety guidance only. Sensitive forensic details are restricted.',level:1},analyst:{label:'ANALYST',note:'Security Analyst access: full investigation evidence, IOCs, infrastructure and forensic findings.',level:2},admin:{label:'ADMIN',note:'Administrator access: complete forensic evidence plus response controls and investigation administration.',level:3}};
-function setRole(role){localStorage.setItem('tmRole',role);const r=roleAccess[role]||roleAccess.analyst;const b=document.getElementById('accessBadge');const n=document.getElementById('roleNote');const side=document.getElementById('sideRoleSelect');if(side)side.value=role;if(b)b.textContent=r.label;if(n)n.textContent=r.note;document.body.dataset.role=role;applyRoleAccess();toast('Access level: '+r.label)}
-function applyRoleAccess(){const role=localStorage.getItem('tmRole')||'analyst';const level=(roleAccess[role]||roleAccess.analyst).level;document.querySelectorAll('[data-sensitive]').forEach(el=>{el.classList.toggle('restricted',level<2);el.title=level<2?'Restricted: elevated role required':''});document.querySelectorAll('[data-admin-only]').forEach(el=>el.style.display=level>=3?'':'none')}
-function markSensitive(){document.querySelectorAll('.kv .mono, .tm-node, .tm-ip, .tm-provider, #mHeaders, #mGraph .node, #mGraph .edge').forEach(el=>el.setAttribute('data-sensitive','1'));document.querySelectorAll('.actions .danger').forEach(el=>el.setAttribute('data-admin-only','1'));applyRoleAccess()}
+function setRole(role, persist = false){
+    const r = roleAccess[role] || roleAccess.viewer;
 
-document.addEventListener("DOMContentLoaded",()=>{const r=localStorage.getItem("tmRole")||"analyst";const sel=document.getElementById("roleSelect");if(sel)sel.value=r;const side=document.getElementById('sideRoleSelect');if(side)side.value=r;setRole(r);});
+    const b = document.getElementById('accessBadge');
+    const n = document.getElementById('roleNote');
+    const side = document.getElementById('sideRoleSelect');
+
+    if(side) side.value = role;
+    if(b) b.textContent = r.label;
+    if(n) n.textContent = r.note;
+
+    document.body.dataset.role = role;
+
+    // Only keep a temporary UI hint if explicitly requested.
+    // The backend remains the source of truth.
+    if(persist){
+        localStorage.setItem('tmRole', role);
+    }
+
+    applyRoleAccess(role);
+}
+
+
+function applyRoleAccess(role){
+    const current = roleAccess[role] || roleAccess.viewer;
+    const level = current.level;
+
+    document.querySelectorAll('[data-sensitive]').forEach(el=>{
+        const restricted = level < 2;
+
+        el.classList.toggle('restricted', restricted);
+        el.title = restricted
+            ? 'Restricted: elevated role required'
+            : '';
+    });
+
+    document.querySelectorAll('[data-admin-only]').forEach(el=>{
+        el.style.display = level >= 3 ? '' : 'none';
+    });
+}
+function markSensitive(){
+    document.querySelectorAll(
+        '.kv .mono, .tm-node, .tm-ip, .tm-provider, #mHeaders, #mGraph .node, #mGraph .edge'
+    ).forEach(el=>{
+        el.setAttribute('data-sensitive','1');
+    });
+
+    document.querySelectorAll('.actions .danger').forEach(el=>{
+        el.setAttribute('data-admin-only','1');
+    });
+
+    const role = document.body.dataset.role || 'viewer';
+    applyRoleAccess(role);
+}
+document.addEventListener("DOMContentLoaded",()=>{
+    // Do not determine the authenticated user's role from localStorage.
+    // script2.js obtains the authenticated user from /auth/me
+    // and calls setRole(user.role, false).
+
+    const role = document.body.dataset.role || 'viewer';
+
+    const sel = document.getElementById("roleSelect");
+    if(sel) sel.value = role;
+
+    const side = document.getElementById("sideRoleSelect");
+    if(side) side.value = role;
+
+    applyRoleAccess(role);
+});
