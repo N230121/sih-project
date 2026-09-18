@@ -70,15 +70,45 @@ async function renderInbox(){
   const q=($("inboxSearch")?.value||"").toLowerCase();
 
   $("inboxBody").innerHTML=
-    `<tr><td colspan="6" class="empty">Loading real Gmail messages...</td></tr>`;
+    `<tr><td colspan="6" class="empty">Checking authentication...</td></tr>`;
 
   try{
+    // First confirm that the backend session is valid.
+    const authResponse=await fetch("/auth/me",{
+      method:"GET",
+      credentials:"include"
+    });
+
+    if(!authResponse.ok){
+      throw new Error("Authentication session is not valid");
+    }
+
+    const authData=await authResponse.json();
+
+    if(!authData.authenticated){
+      throw new Error("Not authenticated");
+    }
+
+    // Only request Gmail after authentication has been confirmed.
+    $("inboxBody").innerHTML=
+      `<tr><td colspan="6" class="empty">Loading real Gmail messages...</td></tr>`;
+
     const response=await fetch("/api/emails",{
+      method:"GET",
       credentials:"include"
     });
 
     if(!response.ok){
-      throw new Error("Unable to load Gmail messages");
+      let detail="Unable to load Gmail messages";
+
+      try{
+        const errorData=await response.json();
+        if(errorData.detail){
+          detail=errorData.detail;
+        }
+      }catch(e){}
+
+      throw new Error(detail);
     }
 
     const data=await response.json();
@@ -127,11 +157,11 @@ async function renderInbox(){
     `).join("");
 
   }catch(error){
-    console.error(error);
+    console.error("Inbox error:",error);
 
     $("inboxBody").innerHTML=
       `<tr><td colspan="6" class="empty">
-        Unable to load Gmail messages. Please log in with Google again.
+        ${esc(error.message||"Unable to load Gmail messages")}
       </td></tr>`;
   }
 }
@@ -245,7 +275,9 @@ function renderAwarenessPage(){
 function showNewResult(r){window.lastAnalysis=r;let sender=(r.x.p.h["from"]||"unknown").replace(/^.*</,"").replace(">","");let subject=r.x.p.h.subject||"Untitled";$("newResult").className="";$("newResult").innerHTML=`<div class="card"><div class="sectionHead"><h2>Investigation Complete</h2><span class="badge ${sev(r.score)}">${r.threat.toUpperCase()}</span></div><div class="risk"><div class="ring" style="background:conic-gradient(var(--red) 0 ${r.score}%,#24323b ${r.score}%)"><b>${r.score}</b></div><div><div class="ey">EXPLAINABLE RISK SCORE</div><h3>${esc(subject)}</h3><div class="muted">${esc(sender)}</div><div class="small muted" style="margin-top:7px">Evidence → Analysis → Intelligence → Action</div></div></div></div><div class="two"><div class="card section"><h3 style="font-size:13px">Why is it dangerous?</h3>${r.reasons.slice(0,4).map(z=>`<div class="find"><span>${esc(z[0])}</span><b><span class="badge ${z[1]==="Observed"?"obs":"inf"}">${z[1]}</span></b></div>`).join("")}</div><div class="card section"><h3 style="font-size:13px">Extracted IOCs</h3><div class="find"><span>IP</span><b>${r.x.ips.length?r.x.ips[0]:"None"}</b></div><div class="find"><span>Domain</span><b>${r.x.domains.length?esc(r.x.domains[0]):"None"}</b></div><div class="find"><span>URL</span><b>${r.x.urls.length?esc(r.x.urls[0]):"None"}</b></div></div></div><div class="card section awareness"><div class="sectionHead"><h3 style="font-size:13px">🧠 Threat Cause & Awareness Model</h3><span class="modelTag">USER AWARENESS</span></div><div id="awarenessContent"></div></div><div class="card section"><div class="sectionHead"><h3 style="font-size:13px">Investigation Intelligence</h3><span class="badge inf">INFERRED</span></div><div class="three"><div class="card"><b>Attack DNA</b><div class="muted small">Campaign fingerprint</div></div><div class="card"><b>Mutation</b><div class="muted small">Infrastructure changes tracked</div></div><div class="card"><b>Blast Radius</b><div class="muted small">Related targets identified</div></div></div><div class="find"><span>Infrastructure</span><b>Observed infrastructure → <span class="badge enr">GEOLOCATION</span></b></div><div class="find"><span>Attacker physical location</span><b>UNKNOWN</b></div></div><div class="card section"><div class="sectionHead"><h3 style="font-size:13px">AI Forensic Copilot</h3><span class="badge obs">EVIDENCE-GROUNDED</span></div><p class="muted" style="margin:0 0 10px">“${r.score >= 90 ? 'High-risk phishing is supported by authentication anomalies, sender mismatch and suspicious infrastructure.' : 'The threat classification is supported by the extracted forensic signals.'}”</p><div class="small muted">Recommended: quarantine if authorized · block confirmed IOC · hunt for matching indicators</div></div><div class="actions section"><button class="btn primary" onclick='saveAnalysis(${JSON.stringify({subject,score:r.score,threat:r.threat,raw:r.x.raw})})'>Save Investigation</button><button class="btn" onclick="go('map')">Trace Geo Location</button><button class="btn" onclick="viewForensicPDF()">Forensic Report</button></div>`;setTimeout(markSensitive,0)}
 function normalizeSender(v){let s=String(v||"").trim();let m=s.match(/<([^>]+)>/);return (m?m[1]:s).trim().toLowerCase()}
 function saveAnalysis(o){let id="TM-2026-"+String(143+cases.length).padStart(5,"0");let parsed=parseEmail(o.raw),ex=extract(o.raw);cases.unshift({id,sender:normalizeSender(parsed.h.from),subject:o.subject,threat:o.threat,score:o.score,loc:"Unknown",geoConfidence:null,status:"ACTIVE",indicators:ex.ips.length+ex.urls.length,raw:o.raw,createdAt:new Date().toISOString()});renderRecent();window.currentCase=cases[0];renderReports();toast("Investigation "+id+" saved");go("inbox")}
-function currentRole(){return localStorage.getItem('tmRole')||'analyst'}
+function currentRole(){
+  return document.body.dataset.role || "viewer";
+}
 function connect(p){
   if(p==='Gmail'){ go('link'); } else toast(p+' connection is available in demo mode');
 }
@@ -282,5 +314,5 @@ function toggleDemoMode(){
 
 const FORENSIC_PDF="./TraceMail_AI_Forensic_Report_TM-2026-00142.pdf";function viewForensicPDF(){window.open(FORENSIC_PDF,"_blank","noopener,noreferrer")};function downloadReport(){let c=cases[0];if(!c){toast("No investigation available yet");go("reports");return}let a=document.createElement("a");a.href=FORENSIC_PDF;a.download=c.id+"_forensic_report.pdf";document.body.appendChild(a);a.click();a.remove();reports.unshift({name:c.id+" Forensic Report",id:c.id,date:new Date().toLocaleString()});renderReports();toast("Structured forensic PDF exported")}
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2600)}
-renderRecent();renderInbox();document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();go("inbox");$("inboxSearch")?.focus();}});
+renderRecent();document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();go("inbox");$("inboxSearch")?.focus();}});
 
