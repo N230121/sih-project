@@ -1052,8 +1052,18 @@ async function renderInbox(){
     });
 
     if(!response.ok){
-      throw new Error("Unable to load Gmail messages");
-    }
+    let detail="Unable to load Gmail messages";
+
+    try{
+      const errorData=await response.json();
+
+      if(errorData.detail){
+        detail=errorData.detail;
+      }
+    }catch(e){}
+
+  throw new Error(detail);
+}
 
     const data=await response.json();
     const emails=data.emails||[];
@@ -1141,14 +1151,41 @@ async function renderInbox(){
       `;
     }).join("");
 
-  }catch(error){
-    console.error(error);
+  }}catch(error){
+  console.error("Inbox error:",error);
 
-    $("inboxBody").innerHTML=
-      `<tr><td colspan="6" class="empty">
-        Unable to load Gmail messages. Please log in with Google again.
-      </td></tr>`;
+  const message=error.message||"Unable to load Gmail messages";
+
+  if(message==="Google account is not connected."){
+    $("inboxBody").innerHTML=`
+      <tr>
+        <td colspan="6" class="empty">
+          <div style="padding:20px">
+            <h3 style="margin-bottom:8px">
+              Gmail account not connected
+            </h3>
+
+            <p class="muted" style="margin-bottom:14px">
+              Your TraceMail account is authenticated, but Gmail access has not been authorized yet.
+            </p>
+
+            <button class="btn primary" onclick="go('link')">
+              Connect Gmail
+            </button>
+          </div>
+        </td>
+      </tr>`;
+
+    return;
   }
+
+  $("inboxBody").innerHTML=`
+    <tr>
+      <td colspan="6" class="empty">
+        ${esc(message)}
+      </td>
+    </tr>`;
+
 }
 function openGmailEmail(email){
   window.currentGmailEmail=email;
