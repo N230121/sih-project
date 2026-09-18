@@ -79,7 +79,10 @@ async def root():
 async def health():
     return {"status": "ok"}
 @app.post("/auth/register")
-async def register(request: RegisterRequest):
+async def register(
+    request: Request,
+    credentials: RegisterRequest,
+):
 
     name = request.name.strip()
     email = request.email.strip().lower()
