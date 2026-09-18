@@ -157,13 +157,46 @@ async function renderInbox(){
     `).join("");
 
   }catch(error){
-    console.error("Inbox error:",error);
+  console.error("Inbox error:",error);
 
-    $("inboxBody").innerHTML=
-      `<tr><td colspan="6" class="empty">
-        ${esc(error.message||"Unable to load Gmail messages")}
-      </td></tr>`;
+  const message=error.message||"Unable to load Gmail messages";
+
+  if(message==="Google account is not connected."){
+    $("inboxBody").innerHTML=`
+      <tr>
+        <td colspan="6" class="empty">
+          <div style="padding:20px">
+            <h3 style="margin-bottom:8px">Gmail account not connected</h3>
+            <p class="muted" style="margin-bottom:14px">
+              Your TraceMail account is authenticated, but Gmail access has not been authorized yet.
+            </p>
+            <button class="btn primary" onclick="go('link')">
+              Connect Gmail
+            </button>
+          </div>
+        </td>
+      </tr>`;
+    return;
   }
+
+  if(message==="Authentication session is not valid" ||
+     message==="Not authenticated"){
+    $("inboxBody").innerHTML=`
+      <tr>
+        <td colspan="6" class="empty">
+          Your TraceMail session has expired. Please log in again.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  $("inboxBody").innerHTML=`
+    <tr>
+      <td colspan="6" class="empty">
+        Unable to load Gmail messages. Please try again.
+      </td>
+    </tr>`;
+}
 }
 function openGmailEmail(email){
   window.currentGmailEmail=email;
