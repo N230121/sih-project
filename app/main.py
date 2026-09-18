@@ -84,10 +84,10 @@ async def register(
     credentials: RegisterRequest,
 ):
 
-    name = request.name.strip()
-    email = request.email.strip().lower()
-    password = request.password
-    role = request.role.strip().lower()
+    name = credentials.name.strip()
+    email = credentials.email.strip().lower()
+    password = credentials.password
+    role = credentials.role.strip().lower()
 
     if not name:
         raise HTTPException(
