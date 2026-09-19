@@ -1034,7 +1034,13 @@ body:not(.authLocked) .main .page.active{display:block!important;}
 
 </main>
 </div>
-<div id="modal" class="modal"><div class="modalBox"><div class="sectionHead"><h2 id="modalTitle">Details</h2><button class="btn" onclick="closeModal()">Close</button></div><div id="modalBody"></div></div></div>
+<div id="modal" class="modal">
+  <div class="modalBox">
+    <div class="sectionHead">
+      <h2 id="modalTitle">Details</h2>
+      <button class="btn" onclick="closeModal()">Close</button>
+    </div>
+<div id="modalBody"></div></div></div>
 <div id="toast" class="toast"></div>
 
 <script>
@@ -1112,188 +1118,285 @@ function reportToSpam(id){
   toast("Reported to Spam — removed from Inbox (demo)");
 }
 async function renderInbox(){
-  const q=($("inboxSearch")?.value||"").toLowerCase();
 
-  $("inboxBody").innerHTML=
-    `<tr><td colspan="6" class="empty">Loading real Gmail messages...</td></tr>`;
+  const q =
+    ($("inboxSearch")?.value || "")
+      .toLowerCase();
+
+  $("inboxBody").innerHTML =
+    `<tr>
+      <td colspan="6" class="empty">
+        Loading real Gmail messages...
+      </td>
+    </tr>`;
 
   try{
-    const response=await fetch("/api/emails",{
-      credentials:"include"
-    });
+
+    const response =
+      await fetch("/api/emails", {
+        credentials:"include"
+      });
 
     if(!response.ok){
-      let detail="Unable to load Gmail messages";
+
+      let detail =
+        "Unable to load Gmail messages";
 
       try{
-        const errorData=await response.json();
+
+        const errorData =
+          await response.json();
 
         if(errorData.detail){
-          detail=errorData.detail;
+          detail = errorData.detail;
         }
+
       }catch(e){
-        console.error("Could not read API error response:",e);
+
+        console.error(
+          "Could not read API error response:",
+          e
+        );
+
       }
 
       throw new Error(detail);
     }
 
-    const data=await response.json();
-    const emails=data.emails||[];
+    const data =
+      await response.json();
 
-    const threats=["PHISHING","RISKY","SUSPICIOUS","SAFE"];
+    const emails =
+      Array.isArray(data.emails)
+        ? data.emails
+        : [];
 
-    const locations=[
-      "Hyderabad, India",
-      "Bengaluru, India",
-      "Mumbai, India",
-      "Delhi, India",
-      "Chennai, India",
-      "Pune, India",
-      "Vijayawada, India",
-      "New York, USA",
-      "London, UK",
-      "Singapore"
-    ];
-
-    const filtered=emails.filter(email=>
-      (email.from+" "+email.subject+" "+email.snippet)
-      .toLowerCase()
-      .includes(q)
-    );
+    const filtered =
+      emails.filter(email =>
+        (
+          (email.from || "") +
+          " " +
+          (email.subject || "") +
+          " " +
+          (email.snippet || "")
+        )
+        .toLowerCase()
+        .includes(q)
+      );
 
     if(!filtered.length){
-      $("inboxBody").innerHTML=
-        `<tr><td colspan="6" class="empty">No Gmail messages found.</td></tr>`;
-      return;
-    }
 
-    $("inboxBody").innerHTML=filtered.map((email,index)=>{
-
-      const threat=threats[index % threats.length];
-      const location=locations[index % locations.length];
-
-      let threatClass="obs";
-
-      if(threat==="PHISHING"){
-        threatClass="bad";
-      }else if(threat==="RISKY"){
-        threatClass="warn";
-      }else if(threat==="SUSPICIOUS"){
-        threatClass="unknown";
-      }else if(threat==="SAFE"){
-        threatClass="good";
-      }
-
-      const gmailEmail={
-        ...email,
-        demoThreat:threat,
-        demoLocation:location
-      };
-
-      return `
-        <tr class="click"
-            onclick='openGmailEmail(${JSON.stringify(gmailEmail)})'>
-
-          <td>${esc(email.from||"")}</td>
-
-          <td>${esc(email.subject||"(No subject)")}</td>
-
-          <td>
-            <span class="badge ${threatClass}">
-              ${esc(threat)}
-            </span>
-          </td>
-
-          <td>
-            ${esc(email.date||"")}
-          </td>
-
-          <td>
-            ${esc(location)}
-          </td>
-
-          <td>
-            <button class="btn"
-              onclick='event.stopPropagation();openGmailEmail(${JSON.stringify(gmailEmail)})'>
-              Investigate
-            </button>
-          </td>
-
-        </tr>
-      `;
-    }).join("");
-
-  }catch(error){
-    console.error("Inbox error:",error);
-
-    const message=error.message||"Unable to load Gmail messages";
-
-    if(message==="Google account is not connected."){
-      $("inboxBody").innerHTML=`
-        <tr>
+      $("inboxBody").innerHTML =
+        `<tr>
           <td colspan="6" class="empty">
-            <div style="padding:20px">
-              <h3 style="margin-bottom:8px">
-                Gmail account not connected
-              </h3>
-
-              <p class="muted" style="margin-bottom:14px">
-                Your TraceMail account is authenticated, but Gmail access has not been authorized yet.
-              </p>
-
-              <button class="btn primary" onclick="go('link')">
-                Connect Gmail
-              </button>
-            </div>
+            No Gmail messages found.
           </td>
         </tr>`;
 
       return;
     }
 
-    $("inboxBody").innerHTML=`
+    $("inboxBody").innerHTML =
+      filtered.map(email => {
+
+        const threat =
+          String(
+            email.threat || "UNKNOWN"
+          ).toUpperCase();
+
+        const riskScore =
+          Number.isFinite(
+            Number(email.riskScore)
+          )
+            ? Number(email.riskScore)
+            : null;
+
+        const riskLevel =
+          String(
+            email.riskLevel || "UNKNOWN"
+          ).toUpperCase();
+
+        const riskText =
+          riskScore === null
+            ? riskLevel
+            : `${riskLevel} · ${riskScore}/100`;
+
+        const threatClass =
+          gmailThreatClass(threat);
+
+        return `
+          <tr
+            class="click"
+            onclick='openGmailEmail(${JSON.stringify(email)})'
+          >
+
+            <td>
+              ${esc(email.from || "")}
+            </td>
+
+            <td>
+              ${esc(
+                email.subject ||
+                "(No subject)"
+              )}
+            </td>
+
+            <td>
+              <span class="badge ${threatClass}">
+                ${esc(threat)}
+              </span>
+            </td>
+
+            <td>
+              <span class="badge ${threatClass}">
+                ${esc(riskText)}
+              </span>
+            </td>
+
+            <td>
+              <span class="badge unknown">
+                UNKNOWN
+              </span>
+            </td>
+
+            <td>
+              <button
+                class="btn"
+                type="button"
+                onclick='event.stopPropagation();openGmailEmail(${JSON.stringify(email)})'
+              >
+                Investigate
+              </button>
+            </td>
+
+          </tr>
+        `;
+
+      }).join("");
+
+  }catch(error){
+
+    console.error(
+      "Inbox error:",
+      error
+    );
+
+    const message =
+      error.message ||
+      "Unable to load Gmail messages";
+
+    if(
+      message ===
+      "Google account is not connected."
+    ){
+
+      $("inboxBody").innerHTML =
+        `
+        <tr>
+          <td colspan="6" class="empty">
+
+            <div style="padding:20px">
+
+              <h3 style="margin-bottom:8px">
+                Gmail account not connected
+              </h3>
+
+              <p
+                class="muted"
+                style="margin-bottom:14px"
+              >
+                Your TraceMail account is authenticated,
+                but Gmail access has not been authorized yet.
+              </p>
+
+              <button
+                class="btn primary"
+                onclick="go('link')"
+              >
+                Connect Gmail
+              </button>
+
+            </div>
+
+          </td>
+        </tr>
+        `;
+
+      return;
+    }
+
+    $("inboxBody").innerHTML =
+      `
       <tr>
-        <td colspan="6" class="empty">
+        <td
+          colspan="6"
+          class="empty"
+        >
           ${esc(message)}
         </td>
-      </tr>`;
+      </tr>
+      `;
   }
 }
 function openGmailEmail(email){
 
-  /*
-   * Preserve the selected Gmail message.
-   * Nothing about Gmail authentication or API access
-   * is changed here.
-   */
-  window.currentGmailEmail = email;
+  window.currentGmailEmail =
+    email;
 
-  /*
-   * Build the investigation view.
-   */
   const threat =
-    String(email.demoThreat || "UNKNOWN").toUpperCase();
+    String(
+      email.threat || "UNKNOWN"
+    ).toUpperCase();
 
-  const location =
-    email.demoLocation || "Unknown";
+  const riskScore =
+    Number.isFinite(
+      Number(email.riskScore)
+    )
+      ? Number(email.riskScore)
+      : null;
+
+  const riskLevel =
+    String(
+      email.riskLevel || "UNKNOWN"
+    ).toUpperCase();
+
+  const findings =
+    Array.isArray(email.findings)
+      ? email.findings
+      : [];
+
+  const forensic =
+    email.forensic || {};
+
+  const authentication =
+    forensic.authentication || {};
+
+  const urls =
+    Array.isArray(forensic.urls)
+      ? forensic.urls
+      : [];
+
+  const attachments =
+    Array.isArray(forensic.attachments)
+      ? forensic.attachments
+      : [];
 
   const sender =
-    email.from || "Unknown sender";
+    email.from ||
+    "Unknown sender";
 
   const subject =
-    email.subject || "(No subject)";
+    email.subject ||
+    "(No subject)";
 
   const date =
-    email.date || "Unknown";
+    email.date ||
+    "Unknown";
 
   const snippet =
-    email.snippet || "No message preview available.";
+    email.snippet ||
+    "No message preview available.";
 
-  /*
-   * Determine whether this email currently has
-   * a problem that deserves contextual education.
-   */
   const hasProblem =
     ![
       "SAFE",
@@ -1302,39 +1405,39 @@ function openGmailEmail(email){
       "NO THREAT"
     ].includes(threat);
 
-  /*
-   * Static investigation information.
-   *
-   * This is intentionally static for the current prototype.
-   * Later the backend/LLM can provide these values.
-   */
   const awareness =
     getStaticAwareness(threat);
 
-  /*
-   * Show the existing investigation modal.
-   */
   const modal =
     document.getElementById("modal");
 
   const modalTitle =
-    document.getElementById("modalTitle");
+    document.getElementById(
+      "modalTitle"
+    );
 
   const modalBody =
-    document.getElementById("modalBody");
+    document.getElementById(
+      "modalBody"
+    );
 
-  if(!modal || !modalTitle || !modalBody){
+  if(
+    !modal ||
+    !modalTitle ||
+    !modalBody
+  ){
 
-    /*
-     * Safety fallback.
-     * If the existing investigation modal cannot
-     * be found, don't break the Gmail inbox.
-     */
     alert(
       "From: " + sender +
       "\nSubject: " + subject +
       "\nThreat: " + threat +
-      "\nLocation: " + location +
+      "\nRisk: " +
+      (
+        riskScore === null
+          ? "UNKNOWN"
+          : riskScore + "/100"
+      ) +
+      "\nRisk Level: " + riskLevel +
       "\nDate: " + date +
       "\n\n" + snippet
     );
@@ -1343,13 +1446,93 @@ function openGmailEmail(email){
   }
 
   modalTitle.textContent =
-    "Email Investigation · " + subject;
+    "Email Investigation · " +
+    subject;
+
+  const riskDisplay =
+    riskScore === null
+      ? "UNKNOWN"
+      : riskScore + "/100";
+
+  const findingsHtml =
+    findings.length
+      ? findings.map(
+          finding => `
+            <div class="find">
+              <span>Indicator</span>
+              <b>
+                ${esc(finding)}
+              </b>
+            </div>
+          `
+        ).join("")
+      : `
+        <div
+          class="authorize"
+          style="margin-top:10px"
+        >
+          No suspicious indicators were
+          detected by the current forensic rules.
+        </div>
+      `;
+
+  const urlsHtml =
+    urls.length
+      ? urls.map(
+          url => `
+            <div class="find">
+              <span>URL</span>
+
+              <b
+                class="mono"
+                style="
+                  word-break:break-all;
+                  overflow-wrap:anywhere;
+                "
+              >
+                ${esc(url)}
+              </b>
+            </div>
+          `
+        ).join("")
+      : `
+        <div class="find">
+          <span>URLs</span>
+          <b>NONE OBSERVED</b>
+        </div>
+      `;
+
+  const attachmentsHtml =
+    attachments.length
+      ? attachments.map(
+          attachment => `
+            <div class="find">
+              <span>
+                ${esc(
+                  attachment.mime_type ||
+                  "UNKNOWN TYPE"
+                )}
+              </span>
+
+              <b>
+                ${esc(
+                  attachment.filename ||
+                  "Unnamed attachment"
+                )}
+              </b>
+            </div>
+          `
+        ).join("")
+      : `
+        <div class="find">
+          <span>Attachments</span>
+          <b>NONE OBSERVED</b>
+        </div>
+      `;
 
   modalBody.innerHTML = `
 
-    <!-- =====================================================
-         EMAIL SUMMARY
-         ===================================================== -->
+    <!-- EMAIL SUMMARY -->
 
     <div class="card section">
 
@@ -1365,7 +1548,9 @@ function openGmailEmail(email){
           </h3>
         </div>
 
-        <span class="badge ${gmailThreatClass(threat)}">
+        <span
+          class="badge ${gmailThreatClass(threat)}"
+        >
           ${esc(threat)}
         </span>
 
@@ -1394,16 +1579,23 @@ function openGmailEmail(email){
         <div>
 
           <div class="find">
-            <span>Infrastructure</span>
+            <span>Risk score</span>
             <b>
-              ${esc(location)}
+              ${esc(riskDisplay)}
+            </b>
+          </div>
+
+          <div class="find">
+            <span>Risk level</span>
+            <b>
+              ${esc(riskLevel)}
             </b>
           </div>
 
           <div class="find">
             <span>Analysis status</span>
             <b>
-              STATIC PROTOTYPE
+              DETERMINISTIC FORENSIC ANALYSIS
             </b>
           </div>
 
@@ -1414,9 +1606,7 @@ function openGmailEmail(email){
     </div>
 
 
-    <!-- =====================================================
-         MESSAGE PREVIEW
-         ===================================================== -->
+    <!-- MESSAGE PREVIEW -->
 
     <div class="card section">
 
@@ -1445,9 +1635,7 @@ function openGmailEmail(email){
     </div>
 
 
-    <!-- =====================================================
-         INVESTIGATION FINDING
-         ===================================================== -->
+    <!-- INVESTIGATION FINDING -->
 
     <div class="card section">
 
@@ -1457,78 +1645,194 @@ function openGmailEmail(email){
           Investigation Finding
         </h3>
 
-        <span class="badge ${gmailThreatClass(threat)}">
+        <span
+          class="badge ${gmailThreatClass(threat)}"
+        >
           ${esc(threat)}
         </span>
 
       </div>
 
+      <div class="find">
+        <span>Threat</span>
+        <b>${esc(threat)}</b>
+      </div>
+
+      <div class="find">
+        <span>Risk score</span>
+        <b>${esc(riskDisplay)}</b>
+      </div>
+
+      <div class="find">
+        <span>Risk level</span>
+        <b>${esc(riskLevel)}</b>
+      </div>
+
+      <div style="margin-top:14px">
+
+        <div class="ey">
+          DETECTED EVIDENCE
+        </div>
+
+        ${findingsHtml}
+
+      </div>
+
       ${
         hasProblem
+          ? `
+            <div class="find">
+              <span>Detected issue</span>
+              <b>
+                ${esc(
+                  awareness.shortTitle
+                )}
+              </b>
+            </div>
 
-        ? `
-          <div class="find">
-
-            <span>
-              Detected issue
-            </span>
-
-            <b>
-              ${esc(awareness.shortTitle)}
-            </b>
-
-          </div>
-
-          <div class="find">
-
-            <span>
-              Why it matters
-            </span>
-
-            <b>
-              ${esc(awareness.summary)}
-            </b>
-
-          </div>
-        `
-
-        : `
-          <div
-            class="authorize"
-            style="margin-top:0"
-          >
-            ✓ No problem requiring contextual awareness
-            was identified in this prototype result.
-          </div>
-        `
+            <div class="find">
+              <span>Why it matters</span>
+              <b>
+                ${esc(
+                  awareness.summary
+                )}
+              </b>
+            </div>
+          `
+          : `
+            <div
+              class="authorize"
+              style="margin-top:14px"
+            >
+              ✓ No problem requiring
+              contextual awareness was identified
+              by the current prototype rules.
+            </div>
+          `
       }
 
     </div>
 
 
-    <!-- =====================================================
-         KNOW MORE
-         Only appears when a problem exists.
-         ===================================================== -->
+    <!-- AUTHENTICATION -->
+
+    <div class="card section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Email Authentication
+        </h3>
+
+        <span class="badge obs">
+          FORENSIC
+        </span>
+
+      </div>
+
+      <div class="three">
+
+        <div class="find">
+          <span>SPF</span>
+          <b>
+            ${esc(
+              String(
+                authentication.spf ||
+                "unknown"
+              ).toUpperCase()
+            )}
+          </b>
+        </div>
+
+        <div class="find">
+          <span>DKIM</span>
+          <b>
+            ${esc(
+              String(
+                authentication.dkim ||
+                "unknown"
+              ).toUpperCase()
+            )}
+          </b>
+        </div>
+
+        <div class="find">
+          <span>DMARC</span>
+          <b>
+            ${esc(
+              String(
+                authentication.dmarc ||
+                "unknown"
+              ).toUpperCase()
+            )}
+          </b>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- URLS -->
+
+    <div class="card section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Extracted URLs
+        </h3>
+
+        <span class="badge obs">
+          ${urls.length}
+        </span>
+
+      </div>
+
+      ${urlsHtml}
+
+    </div>
+
+
+    <!-- ATTACHMENTS -->
+
+    <div class="card section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Attachments
+        </h3>
+
+        <span class="badge obs">
+          ${attachments.length}
+        </span>
+
+      </div>
+
+      ${attachmentsHtml}
+
+    </div>
+
+
+    <!-- KNOW MORE -->
 
     ${
       hasProblem
+        ? `
+          <div class="actions section">
 
-      ? `
-        <div class="actions section">
+            <button
+              class="btn primary"
+              type="button"
+              onclick="openKnowMoreForGmail()"
+            >
+              📖 Know More
+            </button>
 
-          <button
-            class="btn primary"
-            type="button"
-            onclick="openKnowMoreForGmail()"
-          >
-            📖 Know More
-          </button>
-
-        </div>
-      `
-
-      : ""
+          </div>
+        `
+        : ""
     }
 
   `;
@@ -1539,10 +1843,7 @@ function openGmailEmail(email){
     "aria-hidden",
     "false"
   );
-  /*
-   * Preserve the selected awareness information
-   * for the Know More button.
-   */
+
   window.currentGmailAwareness =
     awareness;
 }
@@ -1552,26 +1853,39 @@ function gmailThreatClass(threat){
     String(threat || "")
       .toUpperCase();
 
-  if(t === "SAFE" || t === "LIKELY SAFE"){
-    return "good";
+  if(
+    t === "SAFE" ||
+    t === "LIKELY SAFE"
+  ){
+    return "safe";
   }
 
   if(
-    t === "RISKY" ||
     t === "SUSPICIOUS"
   ){
-    return "warn";
+    return "medium";
+  }
+
+  if(
+    t === "RISKY"
+  ){
+    return "high";
+  }
+
+  if(
+    t === "HIGH RISK"
+  ){
+    return "critical";
   }
 
   if(
     t === "PHISHING" ||
-    t === "MALICIOUS ATTACHMENT" ||
-    t === "HIGH RISK"
+    t === "MALICIOUS ATTACHMENT"
   ){
-    return "bad";
+    return "critical";
   }
 
-  return "obs";
+  return "unknown";
 }
 /* =========================================================
    STATIC CONTEXTUAL AWARENESS KNOWLEDGE

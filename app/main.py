@@ -30,6 +30,8 @@ from .database import (
 )
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from .forensic.parser import parse_email_message
+from .forensic.analyzer import analyze_email
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -615,9 +617,12 @@ async def analyst_area(
 async def get_emails(
     user=Depends(get_current_user)
 ):
+
     user_id = user["id"]
 
-    google_token = get_google_token_by_user_id(user_id)
+    google_token = get_google_token_by_user_id(
+        user_id
+    )
 
     if not google_token:
         raise HTTPException(
@@ -625,7 +630,9 @@ async def get_emails(
             detail="Google account is not connected."
         )
 
-    token_data = json.loads(google_token)
+    token_data = json.loads(
+        google_token
+    )
 
     credentials = Credentials(
         token=token_data.get("access_token"),
@@ -633,41 +640,125 @@ async def get_emails(
         token_uri="https://oauth2.googleapis.com/token",
         client_id=GOOGLE_CLIENT_ID,
         client_secret=GOOGLE_CLIENT_SECRET,
-        scopes=["https://www.googleapis.com/auth/gmail.readonly"],
+        scopes=[
+            "https://www.googleapis.com/auth/gmail.readonly"
+        ],
     )
 
-    gmail = build("gmail", "v1", credentials=credentials)
+    gmail = build(
+        "gmail",
+        "v1",
+        credentials=credentials
+    )
 
-    results = gmail.users().messages().list(
-        userId="me",
-        maxResults=5
-    ).execute()
+    results = (
+        gmail.users()
+        .messages()
+        .list(
+            userId="me",
+            maxResults=5
+        )
+        .execute()
+    )
 
-    messages = results.get("messages", [])
+    messages = results.get(
+        "messages",
+        []
+    )
 
     emails = []
 
     for message in messages:
-        email = gmail.users().messages().get(
-            userId="me",
-            id=message["id"],
-            format="metadata",
-            metadataHeaders=["From", "To", "Subject", "Date"]
-        ).execute()
 
-        headers = {
-            header["name"]: header["value"]
-            for header in email["payload"]["headers"]
-        }
+        # -------------------------------------------------
+        # Fetch FULL Gmail message
+        # -------------------------------------------------
+
+        email = (
+            gmail.users()
+            .messages()
+            .get(
+                userId="me",
+                id=message["id"],
+                format="full"
+            )
+            .execute()
+        )
+
+        # -------------------------------------------------
+        # FORENSIC PARSING
+        # -------------------------------------------------
+
+        forensic = parse_email_message(
+            email
+        )
+
+        # -------------------------------------------------
+        # DETERMINISTIC ANALYSIS
+        # -------------------------------------------------
+
+        analysis = analyze_email(
+            forensic
+        )
+
+        # -------------------------------------------------
+        # FRONTEND RESPONSE
+        # -------------------------------------------------
 
         emails.append({
-            "id": email["id"],
-            "threadId": email["threadId"],
-            "from": headers.get("From", ""),
-            "to": headers.get("To", ""),
-            "subject": headers.get("Subject", ""),
-            "date": headers.get("Date", ""),
-            "snippet": email.get("snippet", ""),
+
+            "id": email.get("id"),
+
+            "threadId": email.get(
+                "threadId"
+            ),
+
+            "from": forensic["headers"].get(
+                "from",
+                ""
+            ),
+
+            "to": forensic["headers"].get(
+                "to",
+                ""
+            ),
+
+            "subject": forensic.get(
+                "subject",
+                ""
+            ),
+
+            "date": forensic.get(
+                "date",
+                ""
+            ),
+
+            "snippet": email.get(
+                "snippet",
+                ""
+            ),
+
+            # -----------------------------
+            # NEW FORENSIC INFORMATION
+            # -----------------------------
+
+            "forensic": forensic,
+
+            "analysis": analysis,
+
+            "threat": analysis["threat"],
+
+            "riskScore": analysis[
+                "risk_score"
+            ],
+
+            "riskLevel": analysis[
+                "risk_level"
+            ],
+
+            "findings": analysis[
+                "findings"
+            ],
         })
 
     return {
