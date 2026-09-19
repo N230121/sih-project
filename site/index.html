@@ -798,6 +798,80 @@ body:not(.authLocked) .main .page.active{display:block!important;}
           </button>
         </div>
       </div>
+      <div
+    id="googleRoleMode"
+    class="authMode"
+    hidden
+>
+
+    <div class="authModeTitle">
+        Complete your TraceMail account
+    </div>
+
+    <div class="authModeSubtitle">
+        Your Google account has been authenticated.
+        Choose the TraceMail role you want for your new account.
+    </div>
+
+    <div
+        id="googleRoleEmail"
+        style="
+            margin:14px 0;
+            padding:10px 12px;
+            background:#f5f8fb;
+            border:1px solid #dbe3ea;
+            border-radius:8px;
+            font-size:12px;
+            color:#536575;
+        "
+    ></div>
+
+    <label
+        class="authLabel"
+        for="googleRoleSelect"
+    >
+        Select your role
+    </label>
+
+    <select
+        id="googleRoleSelect"
+        class="authInput authSelect"
+    >
+
+        <option value="">
+            Select a role
+        </option>
+
+        <option value="viewer">
+            Viewer / Guardian
+        </option>
+
+        <option value="analyst">
+            Security Analyst
+        </option>
+
+        <option value="admin">
+            Administrator
+        </option>
+
+    </select>
+
+    <button
+        class="authPrimary"
+        type="button"
+        onclick="completeGoogleRole()"
+        style="margin-top:16px"
+    >
+        <span>Continue</span>
+        <b>→</b>
+    </button>
+
+    <div class="authFoot">
+        <span class="secureDot"></span>
+        Your selected role controls TraceMail access permissions.
+    </div>
+
+    </div>
     </div>
   </div>
 </div>

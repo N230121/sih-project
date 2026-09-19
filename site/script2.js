@@ -650,6 +650,155 @@ function showLoginMode(){
   }
 
 }
+function showGoogleRoleMode(email){
+
+    const loginMode =
+        document.getElementById('loginMode');
+
+    const registerMode =
+        document.getElementById('registerMode');
+
+    const googleRoleMode =
+        document.getElementById('googleRoleMode');
+
+    const emailEl =
+        document.getElementById('googleRoleEmail');
+
+    if(loginMode){
+        loginMode.hidden = true;
+    }
+
+    if(registerMode){
+        registerMode.hidden = true;
+    }
+
+    if(googleRoleMode){
+        googleRoleMode.hidden = false;
+    }
+
+    if(emailEl){
+        emailEl.textContent =
+            'Google account: ' + (email || '');
+    }
+}
+async function completeGoogleRole(){
+
+    const roleEl =
+        document.getElementById('googleRoleSelect');
+
+    const role =
+        (roleEl?.value || '').trim().toLowerCase();
+
+    if(!['viewer', 'analyst', 'admin'].includes(role)){
+
+        toast('Please select a valid role');
+
+        roleEl?.focus();
+
+        return;
+    }
+
+    try{
+
+        const response = await fetch(
+            '/auth/google/complete-role',
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                credentials: 'include',
+
+                body: JSON.stringify({
+                    role: role
+                })
+            }
+        );
+
+        const data =
+            await response.json();
+
+        if(!response.ok){
+
+            toast(
+                data.detail ||
+                'Unable to complete account setup'
+            );
+
+            return;
+        }
+
+        if(
+            data.success &&
+            data.authenticated &&
+            data.user
+        ){
+
+            displayAuthenticatedUser(
+                data.user
+            );
+
+            localStorage.setItem(
+                'tmUserName',
+                data.user.name || ''
+            );
+
+            localStorage.setItem(
+                'tmUserEmail',
+                data.user.email || ''
+            );
+
+            localStorage.setItem(
+                'tmRole',
+                data.user.role
+            );
+
+            setRole(
+                data.user.role,
+                false
+            );
+
+            const gate =
+                document.getElementById(
+                    'authGate'
+                );
+
+            if(gate){
+
+                gate.classList.add('hidden');
+
+                gate.setAttribute(
+                    'aria-hidden',
+                    'true'
+                );
+            }
+
+            document.body.classList.remove(
+                'authLocked'
+            );
+
+            go('dashboard');
+
+            toast(
+                'Account created successfully'
+            );
+        }
+
+    }catch(error){
+
+        console.error(
+            'Google role completion failed:',
+            error
+        );
+
+        toast(
+            'Unable to complete account setup'
+        );
+    }
+}
 
 
 /* =========================================================
@@ -752,70 +901,148 @@ function setupAuthEmlHandler(){
    ========================================================= */
 
 document.addEventListener(
-  'DOMContentLoaded',
-  async () => {
+    'DOMContentLoaded',
+    async ()=>{
 
-    const showRegisterBtn =
-      document.getElementById(
-        'showRegisterBtn'
-      );
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
 
-    const showLoginBtn =
-      document.getElementById(
-        'showLoginBtn'
-      );
+        const googleRoleRequired =
+            params.get('google_role') === 'required';
+
+        const gate =
+            document.getElementById(
+                'authGate'
+            );
+
+        if(googleRoleRequired){
+
+            if(gate){
+
+                gate.classList.remove(
+                    'hidden'
+                );
+
+                gate.setAttribute(
+                    'aria-hidden',
+                    'false'
+                );
+            }
+
+            document.body.classList.add(
+                'authLocked'
+            );
+
+            try{
+
+                const response =
+                    await fetch(
+                        '/auth/me',
+                        {
+                            credentials:
+                                'include'
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+                if(
+                    data.authenticated &&
+                    data.user
+                ){
+
+                    // This should normally not happen
+                    // for a pending user, but don't allow
+                    // an already-authenticated session to
+                    // remain in role setup.
+                    displayAuthenticatedUser(
+                        data.user
+                    );
+                }
+
+            }catch(err){
+
+                console.error(err);
+
+            }
+
+            // Ask backend for pending Google identity
+            try{
+
+                const response =
+                    await fetch(
+                        '/auth/google/pending',
+                        {
+                            credentials:
+                                'include'
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+                if(
+                    response.ok &&
+                    data.pending
+                ){
+
+                    showGoogleRoleMode(
+                        data.email
+                    );
+                    window.history.replaceState(
+                        {},
+                        document.title,
+                        window.location.pathname
+                    );
 
 
-    showRegisterBtn?.addEventListener(
-      'click',
-      showRegisterMode
-    );
+                    return;
+                }
 
+                toast(
+                    'Google account setup session expired. Please sign in again.'
+                );
 
-    showLoginBtn?.addEventListener(
-      'click',
-      showLoginMode
-    );
+            }catch(error){
 
+                console.error(
+                    'Pending Google account check failed:',
+                    error
+                );
 
-    setupAuthEmlHandler();
+                toast(
+                    'Unable to continue Google account setup.'
+                );
+            }
 
+            return;
+        }
 
-    /*
-      IMPORTANT:
+        const authenticated =
+            await checkBackendAuthentication();
 
-      Do NOT trust sessionStorage as proof
-      of authentication.
+        if(!authenticated){
 
-      Always ask the backend.
-    */
+            if(gate){
 
-    const authenticated =
-      await checkBackendAuthentication();
+                gate.classList.remove(
+                    'hidden'
+                );
 
+                gate.setAttribute(
+                    'aria-hidden',
+                    'false'
+                );
+            }
 
-    const gate =
-      document.getElementById('authGate');
+            document.body.classList.add(
+                'authLocked'
+            );
+        }
 
-
-    if(!authenticated){
-
-      if(gate){
-
-        gate.classList.remove('hidden');
-
-        gate.setAttribute(
-          'aria-hidden',
-          'false'
-        );
-
-      }
-
-      document.body.classList.add(
-        'authLocked'
-      );
-
+        // Keep your existing EML listener here.
     }
-
-  }
 );

@@ -460,6 +460,91 @@ def upsert_user(
     conn.close()
 
     return get_user_by_id(user_id)
+def create_google_user(
+    google_sub,
+    email,
+    name,
+    picture,
+    role,
+):
+    """
+    Create a new TraceMail account after a first-time
+    Google user has explicitly selected a role.
+    """
+
+    role = validate_role(role)
+
+    email = email.strip().lower()
+
+    conn = get_connection()
+
+    try:
+        # Never create a duplicate account.
+        existing = conn.execute(
+            """
+            SELECT id
+            FROM users
+            WHERE LOWER(email) = LOWER(?)
+            """,
+            (email,),
+        ).fetchone()
+
+        if existing:
+            raise ValueError(
+                "An account with this email already exists."
+            )
+
+        # Also make sure this Google identity is not already registered.
+        existing_google = conn.execute(
+            """
+            SELECT id
+            FROM users
+            WHERE google_sub = ?
+            """,
+            (google_sub,),
+        ).fetchone()
+
+        if existing_google:
+            raise ValueError(
+                "This Google account is already registered."
+            )
+
+        cursor = conn.execute(
+            """
+            INSERT INTO users (
+                google_sub,
+                email,
+                name,
+                picture,
+                password_hash,
+                role,
+                google_token
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                google_sub,
+                email,
+                name,
+                picture,
+                None,
+                role,
+                None,
+            ),
+        )
+
+        user_id = cursor.lastrowid
+
+        conn.commit()
+
+        return get_user_by_id(user_id)
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
 
 def update_google_token_for_user_id(user_id, google_token):
     """
@@ -525,3 +610,61 @@ def get_google_token_by_user_id(user_id):
     conn.close()
 
     return row["google_token"] if row else None
+def link_google_identity(
+    user_id,
+    google_sub,
+    name,
+    picture,
+):
+    """
+    Attach a Google identity to an existing TraceMail account.
+    The existing TraceMail role is preserved.
+    """
+
+    conn = get_connection()
+
+    try:
+        existing_google = conn.execute(
+            """
+            SELECT id
+            FROM users
+            WHERE google_sub = ?
+            AND id != ?
+            """,
+            (google_sub, user_id),
+        ).fetchone()
+
+        if existing_google:
+            raise ValueError(
+                "This Google account is already linked "
+                "to another TraceMail account."
+            )
+
+        conn.execute(
+            """
+            UPDATE users
+            SET
+                google_sub=?,
+                name=?,
+                picture=?,
+                last_login=CURRENT_TIMESTAMP
+            WHERE id=?
+            """,
+            (
+                google_sub,
+                name,
+                picture,
+                user_id,
+            ),
+        )
+
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
+    return get_user_by_id(user_id)

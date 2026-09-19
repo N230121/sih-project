@@ -18,8 +18,9 @@ from .config import (
 )
 from .database import (
     init_db,
-    upsert_user,
     create_user,
+    create_google_user,
+    link_google_identity,
     authenticate_user,
     get_user_by_email,
     get_user_by_id,
@@ -61,7 +62,8 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-
+class GoogleRoleRequest(BaseModel):
+    role: str
 
 # ---------------------------------------------------------
 # RBAC ROLE HIERARCHY
@@ -382,27 +384,36 @@ async def google_gmail_callback(request: Request):
                 "detail": str(exc),
             },
         )
+ 
 @app.get("/auth/google/callback")
 async def google_callback(request: Request):
-
     try:
-
-        token = await oauth.google_login.authorize_access_token(
-            request
-        )
+        # --------------------------------------------------
+        # 1. Complete Google authentication
+        # --------------------------------------------------
+        token = await oauth.google_login.authorize_access_token(request)
 
         userinfo = token.get("userinfo")
 
         if not userinfo:
             userinfo = await oauth.google_login.parse_id_token(
                 request,
-                token
+                token,
             )
 
-        google_sub = userinfo["sub"]
+        # --------------------------------------------------
+        # 2. Read Google identity
+        # --------------------------------------------------
+        google_sub = userinfo.get("sub")
         email = userinfo.get("email")
         name = userinfo.get("name", "")
         picture = userinfo.get("picture", "")
+
+        if not google_sub:
+            raise HTTPException(
+                status_code=400,
+                detail="Google did not return a user ID."
+            )
 
         if not email:
             raise HTTPException(
@@ -410,26 +421,81 @@ async def google_callback(request: Request):
                 detail="Google did not return an email address."
             )
 
-        # IMPORTANT:
-        # This is TraceMail LOGIN.
-        #
-        # We intentionally do NOT save this login token as
-        # the Gmail API token.
-        user = upsert_user(
-            google_sub=google_sub,
-            email=email,
-            name=name,
-            picture=picture,
-        )
+        email = email.strip().lower()
 
-        request.session["user_id"] = user["id"]
+        # --------------------------------------------------
+        # 3. Check whether this email already exists
+        # --------------------------------------------------
+        existing_user = get_user_by_email(email)
+
+        # --------------------------------------------------
+        # 4. EXISTING TRACEMAIL ACCOUNT
+        # --------------------------------------------------
+        if existing_user:
+
+            existing_google_sub = existing_user.get(
+                "google_sub"
+            )
+
+            # The email is already connected to a
+            # different Google identity.
+            if (
+                existing_google_sub
+                and existing_google_sub != google_sub
+            ):
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        "This email is already linked "
+                        "to another Google account."
+                    ),
+                )
+
+            # Existing email/password account that has
+            # not yet been connected to Google.
+            if not existing_google_sub:
+                user = link_google_identity(
+                    user_id=existing_user["id"],
+                    google_sub=google_sub,
+                    name=name,
+                    picture=picture,
+                )
+            else:
+                user = get_user_by_id(
+                    existing_user["id"]
+                )
+
+            # Login the existing TraceMail account.
+            request.session["user_id"] = user["id"]
+
+            return RedirectResponse(
+                url=FRONTEND_URL
+            )
+
+        # --------------------------------------------------
+        # 5. BRAND-NEW GOOGLE ACCOUNT
+        # --------------------------------------------------
+        # DO NOT create the database account yet.
+        #
+        # Store only the Google identity temporarily.
+        # The user must choose a TraceMail role first.
+        # --------------------------------------------------
+
+        request.session["pending_google_user"] = {
+            "google_sub": google_sub,
+            "email": email,
+            "name": name,
+            "picture": picture,
+        }
 
         return RedirectResponse(
-            url=FRONTEND_URL
+            url=f"{FRONTEND_URL}?google_role=required"
         )
 
-    except Exception as exc:
+    except HTTPException:
+        raise
 
+    except Exception as exc:
         return JSONResponse(
             status_code=400,
             content={
@@ -437,7 +503,76 @@ async def google_callback(request: Request):
                 "detail": str(exc),
             },
         )
+@app.get("/auth/google/pending")
+async def get_pending_google_user(request: Request):
+    pending_user = request.session.get(
+        "pending_google_user"
+    )
 
+    if not pending_user:
+        return {
+            "pending": False
+        }
+
+    return {
+        "pending": True,
+        "email": pending_user.get("email"),
+        "name": pending_user.get("name"),
+    }
+@app.post("/auth/google/complete-role")
+async def complete_google_role(
+    request: Request,
+    credentials: GoogleRoleRequest,
+):
+    pending_user = request.session.get(
+        "pending_google_user"
+    )
+
+    if not pending_user:
+        raise HTTPException(
+            status_code=400,
+            detail="No pending Google account setup found."
+        )
+
+    role = credentials.role.strip().lower()
+
+    try:
+        validate_role(role)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc)
+        )
+
+    try:
+        user = create_google_user(
+            google_sub=pending_user["google_sub"],
+            email=pending_user["email"],
+            name=pending_user["name"],
+            picture=pending_user["picture"],
+            role=role,
+        )
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=str(exc)
+        )
+
+    # Remove the temporary Google identity.
+    request.session.pop(
+        "pending_google_user",
+        None,
+    )
+
+    # Log the newly created user in.
+    request.session["user_id"] = user["id"]
+
+    return {
+        "success": True,
+        "authenticated": True,
+        "user": user,
+    }
 @app.get("/auth/me")
 async def me(request: Request):
     user_id = request.session.get("user_id")
