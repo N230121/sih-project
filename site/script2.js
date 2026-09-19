@@ -916,6 +916,25 @@ document.addEventListener(
             document.getElementById(
                 'authGate'
             );
+        const showRegisterBtn =
+        document.getElementById('showRegisterBtn');
+
+        const showLoginBtn =
+            document.getElementById('showLoginBtn');
+
+        if(showRegisterBtn){
+            showRegisterBtn.addEventListener(
+                'click',
+                showRegisterMode
+            );
+        }
+
+        if(showLoginBtn){
+            showLoginBtn.addEventListener(
+                'click',
+                showLoginMode
+            );
+        }
 
         if(googleRoleRequired){
 

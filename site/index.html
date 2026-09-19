@@ -1381,7 +1381,9 @@ function startMailLink(){
   localStorage.setItem('tmPendingEmail',email);
   $('mailStatusBadge').textContent='READY FOR OAUTH'; $('mailStatusBadge').className='badge obs';
   $('mailStatusText').innerHTML='Mailbox <b>'+esc(email)+'</b> is ready. Starting secure Google authorization…';
-  const backend=(window.TRACEMAIL_CONFIG&&window.TRACEMAIL_CONFIG.OAUTH_START)||'/auth/google/start?email='+encodeURIComponent(email);
+  const backend =
+    '/auth/google/gmail/login?email=' +
+    encodeURIComponent(email);
   if(window.TRACEMAIL_CONFIG?.DEMO_OAUTH){
     setTimeout(()=>{ $('mailStatusBadge').textContent='DEMO CONNECTED'; $('mailStatusBadge').className='badge safe'; $('mailStatusText').textContent='Demo mailbox connected. Use Secure Inbox to continue the investigation workflow.'; toast('Demo mailbox connected'); },500);
   }else{ window.location.href=backend; }
