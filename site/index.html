@@ -888,7 +888,7 @@ body:not(.authLocked) .main .page.active{display:block!important;}
   <button class="on" data-page="dashboard"><span class="navIcon">⌂</span><span>Home</span></button>
   <button data-page="inbox"><span class="navIcon">▤</span><span>Inbox</span></button>
   <button data-page="new"><span class="navIcon">⌕</span><span>Investigate</span></button>
-  <button data-page="awareness"><span class="navIcon">◎</span><span>Awareness</span></button>
+
   <button data-page="map"><span class="navIcon">⌖</span><span>Geo Location</span></button>
  </nav>
  <div class="status"><span class="dot"></span><b>Monitor ACTIVE</b><br><span class="muted">OAuth-ready · read-only mailbox access</span></div>
@@ -1023,10 +1023,7 @@ body:not(.authLocked) .main .page.active{display:block!important;}
  <div id="investigationReport" class="card section" style="display:none"></div>
 </section>
 
-<section id="awareness" class="page">
- <div class="top"><div><div class="ey">USER AWARENESS & PREVENTION</div><div class="title">Threat Awareness</div></div><span class="modelTag">🧠 AWARENESS MODEL</span></div>
- <div id="awarenessPageContent"></div>
-</section>
+
 
 <section id="map" class="page">
  <div class="top"><div><div class="ey">GEO LOCATION INTELLIGENCE</div><div class="title">Global Threat Geo Location</div></div><button class="btn primary" onclick="tmOpenGeo()" style="white-space:nowrap">🌍 Trace Geo Location</button></div>
@@ -1264,17 +1261,765 @@ async function renderInbox(){
   }
 }
 function openGmailEmail(email){
-  window.currentGmailEmail=email;
 
-  alert(
-    "From: "+(email.from||"")+
-    "\nSubject: "+(email.subject||"(No subject)")+
-    "\nThreat: "+(email.demoThreat||"UNKNOWN")+
-    "\nLocation: "+(email.demoLocation||"Unknown")+
-    "\nDate: "+(email.date||"")+
-    "\n\n"+(email.snippet||"")
+  /*
+   * Preserve the selected Gmail message.
+   * Nothing about Gmail authentication or API access
+   * is changed here.
+   */
+  window.currentGmailEmail = email;
+
+  /*
+   * Build the investigation view.
+   */
+  const threat =
+    String(email.demoThreat || "UNKNOWN").toUpperCase();
+
+  const location =
+    email.demoLocation || "Unknown";
+
+  const sender =
+    email.from || "Unknown sender";
+
+  const subject =
+    email.subject || "(No subject)";
+
+  const date =
+    email.date || "Unknown";
+
+  const snippet =
+    email.snippet || "No message preview available.";
+
+  /*
+   * Determine whether this email currently has
+   * a problem that deserves contextual education.
+   */
+  const hasProblem =
+    ![
+      "SAFE",
+      "LIKELY SAFE",
+      "NONE",
+      "NO THREAT"
+    ].includes(threat);
+
+  /*
+   * Static investigation information.
+   *
+   * This is intentionally static for the current prototype.
+   * Later the backend/LLM can provide these values.
+   */
+  const awareness =
+    getStaticAwareness(threat);
+
+  /*
+   * Show the existing investigation modal.
+   */
+  const modal =
+    document.getElementById("modal");
+
+  const modalTitle =
+    document.getElementById("modalTitle");
+
+  const modalBody =
+    document.getElementById("modalBody");
+
+  if(!modal || !modalTitle || !modalBody){
+
+    /*
+     * Safety fallback.
+     * If the existing investigation modal cannot
+     * be found, don't break the Gmail inbox.
+     */
+    alert(
+      "From: " + sender +
+      "\nSubject: " + subject +
+      "\nThreat: " + threat +
+      "\nLocation: " + location +
+      "\nDate: " + date +
+      "\n\n" + snippet
+    );
+
+    return;
+  }
+
+  modalTitle.textContent =
+    "Email Investigation · " + subject;
+
+  modalBody.innerHTML = `
+
+    <!-- =====================================================
+         EMAIL SUMMARY
+         ===================================================== -->
+
+    <div class="card section">
+
+      <div class="sectionHead">
+
+        <div>
+          <div class="ey">
+            GMAIL MESSAGE
+          </div>
+
+          <h3>
+            ${esc(subject)}
+          </h3>
+        </div>
+
+        <span class="badge ${gmailThreatClass(threat)}">
+          ${esc(threat)}
+        </span>
+
+      </div>
+
+      <div class="two">
+
+        <div>
+
+          <div class="find">
+            <span>Sender</span>
+            <b>
+              ${esc(sender)}
+            </b>
+          </div>
+
+          <div class="find">
+            <span>Date</span>
+            <b>
+              ${esc(date)}
+            </b>
+          </div>
+
+        </div>
+
+        <div>
+
+          <div class="find">
+            <span>Infrastructure</span>
+            <b>
+              ${esc(location)}
+            </b>
+          </div>
+
+          <div class="find">
+            <span>Analysis status</span>
+            <b>
+              STATIC PROTOTYPE
+            </b>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MESSAGE PREVIEW
+         ===================================================== -->
+
+    <div class="card section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Message Preview
+        </h3>
+
+        <span class="badge obs">
+          OBSERVED
+        </span>
+
+      </div>
+
+      <p
+        class="muted"
+        style="
+          line-height:1.7;
+          margin:0;
+        "
+      >
+        ${esc(snippet)}
+      </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         INVESTIGATION FINDING
+         ===================================================== -->
+
+    <div class="card section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Investigation Finding
+        </h3>
+
+        <span class="badge ${gmailThreatClass(threat)}">
+          ${esc(threat)}
+        </span>
+
+      </div>
+
+      ${
+        hasProblem
+
+        ? `
+          <div class="find">
+
+            <span>
+              Detected issue
+            </span>
+
+            <b>
+              ${esc(awareness.shortTitle)}
+            </b>
+
+          </div>
+
+          <div class="find">
+
+            <span>
+              Why it matters
+            </span>
+
+            <b>
+              ${esc(awareness.summary)}
+            </b>
+
+          </div>
+        `
+
+        : `
+          <div
+            class="authorize"
+            style="margin-top:0"
+          >
+            ✓ No problem requiring contextual awareness
+            was identified in this prototype result.
+          </div>
+        `
+      }
+
+    </div>
+
+
+    <!-- =====================================================
+         KNOW MORE
+         Only appears when a problem exists.
+         ===================================================== -->
+
+    ${
+      hasProblem
+
+      ? `
+        <div class="actions section">
+
+          <button
+            class="btn primary"
+            type="button"
+            onclick="openKnowMoreForGmail()"
+          >
+            📖 Know More
+          </button>
+
+        </div>
+      `
+
+      : ""
+    }
+
+  `;
+
+  modal.classList.add("show");
+
+  modal.setAttribute(
+    "aria-hidden",
+    "false"
   );
+  /*
+   * Preserve the selected awareness information
+   * for the Know More button.
+   */
+  window.currentGmailAwareness =
+    awareness;
 }
+function gmailThreatClass(threat){
+
+  const t =
+    String(threat || "")
+      .toUpperCase();
+
+  if(t === "SAFE" || t === "LIKELY SAFE"){
+    return "good";
+  }
+
+  if(
+    t === "RISKY" ||
+    t === "SUSPICIOUS"
+  ){
+    return "warn";
+  }
+
+  if(
+    t === "PHISHING" ||
+    t === "MALICIOUS ATTACHMENT" ||
+    t === "HIGH RISK"
+  ){
+    return "bad";
+  }
+
+  return "obs";
+}
+/* =========================================================
+   STATIC CONTEXTUAL AWARENESS KNOWLEDGE
+
+   IMPORTANT:
+   This is intentionally static for the current prototype.
+
+   Later:
+   Backend / LLM output can replace this object.
+   ========================================================= */
+
+function getStaticAwareness(threat){
+
+  const t =
+    String(threat || "")
+      .toUpperCase();
+
+
+  /* -------------------------------------------------------
+     PHISHING
+     ------------------------------------------------------- */
+
+  if(t === "PHISHING"){
+
+    return {
+
+      shortTitle:
+        "Credential Phishing",
+
+      summary:
+        "The message is associated with an attempt to deceive the recipient into interacting with a fraudulent message, link, or request.",
+
+      what:
+        "Credential phishing is a social-engineering attack in which an attacker attempts to make a user reveal sensitive information such as passwords, login credentials, or one-time passwords.",
+
+      why:
+        "Attackers use phishing because people often trust familiar brands, organizations, or urgent requests. Creating urgency or fear can reduce the time a person spends checking whether a message is genuine.",
+
+      how:
+        "A phishing campaign may imitate a trusted sender, use a lookalike domain, create an urgent request, or direct the recipient toward a fraudulent login or verification page.",
+
+      watch:
+        "Unexpected login requests, urgent account warnings, unfamiliar domains, suspicious links, sender/Reply-To mismatches, requests for passwords or OTPs, and unusual payment requests.",
+
+      action:
+        "Do not use links in unexpected security emails to sign in. Open the organization's official website or application directly and verify unusual requests through an independent channel."
+
+    };
+
+  }
+
+
+  /* -------------------------------------------------------
+     RISKY
+     ------------------------------------------------------- */
+
+  if(t === "RISKY"){
+
+    return {
+
+      shortTitle:
+        "Risky Email Activity",
+
+      summary:
+        "The message contains signals that may require additional verification before the recipient interacts with it.",
+
+      what:
+        "A risky email contains one or more characteristics that deserve additional scrutiny, even when those characteristics alone do not prove that the message is malicious.",
+
+      why:
+        "Attackers can combine legitimate-looking content with suspicious links, unusual requests, sender inconsistencies, or pressure to act quickly.",
+
+      how:
+        "The attacker may use social engineering, impersonation, suspicious infrastructure, unexpected links, or unusual requests to influence the recipient.",
+
+      watch:
+        "Unexpected requests, unfamiliar senders, suspicious links, unusual attachments, urgent instructions, and inconsistencies between the visible sender and message infrastructure.",
+
+      action:
+        "Pause before interacting with the message. Verify the sender and request independently before clicking links, opening attachments, or providing sensitive information."
+
+    };
+
+  }
+
+
+  /* -------------------------------------------------------
+     SUSPICIOUS
+     ------------------------------------------------------- */
+
+  if(t === "SUSPICIOUS"){
+
+    return {
+
+      shortTitle:
+        "Suspicious Email Activity",
+
+      summary:
+        "The message contains indicators that should be examined before the recipient trusts or interacts with it.",
+
+      what:
+        "A suspicious email is a message containing one or more unusual characteristics that warrant investigation.",
+
+      why:
+        "Suspicious characteristics can occur because of phishing, impersonation, compromised accounts, unusual mail infrastructure, or legitimate messages that require additional verification.",
+
+      how:
+        "Multiple weak signals can appear together. For example, a sender mismatch combined with an unexpected link and urgent language may warrant additional investigation.",
+
+      watch:
+        "Sender inconsistencies, unexpected links, unusual authentication results, urgent language, unfamiliar domains, and unexpected requests for information.",
+
+      action:
+        "Verify the message through a trusted channel before taking action. Do not provide credentials or sensitive information until the request has been verified."
+
+    };
+
+  }
+
+
+  /* -------------------------------------------------------
+     MALICIOUS ATTACHMENT
+     ------------------------------------------------------- */
+
+  if(t === "MALICIOUS ATTACHMENT"){
+
+    return {
+
+      shortTitle:
+        "Malicious Attachment",
+
+      summary:
+        "The message is associated with an attachment-based threat pattern.",
+
+      what:
+        "A malicious attachment is a file delivered through an email that may contain harmful code or may be used to trick the recipient into executing an unsafe action.",
+
+      why:
+        "Attackers often disguise harmful files as invoices, documents, reports, resumes, or other files that appear relevant to the recipient.",
+
+      how:
+        "Social engineering is commonly used to persuade the recipient to open the attachment. The file may then attempt code execution, credential theft, or another harmful action.",
+
+      watch:
+        "Unexpected attachments, executable file types, password-protected archives, requests to enable macros or scripts, and attachments from unfamiliar senders.",
+
+      action:
+        "Do not open unexpected attachments. Verify the sender and the reason for the attachment through an independent channel."
+
+    };
+
+  }
+
+
+  /* -------------------------------------------------------
+     HIGH RISK
+     ------------------------------------------------------- */
+
+  if(t === "HIGH RISK"){
+
+    return {
+
+      shortTitle:
+        "High-Risk Email",
+
+      summary:
+        "Multiple security signals currently indicate that this message requires careful investigation.",
+
+      what:
+        "A high-risk email is a message for which the current analysis has identified several signals associated with potentially harmful activity.",
+
+      why:
+        "Attackers often combine several techniques rather than relying on a single indicator. The combination can make a message appear trustworthy while directing the recipient toward a harmful action.",
+
+      how:
+        "The attack may combine impersonation, authentication anomalies, suspicious links, unusual infrastructure, urgency, or requests for sensitive information.",
+
+      watch:
+        "Multiple indicators appearing together, especially authentication failures, sender inconsistencies, suspicious URLs, lookalike domains, unexpected attachments, and urgent requests.",
+
+      action:
+        "Do not interact with the message until the investigation is complete. Verify the sender independently and follow your organization's security procedures."
+
+    };
+
+  }
+
+
+  /* -------------------------------------------------------
+     DEFAULT
+     ------------------------------------------------------- */
+
+  return {
+
+    shortTitle:
+      "Email Security Finding",
+
+    summary:
+      "The current result contains information that may require additional context.",
+
+    what:
+      "Email security analysis examines technical and behavioral signals associated with a message.",
+
+    why:
+      "Individual email signals can have legitimate explanations, so context is important when interpreting a finding.",
+
+    how:
+      "Security analysis combines message metadata, headers, links, domains, authentication results, and other available evidence.",
+
+    watch:
+      "Unexpected requests, unusual sender information, suspicious links, attachments, authentication anomalies, and pressure to act quickly.",
+
+    action:
+      "Verify unusual requests independently before interacting with the message."
+
+  };
+
+}
+/* =========================================================
+   KNOW MORE MODAL
+   ========================================================= */
+
+function openKnowMoreForGmail(){
+
+  const awareness =
+    window.currentGmailAwareness;
+
+  if(!awareness){
+
+    toast(
+      "No additional information is available."
+    );
+
+    return;
+  }
+
+  const modal =
+    document.getElementById(
+      "knowMoreModal"
+    );
+
+  const title =
+    document.getElementById(
+      "knowMoreTitle"
+    );
+
+  const content =
+    document.getElementById(
+      "knowMoreContent"
+    );
+
+  if(!modal || !title || !content){
+
+    toast(
+      "Know More panel is unavailable."
+    );
+
+    return;
+  }
+
+  title.textContent =
+    awareness.shortTitle;
+
+  content.innerHTML = `
+
+    <!-- WHAT IS IT -->
+
+    <div class="card section">
+
+      <div class="ey">
+        01 · WHAT IS IT?
+      </div>
+
+      <h3 style="margin-top:6px">
+        ${esc(awareness.shortTitle)}
+      </h3>
+
+      <p
+        class="muted"
+        style="
+          line-height:1.75;
+          margin:10px 0 0;
+        "
+      >
+        ${esc(awareness.what)}
+      </p>
+
+    </div>
+
+
+    <!-- WHY -->
+
+    <div class="card section">
+
+      <div class="ey">
+        02 · WHY DOES IT OCCUR?
+      </div>
+
+      <p
+        class="muted"
+        style="
+          line-height:1.75;
+          margin:10px 0 0;
+        "
+      >
+        ${esc(awareness.why)}
+      </p>
+
+    </div>
+
+
+    <!-- HOW -->
+
+    <div class="card section">
+
+      <div class="ey">
+        03 · HOW DOES IT OCCUR?
+      </div>
+
+      <p
+        class="muted"
+        style="
+          line-height:1.75;
+          margin:10px 0 0;
+        "
+      >
+        ${esc(awareness.how)}
+      </p>
+
+    </div>
+
+
+    <!-- WHAT TO WATCH -->
+
+    <div class="card section">
+
+      <div class="ey">
+        04 · WHAT SHOULD YOU LOOK FOR?
+      </div>
+
+      <p
+        class="muted"
+        style="
+          line-height:1.75;
+          margin:10px 0 0;
+        "
+      >
+        ${esc(awareness.watch)}
+      </p>
+
+    </div>
+
+
+    <!-- WHAT TO DO -->
+
+    <div
+      class="authorize"
+      style="
+        margin-top:14px;
+        line-height:1.7;
+      "
+    >
+
+      <b>🛡 What should you do?</b>
+
+      <br>
+
+      ${esc(awareness.action)}
+
+    </div>
+
+
+    <!-- FUTURE AI NOTE -->
+
+    <div
+      class="small muted"
+      style="
+        margin-top:16px;
+        text-align:center;
+      "
+    >
+
+      Current version:
+      static security awareness content.
+
+      <br>
+
+      Future version:
+      contextual explanation generated from
+      the email's forensic evidence and LLM analysis.
+
+    </div>
+
+  `;
+
+  modal.classList.add("show");
+
+  modal.setAttribute(
+    "aria-hidden",
+    "false"
+  );
+
+}
+
+
+function closeKnowMore(){
+
+  const modal =
+    document.getElementById(
+      "knowMoreModal"
+    );
+
+  if(!modal)return;
+
+  modal.classList.remove("show");
+
+  modal.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+}
+
+
+/*
+ * Close Know More when clicking
+ * outside the modal box.
+ */
+document.addEventListener(
+  "click",
+  function(event){
+
+    const modal =
+      document.getElementById(
+        "knowMoreModal"
+      );
+
+    if(
+      modal &&
+      event.target === modal
+    ){
+
+      closeKnowMore();
+
+    }
+
+  }
+);
 function getReportCase(){return window.currentCase || cases[0] || null}
 function renderReports(){
  const c=getReportCase(), el=$("fullReport");
@@ -1553,6 +2298,54 @@ document.addEventListener("DOMContentLoaded",()=>{const r=localStorage.getItem("
   });
 })();
 </script>
+<!-- =========================================================
+     CONTEXTUAL KNOW MORE MODAL
+     Static for now.
+     Later this content can come from the LLM/backend.
+     ========================================================= -->
+
+<div
+  id="knowMoreModal"
+  class="modal"
+  aria-hidden="true"
+>
+  <div
+    class="modalBox"
+    style="
+      max-width:760px;
+      width:calc(100% - 32px);
+    "
+  >
+
+    <div class="sectionHead">
+
+      <div>
+        <div class="ey">
+          TRACE MAIL AI · SECURITY AWARENESS
+        </div>
+
+        <h2 id="knowMoreTitle">
+          Know More
+        </h2>
+      </div>
+
+      <button
+        class="btn"
+        type="button"
+        onclick="closeKnowMore()"
+      >
+        ✕
+      </button>
+
+    </div>
+
+    <div
+      id="knowMoreContent"
+      style="margin-top:18px"
+    ></div>
+
+  </div>
+</div>
 </body>
 </html><style id="trace-final-layout">
 /* TRACE MAIL — UNIFIED ENTERPRISE CANVAS */
