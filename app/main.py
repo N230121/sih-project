@@ -12,6 +12,7 @@ from .config import (
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_REDIRECT_URI,
+    GOOGLE_GMAIL_REDIRECT_URI,
     SESSION_SECRET,
     FRONTEND_URL,
 )
@@ -23,6 +24,7 @@ from .database import (
     get_user_by_email,
     get_user_by_id,
     get_google_token_by_user_id,
+    update_google_token_for_user_id,
     validate_role,
 )
 from google.oauth2.credentials import Credentials
@@ -140,13 +142,34 @@ def require_role(required_role: str):
 
 oauth = OAuth()
 
+# ---------------------------------------------------------
+# GOOGLE LOGIN OAUTH
+# ---------------------------------------------------------
+# Used ONLY for signing into TraceMail.
+# Do NOT request Gmail access here.
 oauth.register(
-    name="google",
+    name="google_login",
     client_id=GOOGLE_CLIENT_ID,
     client_secret=GOOGLE_CLIENT_SECRET,
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={
-    "scope": "openid email profile https://www.googleapis.com/auth/gmail.readonly"
+        "scope": "openid email profile"
+    },
+)
+
+
+# ---------------------------------------------------------
+# GOOGLE GMAIL OAUTH
+# ---------------------------------------------------------
+# Used ONLY when an already-authenticated TraceMail user
+# chooses "Connect Gmail".
+oauth.register(
+    name="google_gmail",
+    client_id=GOOGLE_CLIENT_ID,
+    client_secret=GOOGLE_CLIENT_SECRET,
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={
+        "scope": "openid email profile https://www.googleapis.com/auth/gmail.readonly"
     },
 )
 
@@ -250,29 +273,131 @@ async def login(
 
 @app.get("/auth/google/login")
 async def google_login(request: Request):
+
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         raise HTTPException(
             status_code=500,
-            detail="Google OAuth is not configured. Create a .env file first."
+            detail="Google OAuth is not configured."
         )
 
     redirect_uri = GOOGLE_REDIRECT_URI
-    return await oauth.google.authorize_redirect(
-    request,
-    redirect_uri,
-    access_type="offline",
-    prompt="consent",
-    include_granted_scopes="true",
-    )
 
-@app.get("/auth/google/callback")
-async def google_callback(request: Request):
+    return await oauth.google_login.authorize_redirect(
+        request,
+        redirect_uri,
+        prompt="select_account",
+    )
+@app.get("/auth/google/gmail/login")
+async def google_gmail_login(request: Request):
+
+    # Gmail connection is allowed only for an already
+    # authenticated TraceMail user.
+    user_id = request.session.get("user_id")
+
+    if not user_id:
+        raise HTTPException(
+            status_code=401,
+            detail="You must be logged into TraceMail before connecting Gmail."
+        )
+
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=500,
+            detail="Google OAuth is not configured."
+        )
+
+    # The email entered on the Connect Gmail page is only
+    # used as a Google login hint.
+    email = request.query_params.get("email", "").strip()
+
+    redirect_uri = GOOGLE_GMAIL_REDIRECT_URI
+
+    auth_kwargs = {
+        "access_type": "offline",
+        "prompt": "consent",
+        "include_granted_scopes": "true",
+    }
+
+    if email:
+        auth_kwargs["login_hint"] = email
+
+    return await oauth.google_gmail.authorize_redirect(
+        request,
+        redirect_uri,
+        **auth_kwargs,
+    )
+@app.get("/auth/google/gmail/callback")
+async def google_gmail_callback(request: Request):
+
     try:
-        token = await oauth.google.authorize_access_token(request)
+
+        # The user must already be authenticated in TraceMail.
+        user_id = request.session.get("user_id")
+
+        if not user_id:
+            raise HTTPException(
+                status_code=401,
+                detail="TraceMail session is not valid."
+            )
+
+        token = await oauth.google_gmail.authorize_access_token(
+            request
+        )
+
         userinfo = token.get("userinfo")
 
         if not userinfo:
-            userinfo = await oauth.google.parse_id_token(request, token)
+            userinfo = await oauth.google_gmail.parse_id_token(
+                request,
+                token
+            )
+
+        gmail_email = userinfo.get("email")
+
+        if not gmail_email:
+            raise HTTPException(
+                status_code=400,
+                detail="Google did not return the Gmail account email."
+            )
+
+        # Store the Gmail OAuth token against the CURRENT
+        # TraceMail user.
+        #
+        # We do NOT create a new TraceMail account here.
+        update_google_token_for_user_id(
+            user_id=user_id,
+            google_token=json.dumps(token),
+        )
+
+        return RedirectResponse(
+            url=FRONTEND_URL
+        )
+
+    except Exception as exc:
+
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "Gmail connection failed",
+                "detail": str(exc),
+            },
+        )
+@app.get("/auth/google/callback")
+async def google_callback(request: Request):
+
+    try:
+
+        token = await oauth.google_login.authorize_access_token(
+            request
+        )
+
+        userinfo = token.get("userinfo")
+
+        if not userinfo:
+            userinfo = await oauth.google_login.parse_id_token(
+                request,
+                token
+            )
 
         google_sub = userinfo["sub"]
         email = userinfo.get("email")
@@ -285,21 +410,26 @@ async def google_callback(request: Request):
                 detail="Google did not return an email address."
             )
 
+        # IMPORTANT:
+        # This is TraceMail LOGIN.
+        #
+        # We intentionally do NOT save this login token as
+        # the Gmail API token.
         user = upsert_user(
-        google_sub=google_sub,
-        email=email,
-        name=name,
-        picture=picture,
-        google_token=json.dumps(token),
+            google_sub=google_sub,
+            email=email,
+            name=name,
+            picture=picture,
         )
 
         request.session["user_id"] = user["id"]
 
-        # For now we return to the frontend home page.
-        # Later this can be changed to your real dashboard URL.
-        return RedirectResponse(url=FRONTEND_URL)
+        return RedirectResponse(
+            url=FRONTEND_URL
+        )
 
     except Exception as exc:
+
         return JSONResponse(
             status_code=400,
             content={

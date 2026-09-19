@@ -9,5 +9,9 @@ GOOGLE_REDIRECT_URI = os.getenv(
     "GOOGLE_REDIRECT_URI",
     "http://localhost:8000/auth/google/callback",
 )
+GOOGLE_GMAIL_REDIRECT_URI = os.getenv(
+    "GOOGLE_GMAIL_REDIRECT_URI",
+    "http://localhost:8000/auth/google/gmail/callback",
+)
 SESSION_SECRET = os.getenv("SESSION_SECRET", "dev-only-change-me")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5500")

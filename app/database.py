@@ -71,7 +71,11 @@ def init_db():
             ALTER TABLE users
             ADD COLUMN password_hash TEXT
         """)
-
+    if "google_token" not in columns:
+        conn.execute("""
+            ALTER TABLE users
+            ADD COLUMN google_token TEXT
+        """)
     # Check whether the existing schema still has the old
     # google_sub NOT NULL / email-not-unique structure.
     table_info = conn.execute(
@@ -358,7 +362,7 @@ def upsert_user(
                 email=?,
                 name=?,
                 picture=?,
-                google_token=?,
+                google_token=COALESCE(?, google_token),
                 last_login=CURRENT_TIMESTAMP
             WHERE google_sub=?
             """,
@@ -403,7 +407,7 @@ def upsert_user(
                     google_sub=?,
                     name=?,
                     picture=?,
-                    google_token=?,
+                    google_token=COALESCE(?, google_token),
                     last_login=CURRENT_TIMESTAMP
                 WHERE id=?
                 """,
@@ -457,6 +461,32 @@ def upsert_user(
 
     return get_user_by_id(user_id)
 
+def update_google_token_for_user_id(user_id, google_token):
+    """
+    Store the Gmail OAuth token for an already-authenticated
+    TraceMail user.
+    """
+
+    conn = get_connection()
+
+    conn.execute(
+        """
+        UPDATE users
+        SET
+            google_token=?,
+            last_login=CURRENT_TIMESTAMP
+        WHERE id=?
+        """,
+        (
+            google_token,
+            user_id,
+        ),
+    )
+
+    conn.commit()
+    conn.close()
+
+    return get_user_by_id(user_id)
 
 def get_user_by_id(user_id):
     conn = get_connection()

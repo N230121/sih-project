@@ -315,15 +315,60 @@ function connect(p){
   if(p==='Gmail'){ go('link'); } else toast(p+' connection is available in demo mode');
 }
 function startMailLink(){
-  const email=($('mailAddress')?.value||'').trim();
-  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('Enter a valid email address first');return}
-  localStorage.setItem('tmPendingEmail',email);
-  $('mailStatusBadge').textContent='READY FOR OAUTH'; $('mailStatusBadge').className='badge obs';
-  $('mailStatusText').innerHTML='Mailbox <b>'+esc(email)+'</b> is ready. Starting secure Google authorization…';
-  const backend=(window.TRACEMAIL_CONFIG&&window.TRACEMAIL_CONFIG.OAUTH_START)||'/auth/google/start?email='+encodeURIComponent(email);
+
+  const email =
+    ($('mailAddress')?.value || '').trim();
+
+  if(
+    !email ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ){
+    toast('Enter a valid email address first');
+    return;
+  }
+
+  localStorage.setItem(
+    'tmPendingEmail',
+    email
+  );
+
+  $('mailStatusBadge').textContent =
+    'READY FOR OAUTH';
+
+  $('mailStatusBadge').className =
+    'badge obs';
+
+  $('mailStatusText').innerHTML =
+    'Mailbox <b>' +
+    esc(email) +
+    '</b> is ready. Starting secure Google authorization…';
+
   if(window.TRACEMAIL_CONFIG?.DEMO_OAUTH){
-    setTimeout(()=>{ $('mailStatusBadge').textContent='DEMO CONNECTED'; $('mailStatusBadge').className='badge safe'; $('mailStatusText').textContent='Demo mailbox connected. Use Secure Inbox to continue the investigation workflow.'; toast('Demo mailbox connected'); },500);
-  }else{ window.location.href=backend; }
+
+    setTimeout(() => {
+
+      $('mailStatusBadge').textContent =
+        'DEMO CONNECTED';
+
+      $('mailStatusBadge').className =
+        'badge safe';
+
+      $('mailStatusText').textContent =
+        'Demo mailbox connected. Use Secure Inbox to continue the investigation workflow.';
+
+      toast('Demo mailbox connected');
+
+    }, 500);
+
+  }else{
+
+    const gmailOAuthUrl =
+      '/auth/google/gmail/login?email=' +
+      encodeURIComponent(email);
+
+    window.location.href =
+      gmailOAuthUrl;
+  }
 }
 function authorizeAction(action){
   if(currentRole()!=='admin'){toast('Administrator role required for response actions');return}
