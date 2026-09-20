@@ -1315,16 +1315,100 @@ async function renderInbox(){
       error
     );
 
-    $("inboxBody").innerHTML =
-      `<tr>
-        <td colspan="6" class="empty">
-          Unable to load Gmail messages.
-          Please log in with Google again.
+    const message =
+      error?.message ||
+      "Unable to load Gmail messages";
+
+    if(
+      message ===
+      "Google account is not connected."
+    ){
+
+      $("inboxBody").innerHTML = `
+        <tr>
+          <td
+            colspan="6"
+            class="empty"
+          >
+            <div style="
+              padding:28px 20px;
+              text-align:center;
+            ">
+
+              <div style="
+                font-size:28px;
+                margin-bottom:10px;
+              ">
+                ✉️
+              </div>
+
+              <h3 style="
+                margin:0 0 8px;
+                color:#294153;
+              ">
+                Gmail account not connected
+              </h3>
+
+              <p style="
+                margin:0 auto 16px;
+                max-width:520px;
+                line-height:1.6;
+                color:#6b7c8d;
+              ">
+                Connect your Gmail account with
+                read-only access to load real
+                messages into the Secure Inbox.
+              </p>
+
+              <button
+                class="btn primary"
+                type="button"
+                onclick="go('link')"
+              >
+                🔐 Connect Gmail
+              </button>
+
+            </div>
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+  }
+    $("inboxBody").innerHTML = `
+      <tr>
+        <td
+          colspan="6"
+          class="empty"
+        >
+          <div style="
+            padding:28px 20px;
+            text-align:center;
+          ">
+
+            <h3 style="
+              margin:0 0 8px;
+              color:#294153;
+            ">
+              Unable to load Gmail messages
+            </h3>
+
+            <p style="
+              margin:0;
+              line-height:1.6;
+              color:#6b7c8d;
+            ">
+              ${esc(message)}
+            </p>
+
+          </div>
         </td>
-      </tr>`;
+      </tr>
+    `;
 
   }
-}
+
 function openGmailEmailById(id){
 
   const email =
