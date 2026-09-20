@@ -148,11 +148,391 @@ def init_db():
         """)
 
         conn.execute("PRAGMA foreign_keys=ON")
+        conn.execute("""
+                CREATE TABLE IF NOT EXISTS investigations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    case_id TEXT NOT NULL UNIQUE,
+                    user_id INTEGER NOT NULL,
+                    gmail_message_id TEXT,
+                    thread_id TEXT,
+                    sender TEXT,
+                    subject TEXT,
+                    threat TEXT,
+                    risk_score INTEGER,
+                    risk_level TEXT,
+                    status TEXT NOT NULL DEFAULT 'ACTIVE',
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(user_id) REFERENCES users(id)
+                )
+            """)
+        conn.execute("""
+                CREATE TABLE IF NOT EXISTS investigation_evidence (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    investigation_id INTEGER NOT NULL,
+                    evidence_type TEXT NOT NULL,
+                    evidence_key TEXT,
+                    evidence_value TEXT,
+                    source TEXT,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(investigation_id)
+                        REFERENCES investigations(id)
+                        ON DELETE CASCADE
+                )
+            """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS investigation_iocs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                investigation_id INTEGER NOT NULL,
+                ioc_type TEXT NOT NULL,
+                value TEXT NOT NULL,
+                source TEXT,
+                confidence INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(investigation_id)
+                    REFERENCES investigations(id)
+                    ON DELETE CASCADE
+            )
+        """)
+        conn.execute("""
+                CREATE TABLE IF NOT EXISTS infrastructure (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    investigation_id INTEGER NOT NULL,
+                    ioc_type TEXT NOT NULL,
+                    value TEXT NOT NULL,
+                    ip TEXT,
+                    domain TEXT,
+                    country TEXT,
+                    region TEXT,
+                    city TEXT,
+                    isp TEXT,
+                    organization TEXT,
+                    asn TEXT,
+                    latitude REAL,
+                    longitude REAL,
+                    vpn BOOLEAN,
+                    proxy BOOLEAN,
+                    tor BOOLEAN,
+                    confidence INTEGER DEFAULT 0,
+                    provider TEXT,
+                    raw_json TEXT,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(investigation_id)
+                        REFERENCES investigations(id)
+                        ON DELETE CASCADE
+                )
+            """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_investigations_user
+            ON investigations(user_id)
+        """)
+
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_investigations_gmail
+            ON investigations(gmail_message_id)
+        """)
+
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_iocs_value
+            ON investigation_iocs(value)
+        """)
+
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_infrastructure_value
+            ON infrastructure(value)
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS infrastructure (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                investigation_id INTEGER NOT NULL,
+                hostname TEXT,
+                ip TEXT,
+                country TEXT,
+                region TEXT,
+                city TEXT,
+                isp TEXT,
+                organization TEXT,
+                asn TEXT,
+                latitude REAL,
+                longitude REAL,
+                vpn TEXT,
+                proxy TEXT,
+                tor TEXT,
+                confidence REAL,
+                provider TEXT,
+                raw_json TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+                FOREIGN KEY(investigation_id)
+                    REFERENCES investigations(id)
+                    ON DELETE CASCADE
+            )
+        """)
+
+    conn.commit()
+    conn.close()
+    
+
+def generate_case_id():
+    conn = get_connection()
+
+    row = conn.execute("""
+        SELECT case_id
+        FROM investigations
+        ORDER BY id DESC
+        LIMIT 1
+    """).fetchone()
+
+    conn.close()
+
+    if not row:
+        number = 142
+    else:
+        try:
+            number = int(row["case_id"].split("-")[-1]) + 1
+        except Exception:
+            number = 142
+
+    return f"TM-2026-{number:05d}"
+
+def create_investigation(
+    user_id,
+    gmail_message_id,
+    thread_id,
+    sender,
+    subject,
+    threat,
+    risk_score,
+    risk_level,
+):
+    case_id = generate_case_id()
+
+    conn = get_connection()
+
+    cursor = conn.execute("""
+        INSERT INTO investigations (
+            case_id,
+            user_id,
+            gmail_message_id,
+            thread_id,
+            sender,
+            subject,
+            threat,
+            risk_score,
+            risk_level,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        case_id,
+        user_id,
+        gmail_message_id,
+        thread_id,
+        sender,
+        subject,
+        threat,
+        risk_score,
+        risk_level,
+        "ACTIVE",
+    ))
+
+    investigation_id = cursor.lastrowid
 
     conn.commit()
     conn.close()
 
+    return get_investigation_by_id(
+        investigation_id
+    )
 
+def get_investigation_by_id(
+    investigation_id
+):
+    conn = get_connection()
+
+    row = conn.execute("""
+        SELECT
+            id,
+            case_id,
+            user_id,
+            gmail_message_id,
+            thread_id,
+            sender,
+            subject,
+            threat,
+            risk_score,
+            risk_level,
+            status,
+            created_at,
+            updated_at
+        FROM investigations
+        WHERE id = ?
+    """, (
+        investigation_id,
+    )).fetchone()
+
+    conn.close()
+
+    return dict(row) if row else None
+
+def get_investigations_for_user(user_id):
+    conn = get_connection()
+
+    rows = conn.execute("""
+        SELECT
+            id,
+            case_id,
+            gmail_message_id,
+            thread_id,
+            sender,
+            subject,
+            threat,
+            risk_score,
+            risk_level,
+            status,
+            created_at,
+            updated_at
+        FROM investigations
+        WHERE user_id = ?
+        ORDER BY id DESC
+    """, (
+        user_id,
+    )).fetchall()
+
+    conn.close()
+
+    return [
+        dict(row)
+        for row in rows
+    ]
+
+def add_investigation_evidence(
+    investigation_id,
+    evidence_type,
+    evidence_key,
+    evidence_value,
+    source,
+):
+    conn = get_connection()
+
+    conn.execute("""
+        INSERT INTO investigation_evidence (
+            investigation_id,
+            evidence_type,
+            evidence_key,
+            evidence_value,
+            source
+        )
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        investigation_id,
+        evidence_type,
+        evidence_key,
+        evidence_value,
+        source,
+    ))
+
+    conn.commit()
+    conn.close()
+
+def add_investigation_ioc(
+    investigation_id,
+    ioc_type,
+    value,
+    source,
+    confidence=0,
+):
+    conn = get_connection()
+
+    conn.execute("""
+        INSERT INTO investigation_iocs (
+            investigation_id,
+            ioc_type,
+            value,
+            source,
+            confidence
+        )
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        investigation_id,
+        ioc_type,
+        value,
+        source,
+        confidence,
+    ))
+
+    conn.commit()
+    conn.close()
+def add_infrastructure(
+    investigation_id,
+    ioc_type,
+    value,
+    ip=None,
+    domain=None,
+    country=None,
+    region=None,
+    city=None,
+    isp=None,
+    organization=None,
+    asn=None,
+    latitude=None,
+    longitude=None,
+    vpn=None,
+    proxy=None,
+    tor=None,
+    confidence=0,
+    provider=None,
+    raw_json=None,
+):
+    conn = get_connection()
+
+    conn.execute("""
+        INSERT INTO infrastructure (
+            investigation_id,
+            ioc_type,
+            value,
+            ip,
+            domain,
+            country,
+            region,
+            city,
+            isp,
+            organization,
+            asn,
+            latitude,
+            longitude,
+            vpn,
+            proxy,
+            tor,
+            confidence,
+            provider,
+            raw_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        investigation_id,
+        ioc_type,
+        value,
+        ip,
+        domain,
+        country,
+        region,
+        city,
+        isp,
+        organization,
+        asn,
+        latitude,
+        longitude,
+        vpn,
+        proxy,
+        tor,
+        confidence,
+        provider,
+        raw_json,
+    ))
+
+    conn.commit()
+    conn.close()
 def validate_role(role):
     """
     Validate that a role is one of the roles supported
@@ -668,3 +1048,98 @@ def link_google_identity(
         conn.close()
 
     return get_user_by_id(user_id)
+def add_infrastructure(
+    investigation_id,
+    hostname,
+    ip,
+    country=None,
+    region=None,
+    city=None,
+    isp=None,
+    organization=None,
+    asn=None,
+    latitude=None,
+    longitude=None,
+    vpn=None,
+    proxy=None,
+    tor=None,
+    confidence=None,
+    provider=None,
+    raw_json=None,
+):
+    conn = get_connection()
+
+    cursor = conn.execute(
+        """
+        INSERT INTO infrastructure (
+            investigation_id,
+            hostname,
+            ip,
+            country,
+            region,
+            city,
+            isp,
+            organization,
+            asn,
+            latitude,
+            longitude,
+            vpn,
+            proxy,
+            tor,
+            confidence,
+            provider,
+            raw_json
+        )
+        VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?
+        )
+        """,
+        (
+            investigation_id,
+            hostname,
+            ip,
+            country,
+            region,
+            city,
+            isp,
+            organization,
+            asn,
+            latitude,
+            longitude,
+            vpn,
+            proxy,
+            tor,
+            confidence,
+            provider,
+            raw_json,
+        )
+    )
+
+    infrastructure_id = cursor.lastrowid
+
+    conn.commit()
+    conn.close()
+
+    return infrastructure_id
+def get_infrastructure_for_investigation(
+    investigation_id
+):
+    conn = get_connection()
+
+    rows = conn.execute(
+        """
+        SELECT *
+        FROM infrastructure
+        WHERE investigation_id = ?
+        ORDER BY created_at ASC
+        """,
+        (investigation_id,)
+    ).fetchall()
+
+    conn.close()
+
+    return [
+        dict(row)
+        for row in rows
+    ]

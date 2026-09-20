@@ -15,3 +15,7 @@ GOOGLE_GMAIL_REDIRECT_URI = os.getenv(
 )
 SESSION_SECRET = os.getenv("SESSION_SECRET", "dev-only-change-me")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5500")
+INFRA_PROVIDER_API_KEY = os.getenv(
+    "INFRA_PROVIDER_API_KEY",
+    ""
+)

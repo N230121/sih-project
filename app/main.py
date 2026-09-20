@@ -27,6 +27,17 @@ from .database import (
     get_google_token_by_user_id,
     update_google_token_for_user_id,
     validate_role,
+    create_investigation,
+    get_investigation_by_id,
+    get_investigations_for_user,
+    add_investigation_evidence,
+    add_investigation_ioc,
+    add_infrastructure,
+    add_infrastructure,
+    get_infrastructure_for_investigation,
+)
+from .intelligence.infrastructure import (
+    extract_public_ips,
 )
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -66,7 +77,8 @@ class LoginRequest(BaseModel):
     password: str
 class GoogleRoleRequest(BaseModel):
     role: str
-
+class InvestigationRequest(BaseModel):
+    gmail_message_id: str
 # ---------------------------------------------------------
 # RBAC ROLE HIERARCHY
 # ---------------------------------------------------------
@@ -764,8 +776,320 @@ async def get_emails(
     return {
         "emails": emails
     }
+# =========================================================
+# INVESTIGATION API
+# =========================================================
+
+@app.post("/api/investigations")
+async def create_investigation_api(
+    request: Request,
+    user=Depends(get_current_user)
+):
+    """
+    Create a persistent forensic investigation
+    from a Gmail message.
+    """
+
+    body = await request.json()
+
+    message_id = body.get("message_id")
+
+    if not message_id:
+        raise HTTPException(
+            status_code=400,
+            detail="message_id is required."
+        )
+
+    user_id = user["id"]
+
+    # -----------------------------------------------------
+    # 1. Get the user's stored Gmail OAuth token
+    # -----------------------------------------------------
+
+    google_token = get_google_token_by_user_id(
+        user_id
+    )
+
+    if not google_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Google account is not connected."
+        )
+
+    token_data = json.loads(
+        google_token
+    )
+
+    # -----------------------------------------------------
+    # 2. Build Gmail credentials
+    # -----------------------------------------------------
+
+    credentials = Credentials(
+        token=token_data.get("access_token"),
+        refresh_token=token_data.get("refresh_token"),
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
+        scopes=[
+            "https://www.googleapis.com/auth/gmail.readonly"
+        ],
+    )
+
+    # -----------------------------------------------------
+    # 3. Connect to Gmail API
+    # -----------------------------------------------------
+
+    gmail = build(
+        "gmail",
+        "v1",
+        credentials=credentials
+    )
+
+    # -----------------------------------------------------
+    # 4. Fetch the selected Gmail message
+    # -----------------------------------------------------
+
+    try:
+
+        email = (
+            gmail.users()
+            .messages()
+            .get(
+                userId="me",
+                id=message_id,
+                format="full"
+            )
+            .execute()
+        )
+
+    except Exception as exc:
+
+        raise HTTPException(
+            status_code=404,
+            detail=f"Unable to fetch Gmail message: {exc}"
+        )
+
+    # -----------------------------------------------------
+    # 5. Parse the email
+    # -----------------------------------------------------
+
+    forensic = parse_email_message(
+        email
+    )
+
+    # -----------------------------------------------------
+    # 6. Run deterministic forensic analysis
+    # -----------------------------------------------------
+
+    analysis = analyze_email(
+        forensic
+    )
+
+    # -----------------------------------------------------
+    # 7. Create persistent investigation
+    # -----------------------------------------------------
+
+    investigation = create_investigation(
+        user_id=user_id,
+        gmail_message_id=message_id,
+        thread_id=email.get("threadId"),
+        sender=forensic["headers"].get(
+            "from",
+            ""
+        ),
+        recipient=forensic["headers"].get(
+            "to",
+            ""
+        ),
+        subject=forensic.get(
+            "subject",
+            ""
+        ),
+        threat=analysis["threat"],
+        risk_score=analysis["risk_score"],
+        risk_level=analysis["risk_level"],
+        findings=json.dumps(
+            analysis["findings"]
+        ),
+    )
+
+    investigation_id = investigation["id"]
+
+    # -----------------------------------------------------
+    # 8. Save forensic evidence
+    # -----------------------------------------------------
+
+    add_investigation_evidence(
+        investigation_id=investigation_id,
+        evidence_type="headers",
+        evidence=json.dumps(
+            forensic.get("headers", {})
+        ),
+    )
+
+    add_investigation_evidence(
+        investigation_id=investigation_id,
+        evidence_type="authentication",
+        evidence=json.dumps(
+            forensic.get(
+                "authentication",
+                {}
+            )
+        ),
+    )
+
+    add_investigation_evidence(
+    investigation_id=investigation_id,
+    evidence_type="body",
+    evidence=json.dumps(
+        forensic
+        ),
+    )
+    add_investigation_evidence(
+        investigation_id=investigation_id,
+        evidence_type="attachments",
+        evidence=json.dumps(
+            forensic.get(
+                "attachments",
+                []
+            )
+        ),
+    )
+
+    # -----------------------------------------------------
+    # 9. Save extracted URLs as IOCs
+    # -----------------------------------------------------
+
+    urls = forensic.get(
+        "urls",
+        []
+    )
+
+    for url in urls:
+
+        add_investigation_ioc(
+            investigation_id=investigation_id,
+            ioc_type="url",
+            value=url,
+        )
+        # -----------------------------------------------------
+        # 9B. Infrastructure intelligence
+        # -----------------------------------------------------
+
+        infrastructure_items = extract_public_ips(
+            urls
+        )
+
+    # -----------------------------------------------------
+    # 10. Return investigation
+    # -----------------------------------------------------
+
+    return {
+        "success": True,
+        "investigation": investigation,
+        "forensic": forensic,
+        "analysis": analysis,
+        "ioc_count": len(urls),
+    }
+
+
+# =========================================================
+# GET SINGLE INVESTIGATION
+# =========================================================
+
+@app.get("/api/investigations/{investigation_id}")
+async def get_investigation_api(
+    investigation_id: int,
+    user=Depends(get_current_user)
+):
+
+    investigation = get_investigation_by_id(
+        investigation_id
+    )
+
+    if not investigation:
+        raise HTTPException(
+            status_code=404,
+            detail="Investigation not found."
+        )
+
+    # -----------------------------------------------------
+    # SECURITY:
+    # Only allow the owner of the investigation
+    # to retrieve it.
+    # -----------------------------------------------------
+
+    if investigation["user_id"] != user["id"]:
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have access to this investigation."
+        )
+
+    return {
+        "success": True,
+        "investigation": investigation,
+    }
+
+# =========================================================
+# GET INFRASTRUCTURE INTELLIGENCE
+# =========================================================
+
+@app.get(
+    "/api/investigations/{investigation_id}/infrastructure"
+)
+async def get_infrastructure_api(
+    investigation_id: int,
+    user=Depends(get_current_user)
+):
+
+    investigation = get_investigation_by_id(
+        investigation_id
+    )
+
+    if not investigation:
+        raise HTTPException(
+            status_code=404,
+            detail="Investigation not found."
+        )
+
+    if investigation["user_id"] != user["id"]:
+        raise HTTPException(
+            status_code=403,
+            detail="You do not have access to this investigation."
+        )
+
+    infrastructure = (
+        get_infrastructure_for_investigation(
+            investigation_id
+        )
+    )
+
+    return {
+        "success": True,
+        "investigation_id": investigation_id,
+        "infrastructure": infrastructure,
+    }
+# =========================================================
+# LIST USER INVESTIGATIONS
+# =========================================================
+
+@app.get("/api/investigations")
+async def list_investigations_api(
+    user=Depends(get_current_user)
+):
+
+    investigations = get_investigations_for_user(
+        user["id"]
+    )
+
+    return {
+        "success": True,
+        "investigations": investigations,
+    }
 app.mount(
     "/",
     StaticFiles(directory="site"),
     name="site"
     )
+
+
