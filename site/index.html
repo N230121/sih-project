@@ -1134,7 +1134,7 @@ async function renderInbox(){
 
     const response =
       await fetch("/api/emails", {
-        credentials:"include"
+        credentials: "include"
       });
 
     if(!response.ok){
@@ -1171,6 +1171,28 @@ async function renderInbox(){
         ? data.emails
         : [];
 
+    /*
+     * Store the complete Gmail objects outside
+     * the HTML itself.
+     *
+     * This prevents large forensic data and
+     * email-body apostrophes from breaking
+     * onclick attributes.
+     */
+    window.gmailInboxEmails = {};
+
+    emails.forEach(email => {
+
+      if(email && email.id){
+
+        window.gmailInboxEmails[
+          String(email.id)
+        ] = email;
+
+      }
+
+    });
+
     const filtered =
       emails.filter(email =>
         (
@@ -1199,6 +1221,9 @@ async function renderInbox(){
     $("inboxBody").innerHTML =
       filtered.map(email => {
 
+        const emailId =
+          String(email.id || "");
+
         const threat =
           String(
             email.threat || "UNKNOWN"
@@ -1224,10 +1249,19 @@ async function renderInbox(){
         const threatClass =
           gmailThreatClass(threat);
 
+        /*
+         * Location is deliberately UNKNOWN for now.
+         *
+         * We must not invent a physical sender
+         * location from an email address.
+         */
+        const location =
+          "UNKNOWN";
+
         return `
           <tr
             class="click"
-            onclick='openGmailEmail(${JSON.stringify(email)})'
+            onclick="openGmailEmailById('${emailId}')"
           >
 
             <td>
@@ -1254,16 +1288,16 @@ async function renderInbox(){
             </td>
 
             <td>
-              <span class="badge unknown">
-                UNKNOWN
-              </span>
+              ${esc(location)}
             </td>
 
             <td>
               <button
                 class="btn"
-                type="button"
-                onclick='event.stopPropagation();openGmailEmail(${JSON.stringify(email)})'
+                onclick="
+                  event.stopPropagation();
+                  openGmailEmailById('${emailId}')
+                "
               >
                 Investigate
               </button>
@@ -1277,66 +1311,37 @@ async function renderInbox(){
   }catch(error){
 
     console.error(
-      "Inbox error:",
+      "Gmail Inbox error:",
       error
     );
 
-    const message =
-      error.message ||
-      "Unable to load Gmail messages";
-
-    if(
-      message ===
-      "Google account is not connected."
-    ){
-
-      $("inboxBody").innerHTML =
-        `
-        <tr>
-          <td colspan="6" class="empty">
-
-            <div style="padding:20px">
-
-              <h3 style="margin-bottom:8px">
-                Gmail account not connected
-              </h3>
-
-              <p
-                class="muted"
-                style="margin-bottom:14px"
-              >
-                Your TraceMail account is authenticated,
-                but Gmail access has not been authorized yet.
-              </p>
-
-              <button
-                class="btn primary"
-                onclick="go('link')"
-              >
-                Connect Gmail
-              </button>
-
-            </div>
-
-          </td>
-        </tr>
-        `;
-
-      return;
-    }
-
     $("inboxBody").innerHTML =
-      `
-      <tr>
-        <td
-          colspan="6"
-          class="empty"
-        >
-          ${esc(message)}
+      `<tr>
+        <td colspan="6" class="empty">
+          Unable to load Gmail messages.
+          Please log in with Google again.
         </td>
-      </tr>
-      `;
+      </tr>`;
+
   }
+}
+function openGmailEmailById(id){
+
+  const email =
+    window.gmailInboxEmails?.[
+      String(id)
+    ];
+
+  if(!email){
+
+    toast(
+      "Email data is unavailable. Please refresh the Inbox."
+    );
+
+    return;
+  }
+
+  openGmailEmail(email);
 }
 function openGmailEmail(email){
 
