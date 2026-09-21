@@ -1086,11 +1086,36 @@ function go(id){
   if(id==="dashboard")renderRecent();
   if(id==="awareness")renderAwarenessPage();
   if(id==="new"){
-    if(!window.currentCase){window.currentCase=cases[0];}
-    const demo=window.currentCase||cases[0];
-    if(demo && $("currentEvidenceLabel"))$("currentEvidenceLabel").textContent=demo.id+" · "+demo.subject+" · sample .EML evidence ready";
-    renderInvestigationAccess();
+
+  const active =
+    window.currentCase ||
+    null;
+
+  if(active){
+
+    if($("currentEvidenceLabel")){
+
+      $("currentEvidenceLabel").textContent =
+        active.id +
+        " · " +
+        active.subject +
+        " · persistent investigation loaded";
+
+    }
+
+  }else{
+
+    if($("currentEvidenceLabel")){
+
+      $("currentEvidenceLabel").textContent =
+        "No persistent investigation selected. Investigate an email from the Inbox first.";
+
+    }
+
   }
+
+  renderInvestigationAccess();
+}
   window.scrollTo(0,0);
   return false;
 }
@@ -1409,7 +1434,7 @@ async function renderInbox(){
 
   }
 
-function openGmailEmailById(id){
+async function openGmailEmailById(id){
 
   const email =
     window.gmailInboxEmails?.[
@@ -1425,7 +1450,273 @@ function openGmailEmailById(id){
     return;
   }
 
-  openGmailEmail(email);
+  const messageId =
+    String(email.id || id || "").trim();
+
+  if(!messageId){
+
+    toast(
+      "This Gmail message does not have a valid message ID."
+    );
+
+    return;
+  }
+
+  // ---------------------------------------------------------
+  // BACKEND INVESTIGATION
+  // ---------------------------------------------------------
+  // The frontend sends ONLY the Gmail message ID.
+  //
+  // The backend is responsible for:
+  // Gmail fetch → forensic parsing → threat analysis
+  // → database persistence → IOC/infrastructure extraction.
+  // ---------------------------------------------------------
+
+  toast("Running forensic investigation...");
+
+  try{
+
+    const response =
+      await fetch("/api/investigations", {
+
+        method: "POST",
+
+        credentials: "include",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          gmail_message_id: messageId
+        })
+
+      });
+
+    // -------------------------------------------------------
+    // HANDLE BACKEND ERROR
+    // -------------------------------------------------------
+
+    if(!response.ok){
+
+      let detail =
+        "Unable to create investigation.";
+
+      try{
+
+        const errorData =
+          await response.json();
+
+        if(errorData.detail){
+          detail = errorData.detail;
+        }
+
+      }catch(error){
+
+        console.error(
+          "Could not read investigation error:",
+          error
+        );
+
+      }
+
+      throw new Error(detail);
+    }
+
+    // -------------------------------------------------------
+    // READ BACKEND INVESTIGATION RESULT
+    // -------------------------------------------------------
+
+    const data =
+      await response.json();
+
+    if(!data.success){
+
+      throw new Error(
+        "Investigation was not created successfully."
+      );
+
+    }
+
+    // -------------------------------------------------------
+    // STORE THE PERSISTENT INVESTIGATION
+    // -------------------------------------------------------
+
+    window.currentInvestigation =
+      data.investigation || null;
+    window.currentForensic =
+      data.forensic || {};
+
+    window.currentAnalysis =
+      data.analysis || {};
+
+    window.currentInvestigationIocCount =
+      data.ioc_count || 0;
+
+
+    /*
+    * Convert the persistent backend investigation
+    * into the structure used by the existing
+    * Investigation page/report UI.
+    */
+    if(window.currentInvestigation){
+
+      const inv =
+        window.currentInvestigation;
+
+      window.currentCase = {
+
+        id:
+          inv.case_id ||
+          inv.id ||
+          "UNKNOWN",
+
+        sender:
+          inv.sender ||
+          email.from ||
+          "UNKNOWN",
+
+        subject:
+          inv.subject ||
+          email.subject ||
+          "UNKNOWN",
+
+        threat:
+          inv.threat ||
+          data.analysis?.threat ||
+          "UNKNOWN",
+
+        score:
+          inv.risk_score ??
+          data.analysis?.risk_score ??
+          0,
+
+        loc:
+          "UNKNOWN",
+
+        geoConfidence:
+          null,
+
+        status:
+          inv.status ||
+          "ACTIVE",
+
+        indicators:
+          data.ioc_count ||
+          0,
+
+        raw:
+          "",
+
+        createdAt:
+          inv.created_at ||
+          new Date().toISOString(),
+
+        investigationId:
+          inv.id,
+
+        gmailMessageId:
+          inv.gmail_message_id,
+
+        forensic:
+          data.forensic ||
+          {},
+
+        analysis:
+          data.analysis ||
+          {},
+
+        findings:
+          data.analysis?.findings ||
+          []
+      };
+
+    }
+
+    // -------------------------------------------------------
+    // MERGE BACKEND FORENSIC DATA INTO THE EMAIL OBJECT
+    // -------------------------------------------------------
+    //
+    // The existing openGmailEmail() function already knows
+    // how to display:
+    //
+    //   sender
+    //   subject
+    //   threat
+    //   risk
+    //   findings
+    //   authentication
+    //   URLs
+    //   attachments
+    //
+    // So we reuse it instead of rebuilding the modal.
+    // -------------------------------------------------------
+
+    const enrichedEmail = {
+
+      ...email,
+
+      forensic:
+        data.forensic ||
+        email.forensic ||
+        {},
+
+      analysis:
+        data.analysis ||
+        email.analysis ||
+        {},
+
+      threat:
+        data.analysis?.threat ||
+        email.threat ||
+        "UNKNOWN",
+
+      riskScore:
+        data.analysis?.risk_score ??
+        email.riskScore ??
+        null,
+
+      riskLevel:
+        data.analysis?.risk_level ||
+        email.riskLevel ||
+        "UNKNOWN",
+
+      findings:
+        data.analysis?.findings ||
+        email.findings ||
+        []
+
+    };
+
+    // -------------------------------------------------------
+    // OPEN THE EXISTING FORENSIC MODAL
+    // -------------------------------------------------------
+
+    openGmailEmail(enrichedEmail);
+
+    toast(
+      "Investigation completed and saved."
+    );
+
+    console.log(
+      "TraceMail investigation created:",
+      data
+    );
+
+  }catch(error){
+
+    console.error(
+      "Investigation error:",
+      error
+    );
+
+    toast(
+      error?.message ||
+      "Investigation failed. Please try again."
+    );
+
+  }
+
 }
 function openGmailEmail(email){
 
@@ -2460,26 +2751,1035 @@ function renderInvestigation(c){const ex=extract(c.raw||"");const h=ex.p.h;const
  <div class="response-card"><b>🔎 Hunt Organization</b><small>Search matching indicators across the monitored mailbox.</small></div>
 </div><div class="authorize">⚠ HUMAN AUTHORIZATION REQUIRED · TraceMail recommends actions but does not silently execute destructive changes.</div>
 <div class="actions section"><button class="btn danger" data-analyst-only="1" onclick="authorizeAction('Quarantine')">Quarantine</button><button class="btn" data-analyst-only="1" onclick="addWatchFromCase()">Add IOC to Watchlist</button><button class="btn primary" onclick="downloadReport()">Generate Report</button></div>`;$("modal").classList.add("show")}
-function showForensicReportInInvestigation(){
- const c=window.currentCase||cases[0];
- if(!c){toast('No investigation available yet');return;}
- const el=$('investigationReport');
- if(!el){toast('Forensic report panel unavailable');return;}
- const ex=extract(c.raw||''); const h=ex.p.h||{};
- const role=currentRole();
- const level=(roleAccess[role]||roleAccess.analyst).level;
- const roleLabel=level===1?'VIEWER / GUARDIAN':level===2?'SECURITY ANALYST':'ADMINISTRATOR';
- const roleFocus=level===1?'AWARENESS REPORT':level===2?'FULL FORENSIC REPORT':'FULL FORENSIC + RESPONSE REPORT';
- const auth=h['authentication-results']||'UNKNOWN';
- const makeRows=(items,label)=>items.length?items.map(x=>'<div class="find"><span>'+esc(label)+'</span><b class="mono">'+esc(x)+'</b><i class="source obs">OBSERVED</i></div>').join(''):'<div class="find"><span>'+esc(label)+'</span><b>NONE OBSERVED</b></div>';
- const observedSummary='<div class="two section"><div><h3>Message Summary</h3><div class="find"><span>From</span><b>'+esc(h.from||c.sender||'UNKNOWN')+'</b></div><div class="find"><span>Reply-To</span><b>'+esc(h['reply-to']||'UNKNOWN')+'</b></div><div class="find"><span>Threat</span><b>'+esc(c.threat)+'</b></div><div class="find"><span>Risk Score</span><b>'+c.score+'/100</b></div></div><div><h3>Safety Finding</h3><p class="muted">This report provides the evidence needed to understand the message risk. Technical response controls are available only to authorized roles.</p><div class="find"><span>User interaction</span><b>UNKNOWN / NOT OBSERVED</b></div></div></div>';
- const analystDetails=level>=2?'<div class="two section"><div><h3>Authentication Evidence</h3><pre class="mono" style="white-space:pre-wrap;color:#294153;background:#f7fafc;border:1px solid #dbe3ea;padding:12px;border-radius:8px">'+esc(auth)+'</pre></div><div><h3>Message Headers</h3><div class="find"><span>Return-Path</span><b>'+esc(h['return-path']||'UNKNOWN')+'</b></div><div class="find"><span>Message-ID</span><b>'+esc(h['message-id']||'UNKNOWN')+'</b></div><div class="find"><span>Date</span><b>'+esc(h.date||'UNKNOWN')+'</b></div><div class="find"><span>Content-Type</span><b>'+esc(h['content-type']||'UNKNOWN')+'</b></div></div></div><div class="section"><div class="sectionHead"><h3>Indicators of Compromise</h3><span class="badge obs">FULL IOC VIEW</span></div>'+makeRows(ex.ips,'IP')+makeRows(ex.domains.slice(0,8),'Domain')+makeRows(ex.urls,'URL')+'</div><div class="section"><h3>Infrastructure & Correlation</h3><div class="three"><div class="card"><div class="ey">SOURCE IP</div><h3 class="mono">'+esc(ex.ips[0]||'UNKNOWN')+'</h3><div class="muted small">Observed infrastructure</div></div><div class="card"><div class="ey">GEO LOCATION</div><h3>'+esc(c.loc||'UNKNOWN')+'</h3><div class="muted small">Confidence '+(c.geoConfidence==null?'UNKNOWN':c.geoConfidence+'%')+'</div></div><div class="card"><div class="ey">CORRELATION</div><h3>Campaign / IOC links</h3><div class="muted small">Available to analyst and administrator</div></div></div></div>':'';
- const adminDetails=level>=3?'<div class="section"><div class="sectionHead"><h3>Administrator Response & Audit Context</h3><span class="badge critical">ADMIN ONLY</span></div><div class="three"><div class="card"><b>Quarantine</b><div class="muted small">Authorized containment action</div></div><div class="card"><b>Block IOC</b><div class="muted small">Block confirmed IP, domain or URL</div></div><div class="card"><b>Audit Trail</b><div class="muted small">Response and access activity visibility</div></div></div><div class="find"><span>Human authorization</span><b>REQUIRED BEFORE DESTRUCTIVE ACTIONS</b></div></div>':'';
- const restrictedNote=level===1?'<div class="authorize">🔒 VIEWER / GUARDIAN: Detailed headers, IOC lists, infrastructure correlation and response controls are intentionally limited. The report still provides the complete safety finding and enough evidence to understand the threat.</div>':level===2?'<div class="authorize">🛡️ SECURITY ANALYST: Full forensic evidence is visible. Administrator-only user, configuration and audit controls remain restricted.</div>':'<div class="authorize">🔐 ADMINISTRATOR: Complete forensic and response context is visible. Destructive actions still require explicit human authorization.</div>';
- el.style.display='block';
- el.innerHTML='<div class="sectionHead"><div><div class="ey">TRACEMAIL AI · FORENSIC REPORT</div><h2>'+esc(c.id)+' · '+esc(c.subject)+'</h2></div><div class="actions"><span class="accessLevelTag">'+roleLabel+' · '+roleFocus+'</span><button class="btn" type="button" onclick="viewForensicPDF()">Open PDF</button><button class="btn primary" type="button" onclick="downloadReport()">Export PDF</button></div></div>'+
- '<div class="three" style="margin-top:14px"><div class="card"><div class="ey">THREAT</div><h3>'+esc(c.threat)+'</h3><div class="muted small">Risk score '+c.score+'/100</div></div><div class="card"><div class="ey">SENDER</div><h3 class="mono" style="font-size:13px">'+esc(c.sender)+'</h3><div class="muted small">OBSERVED</div></div><div class="card"><div class="ey">GEO LOCATION</div><h3>'+esc(c.loc||'UNKNOWN')+'</h3><div class="muted small">Observed infrastructure · confidence '+(c.geoConfidence==null?'UNKNOWN':c.geoConfidence+'%')+'</div></div></div>'+observedSummary+analystDetails+adminDetails+restrictedNote;
- el.scrollIntoView({behavior:'smooth',block:'start'});
+async function loadInvestigationInfrastructure(investigationId){
+
+  if(!investigationId){
+    return [];
+  }
+
+  try{
+
+    const response =
+      await fetch(
+        `/api/investigations/${encodeURIComponent(investigationId)}/infrastructure`,
+        {
+          method: "GET",
+          credentials: "include"
+        }
+      );
+
+    if(!response.ok){
+
+      console.warn(
+        "Infrastructure request failed:",
+        response.status
+      );
+
+      return [];
+    }
+
+    const data =
+      await response.json();
+
+    if(Array.isArray(data)){
+      return data;
+    }
+
+    if(Array.isArray(data.infrastructure)){
+      return data.infrastructure;
+    }
+
+    return [];
+
+  }catch(error){
+
+    console.error(
+      "Infrastructure loading error:",
+      error
+    );
+
+    return [];
+  }
+}
+async function showForensicReportInInvestigation(){
+
+  const investigation =
+    window.currentInvestigation || null;
+
+  const forensic =
+    window.currentForensic || {};
+
+  const analysis =
+    window.currentAnalysis || {};
+
+  if(!investigation){
+
+    toast(
+      "No backend investigation is available. Investigate a Gmail message first."
+    );
+
+    return;
+  }
+
+  const el =
+    $("investigationReport");
+
+  if(!el){
+
+    toast(
+      "Forensic report panel unavailable"
+    );
+
+    return;
+  }
+
+  const investigationId =
+    investigation.id || "";
+
+  if(!investigationId){
+
+    toast(
+      "Investigation ID is missing."
+    );
+
+    return;
+  }
+
+  // ---------------------------------------------------------
+  // LOAD REAL INFRASTRUCTURE DATA
+  // ---------------------------------------------------------
+
+  toast(
+    "Loading forensic evidence..."
+  );
+
+  const infrastructure =
+    await loadInvestigationInfrastructure(
+      investigationId
+    );
+
+  // ---------------------------------------------------------
+  // NORMALIZE BACKEND FORENSIC DATA
+  // ---------------------------------------------------------
+
+  const authentication =
+    forensic.authentication || {};
+
+  const urls =
+    Array.isArray(forensic.urls)
+      ? forensic.urls
+      : [];
+
+  const attachments =
+    Array.isArray(forensic.attachments)
+      ? forensic.attachments
+      : [];
+
+  const headers =
+    forensic.headers ||
+    forensic.header_map ||
+    {};
+
+  const ips =
+    Array.isArray(forensic.ips)
+      ? forensic.ips
+      : [];
+
+  const domains =
+    Array.isArray(forensic.domains)
+      ? forensic.domains
+      : [];
+
+  const received =
+    Array.isArray(forensic.received)
+      ? forensic.received
+      : [];
+
+  const findings =
+    Array.isArray(analysis.findings)
+      ? analysis.findings
+      : [];
+
+  // ---------------------------------------------------------
+  // HELPERS
+  // ---------------------------------------------------------
+
+  const valueOrUnknown =
+    value => {
+
+      if(
+        value === null ||
+        value === undefined ||
+        String(value).trim() === ""
+      ){
+        return "UNKNOWN";
+      }
+
+      return String(value);
+    };
+
+  const arrayOrEmpty =
+    value =>
+      Array.isArray(value)
+        ? value
+        : [];
+
+  const renderList =
+    (
+      items,
+      emptyText="NONE OBSERVED"
+    ) => {
+
+      const values =
+        arrayOrEmpty(items);
+
+      if(!values.length){
+
+        return `
+          <div class="find">
+            <span>Evidence</span>
+            <b>${esc(emptyText)}</b>
+          </div>
+        `;
+      }
+
+      return values
+        .map(item => {
+
+          const text =
+            typeof item === "string"
+              ? item
+              : JSON.stringify(item);
+
+          return `
+            <div class="find">
+              <span>Observed</span>
+              <b class="mono">
+                ${esc(text)}
+              </b>
+              <i class="source obs">
+                OBSERVED
+              </i>
+            </div>
+          `;
+
+        })
+        .join("");
+    };
+
+  const renderObject =
+    object => {
+
+      if(
+        !object ||
+        typeof object !== "object"
+      ){
+
+        return `
+          <div class="find">
+            <span>Evidence</span>
+            <b>UNKNOWN</b>
+          </div>
+        `;
+      }
+
+      const entries =
+        Object.entries(object);
+
+      if(!entries.length){
+
+        return `
+          <div class="find">
+            <span>Evidence</span>
+            <b>NONE OBSERVED</b>
+          </div>
+        `;
+      }
+
+      return entries
+        .map(([key,value]) => {
+
+          let displayValue;
+
+          if(
+            value &&
+            typeof value === "object"
+          ){
+
+            displayValue =
+              JSON.stringify(value);
+          }else{
+
+            displayValue =
+              valueOrUnknown(value);
+          }
+
+          return `
+            <div class="find">
+              <span>
+                ${esc(key)}
+              </span>
+              <b class="mono">
+                ${esc(displayValue)}
+              </b>
+              <i class="source obs">
+                OBSERVED
+              </i>
+            </div>
+          `;
+
+        })
+        .join("");
+    };
+
+  // ---------------------------------------------------------
+  // AUTHENTICATION
+  // ---------------------------------------------------------
+
+  const authSpf =
+    valueOrUnknown(
+      authentication.spf
+    );
+
+  const authDkim =
+    valueOrUnknown(
+      authentication.dkim
+    );
+
+  const authDmarc =
+    valueOrUnknown(
+      authentication.dmarc
+    );
+
+  const authRaw =
+    valueOrUnknown(
+      authentication.raw
+    );
+
+  // ---------------------------------------------------------
+  // INVESTIGATION SUMMARY
+  // ---------------------------------------------------------
+
+  const threat =
+    valueOrUnknown(
+      investigation.threat ||
+      analysis.threat
+    );
+
+  const riskScore =
+    investigation.risk_score ??
+    analysis.risk_score ??
+    0;
+
+  const riskLevel =
+    valueOrUnknown(
+      investigation.risk_level ||
+      analysis.risk_level
+    );
+
+  const sender =
+    valueOrUnknown(
+      investigation.sender
+    );
+
+  const recipient =
+    valueOrUnknown(
+      investigation.recipient
+    );
+
+  const subject =
+    valueOrUnknown(
+      investigation.subject
+    );
+
+  const threadId =
+    valueOrUnknown(
+      investigation.thread_id
+    );
+
+  // ---------------------------------------------------------
+  // INFRASTRUCTURE
+  // ---------------------------------------------------------
+
+  const infrastructureRows =
+    infrastructure.length
+
+      ? infrastructure.map(item => {
+
+          const hostname =
+            valueOrUnknown(
+              item.hostname
+            );
+
+          const ip =
+            valueOrUnknown(
+              item.ip
+            );
+
+          const country =
+            valueOrUnknown(
+              item.country
+            );
+
+          const region =
+            valueOrUnknown(
+              item.region
+            );
+
+          const city =
+            valueOrUnknown(
+              item.city
+            );
+
+          const isp =
+            valueOrUnknown(
+              item.isp
+            );
+
+          const organization =
+            valueOrUnknown(
+              item.organization
+            );
+
+          const asn =
+            valueOrUnknown(
+              item.asn
+            );
+
+          const provider =
+            valueOrUnknown(
+              item.provider
+            );
+
+          const confidence =
+            item.confidence == null
+              ? "UNKNOWN"
+              : String(item.confidence) + "%";
+
+          return `
+            <div class="card">
+
+              <div class="ey">
+                INFRASTRUCTURE NODE
+              </div>
+
+              <div class="find">
+                <span>Hostname</span>
+                <b class="mono">
+                  ${esc(hostname)}
+                </b>
+              </div>
+
+              <div class="find">
+                <span>IP Address</span>
+                <b class="mono">
+                  ${esc(ip)}
+                </b>
+              </div>
+
+              <div class="find">
+                <span>Country</span>
+                <b>${esc(country)}</b>
+              </div>
+
+              <div class="find">
+                <span>Region</span>
+                <b>${esc(region)}</b>
+              </div>
+
+              <div class="find">
+                <span>City</span>
+                <b>${esc(city)}</b>
+              </div>
+
+              <div class="find">
+                <span>ISP</span>
+                <b>${esc(isp)}</b>
+              </div>
+
+              <div class="find">
+                <span>Organization</span>
+                <b>${esc(organization)}</b>
+              </div>
+
+              <div class="find">
+                <span>ASN</span>
+                <b class="mono">
+                  ${esc(asn)}
+                </b>
+              </div>
+
+              <div class="find">
+                <span>Provider</span>
+                <b>${esc(provider)}</b>
+              </div>
+
+              <div class="find">
+                <span>Confidence</span>
+                <b>${esc(confidence)}</b>
+              </div>
+
+            </div>
+          `;
+
+        }).join("")
+
+      : `
+        <div class="find">
+          <span>Infrastructure</span>
+          <b>NONE OBSERVED</b>
+        </div>
+      `;
+
+  // ---------------------------------------------------------
+  // REPORT HTML
+  // ---------------------------------------------------------
+
+  el.style.display =
+    "block";
+
+  el.innerHTML = `
+
+    <div class="sectionHead">
+
+      <div>
+
+        <div class="ey">
+          TRACEMAIL AI · FORENSIC REPORT
+        </div>
+
+        <h2>
+          ${esc(
+            investigation.case_id ||
+            investigation.id
+          )}
+          ·
+          ${esc(subject)}
+        </h2>
+
+      </div>
+
+      <div class="actions">
+
+        <span class="accessLevelTag">
+          BACKEND EVIDENCE
+        </span>
+
+        <button
+          class="btn"
+          type="button"
+          onclick="viewForensicPDF()"
+        >
+          Open PDF
+        </button>
+
+        <button
+          class="btn primary"
+          type="button"
+          onclick="downloadReport()"
+        >
+          Export PDF
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         1. INVESTIGATION SUMMARY
+         ===================================================== -->
+
+    <div class="three"
+         style="margin-top:14px">
+
+      <div class="card">
+
+        <div class="ey">
+          THREAT
+        </div>
+
+        <h3>
+          ${esc(threat)}
+        </h3>
+
+        <div class="muted small">
+          Risk score
+          ${esc(String(riskScore))}/100
+          ·
+          ${esc(riskLevel)}
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="ey">
+          SENDER
+        </div>
+
+        <h3
+          class="mono"
+          style="font-size:13px"
+        >
+          ${esc(sender)}
+        </h3>
+
+        <div class="muted small">
+          OBSERVED FROM BACKEND
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="ey">
+          INVESTIGATION
+        </div>
+
+        <h3
+          class="mono"
+          style="font-size:13px"
+        >
+          ${esc(investigationId)}
+        </h3>
+
+        <div class="muted small">
+          Thread:
+          ${esc(threadId)}
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         2. MESSAGE METADATA
+         ===================================================== -->
+
+    <div class="two section">
+
+      <div>
+
+        <h3>
+          Message Metadata
+        </h3>
+
+        <div class="find">
+          <span>From</span>
+          <b>${esc(sender)}</b>
+        </div>
+
+        <div class="find">
+          <span>To</span>
+          <b>${esc(recipient)}</b>
+        </div>
+
+        <div class="find">
+          <span>Subject</span>
+          <b>${esc(subject)}</b>
+        </div>
+
+        <div class="find">
+          <span>Thread ID</span>
+          <b class="mono">${esc(threadId)}</b>
+        </div>
+
+      </div>
+
+
+      <div>
+
+        <h3>
+          Authentication Results
+        </h3>
+
+        <div class="find">
+          <span>SPF</span>
+          <b>${esc(authSpf)}</b>
+        </div>
+
+        <div class="find">
+          <span>DKIM</span>
+          <b>${esc(authDkim)}</b>
+        </div>
+
+        <div class="find">
+          <span>DMARC</span>
+          <b>${esc(authDmarc)}</b>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         3. RAW AUTHENTICATION EVIDENCE
+         ===================================================== -->
+
+    <div class="section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Authentication Evidence
+        </h3>
+
+        <span class="badge obs">
+          BACKEND OBSERVED
+        </span>
+
+      </div>
+
+      <pre
+        class="mono"
+        style="
+          white-space:pre-wrap;
+          color:#294153;
+          background:#f7fafc;
+          border:1px solid #dbe3ea;
+          padding:12px;
+          border-radius:8px;
+        "
+      >${esc(authRaw)}</pre>
+
+    </div>
+
+
+    <!-- =====================================================
+         4. HEADERS
+         ===================================================== -->
+
+    <div class="section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Message Headers
+        </h3>
+
+        <span class="badge obs">
+          BACKEND EVIDENCE
+        </span>
+
+      </div>
+
+      ${renderObject(headers)}
+
+    </div>
+
+
+    <!-- =====================================================
+         5. RECEIVED CHAIN
+         ===================================================== -->
+
+    <div class="section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Received / Origin Chain
+        </h3>
+
+        <span class="badge obs">
+          OBSERVED
+        </span>
+
+      </div>
+
+      ${renderList(
+        received,
+        "Received"
+      )}
+
+    </div>
+
+
+    <!-- =====================================================
+         6. IOCs
+         ===================================================== -->
+
+    <div class="section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Indicators of Compromise
+        </h3>
+
+        <span class="badge obs">
+          ${esc(
+            String(
+              window.currentInvestigationIocCount || 0
+            )
+          )}
+          STORED
+        </span>
+
+      </div>
+
+
+      <h4>IP Addresses</h4>
+
+      ${renderList(
+        ips,
+        "IP"
+      )}
+
+
+      <h4 style="margin-top:14px">
+        Domains
+      </h4>
+
+      ${renderList(
+        domains,
+        "Domain"
+      )}
+
+
+      <h4 style="margin-top:14px">
+        URLs
+      </h4>
+
+      ${renderList(
+        urls,
+        "URL"
+      )}
+
+    </div>
+
+
+    <!-- =====================================================
+         7. ATTACHMENTS
+         ===================================================== -->
+
+    <div class="section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Attachments
+        </h3>
+
+        <span class="badge obs">
+          BACKEND PARSED
+        </span>
+
+      </div>
+
+      ${
+        attachments.length
+          ? attachments.map(item => `
+
+              <div class="find">
+
+                <span>
+                  Attachment
+                </span>
+
+                <b class="mono">
+                  ${esc(
+                    typeof item === "string"
+                      ? item
+                      : JSON.stringify(item)
+                  )}
+                </b>
+
+                <i class="source obs">
+                  OBSERVED
+                </i>
+
+              </div>
+
+            `).join("")
+          : `
+            <div class="find">
+              <span>Attachments</span>
+              <b>NONE OBSERVED</b>
+            </div>
+          `
+      }
+
+    </div>
+
+
+    <!-- =====================================================
+         8. ANALYSIS FINDINGS
+         ===================================================== -->
+
+    <div class="section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Forensic Findings
+        </h3>
+
+        <span class="badge inf">
+          BACKEND ANALYSIS
+        </span>
+
+      </div>
+
+      ${
+        findings.length
+          ? findings.map(item => `
+
+              <div class="find">
+
+                <span>
+                  Finding
+                </span>
+
+                <b>
+                  ${
+                    typeof item === "string"
+                      ? esc(item)
+                      : esc(
+                          item?.reason ||
+                          item?.message ||
+                          JSON.stringify(item)
+                        )
+                  }
+                </b>
+
+              </div>
+
+            `).join("")
+          : `
+            <div class="find">
+              <span>Findings</span>
+              <b>NONE RETURNED</b>
+            </div>
+          `
+      }
+
+    </div>
+
+
+    <!-- =====================================================
+         9. INFRASTRUCTURE
+         ===================================================== -->
+
+    <div class="section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Infrastructure Intelligence
+        </h3>
+
+        <span class="badge inf">
+          BACKEND DATA
+        </span>
+
+      </div>
+
+      <div class="three">
+
+        ${infrastructureRows}
+
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         10. EVIDENCE INTEGRITY
+         ===================================================== -->
+
+    <div class="section">
+
+      <h3>
+        Evidence Integrity
+      </h3>
+
+      <div class="find">
+
+        <span>
+          Evidence source
+        </span>
+
+        <b>
+          Gmail message fetched by backend
+        </b>
+
+      </div>
+
+      <div class="find">
+
+        <span>
+          Parsing
+        </span>
+
+        <b>
+          TraceMail backend forensic parser
+        </b>
+
+      </div>
+
+      <div class="find">
+
+        <span>
+          Threat analysis
+        </span>
+
+        <b>
+          TraceMail backend analyzer
+        </b>
+
+      </div>
+
+      <div class="find">
+
+        <span>
+          Persistence
+        </span>
+
+        <b>
+          Investigation + IOC + infrastructure records
+        </b>
+
+      </div>
+
+      <div class="find">
+
+        <span>
+          Attacker physical location
+        </span>
+
+        <b>
+          UNKNOWN unless supported by evidence
+        </b>
+
+      </div>
+
+    </div>
+
+
+    <div class="authorize">
+
+      🔐 BACKEND-GROUNDED REPORT ·
+      Evidence shown here comes from the persisted
+      TraceMail investigation and its forensic records.
+      Unknown values are not invented.
+
+    </div>
+
+  `;
+
+  el.scrollIntoView({
+    behavior:"smooth",
+    block:"start"
+  });
+
+  toast(
+    "Backend forensic report generated."
+  );
 }
 function switchModalTab(btn,id){document.querySelectorAll(".modalBox .tab").forEach(x=>x.classList.remove("on"));document.querySelectorAll(".modalBox .tabbody").forEach(x=>x.classList.remove("on"));btn.classList.add("on");$(id).classList.add("on")}
 function closeModal(){$("modal").classList.remove("show")}

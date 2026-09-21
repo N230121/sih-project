@@ -33,7 +33,6 @@ from .database import (
     add_investigation_evidence,
     add_investigation_ioc,
     add_infrastructure,
-    add_infrastructure,
     get_infrastructure_for_investigation,
 )
 from .intelligence.infrastructure import (
@@ -782,7 +781,7 @@ async def get_emails(
 
 @app.post("/api/investigations")
 async def create_investigation_api(
-    request: Request,
+    credentials: InvestigationRequest,
     user=Depends(get_current_user)
 ):
     """
@@ -790,16 +789,7 @@ async def create_investigation_api(
     from a Gmail message.
     """
 
-    body = await request.json()
-
-    message_id = body.get("message_id")
-
-    if not message_id:
-        raise HTTPException(
-            status_code=400,
-            detail="message_id is required."
-        )
-
+    message_id = credentials.gmail_message_id
     user_id = user["id"]
 
     # -----------------------------------------------------
@@ -922,41 +912,41 @@ async def create_investigation_api(
     add_investigation_evidence(
         investigation_id=investigation_id,
         evidence_type="headers",
-        evidence=json.dumps(
+        evidence_key="headers",
+        evidence_value=json.dumps(
             forensic.get("headers", {})
         ),
+        source="gmail_parser",
     )
 
     add_investigation_evidence(
         investigation_id=investigation_id,
         evidence_type="authentication",
-        evidence=json.dumps(
-            forensic.get(
-                "authentication",
-                {}
-            )
+        evidence_key="authentication",
+        evidence_value=json.dumps(
+            forensic.get("authentication", {})
         ),
+        source="gmail_parser",
     )
 
     add_investigation_evidence(
-    investigation_id=investigation_id,
-    evidence_type="body",
-    evidence=json.dumps(
-        forensic
-        ),
+        investigation_id=investigation_id,
+        evidence_type="body",
+        evidence_key="forensic_data",
+        evidence_value=json.dumps(forensic),
+        source="gmail_parser",
     )
+
     add_investigation_evidence(
         investigation_id=investigation_id,
         evidence_type="attachments",
-        evidence=json.dumps(
-            forensic.get(
-                "attachments",
-                []
-            )
+        evidence_key="attachments",
+        evidence_value=json.dumps(
+            forensic.get("attachments", [])
         ),
+        source="gmail_parser",
     )
-
-    # -----------------------------------------------------
+        # -----------------------------------------------------
     # 9. Save extracted URLs as IOCs
     # -----------------------------------------------------
 
@@ -971,15 +961,42 @@ async def create_investigation_api(
             investigation_id=investigation_id,
             ioc_type="url",
             value=url,
-        )
-        # -----------------------------------------------------
-        # 9B. Infrastructure intelligence
-        # -----------------------------------------------------
-
-        infrastructure_items = extract_public_ips(
-            urls
+            source="gmail_email",
+            confidence=100,
         )
 
+    # -----------------------------------------------------
+    # 9B. Extract infrastructure candidates
+    # -----------------------------------------------------
+    # This is intentionally outside the URL loop.
+    # We only need to perform hostname/IP discovery once.
+    # -----------------------------------------------------
+
+    infrastructure_items = extract_public_ips(
+        urls
+    )
+        # -----------------------------------------------------
+    # 9C. Save discovered infrastructure candidates
+    # -----------------------------------------------------
+    # At this stage we only know:
+    #
+    # hostname + public IP
+    #
+    # We do NOT yet claim country, ISP, ASN, etc.
+    # Those fields will come from the real
+    # infrastructure intelligence provider.
+    # -----------------------------------------------------
+
+    for item in infrastructure_items:
+
+        add_infrastructure(
+            investigation_id=investigation_id,
+            hostname=item.get("hostname"),
+            ip=item.get("ip"),
+            provider="dns_resolution",
+            confidence=50,
+            raw_json=json.dumps(item),
+        )
     # -----------------------------------------------------
     # 10. Return investigation
     # -----------------------------------------------------

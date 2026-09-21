@@ -97,6 +97,7 @@ def init_db():
     if google_sub_not_null:
 
         conn.execute("PRAGMA foreign_keys=OFF")
+        conn.execute("DROP TABLE IF EXISTS users_new")
 
         conn.execute("""
             CREATE TABLE users_new (
@@ -148,132 +149,140 @@ def init_db():
         """)
 
         conn.execute("PRAGMA foreign_keys=ON")
-        conn.execute("""
-                CREATE TABLE IF NOT EXISTS investigations (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    case_id TEXT NOT NULL UNIQUE,
-                    user_id INTEGER NOT NULL,
-                    gmail_message_id TEXT,
-                    thread_id TEXT,
-                    sender TEXT,
-                    subject TEXT,
-                    threat TEXT,
-                    risk_score INTEGER,
-                    risk_level TEXT,
-                    status TEXT NOT NULL DEFAULT 'ACTIVE',
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY(user_id) REFERENCES users(id)
-                )
-            """)
-        conn.execute("""
-                CREATE TABLE IF NOT EXISTS investigation_evidence (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    investigation_id INTEGER NOT NULL,
-                    evidence_type TEXT NOT NULL,
-                    evidence_key TEXT,
-                    evidence_value TEXT,
-                    source TEXT,
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY(investigation_id)
-                        REFERENCES investigations(id)
-                        ON DELETE CASCADE
-                )
-            """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS investigation_iocs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                investigation_id INTEGER NOT NULL,
-                ioc_type TEXT NOT NULL,
-                value TEXT NOT NULL,
-                source TEXT,
-                confidence INTEGER DEFAULT 0,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(investigation_id)
-                    REFERENCES investigations(id)
-                    ON DELETE CASCADE
-            )
-        """)
-        conn.execute("""
-                CREATE TABLE IF NOT EXISTS infrastructure (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    investigation_id INTEGER NOT NULL,
-                    ioc_type TEXT NOT NULL,
-                    value TEXT NOT NULL,
-                    ip TEXT,
-                    domain TEXT,
-                    country TEXT,
-                    region TEXT,
-                    city TEXT,
-                    isp TEXT,
-                    organization TEXT,
-                    asn TEXT,
-                    latitude REAL,
-                    longitude REAL,
-                    vpn BOOLEAN,
-                    proxy BOOLEAN,
-                    tor BOOLEAN,
-                    confidence INTEGER DEFAULT 0,
-                    provider TEXT,
-                    raw_json TEXT,
-                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY(investigation_id)
-                        REFERENCES investigations(id)
-                        ON DELETE CASCADE
-                )
-            """)
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_investigations_user
-            ON investigations(user_id)
-        """)
 
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_investigations_gmail
-            ON investigations(gmail_message_id)
-        """)
+        # =========================================================
+    # INVESTIGATION TABLES
+    # =========================================================
+    # These tables must be created for BOTH:
+    # 1. new databases
+    # 2. existing migrated databases
+    # =========================================================
 
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_iocs_value
-            ON investigation_iocs(value)
-        """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS investigations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            case_id TEXT NOT NULL UNIQUE,
+            user_id INTEGER NOT NULL,
+            gmail_message_id TEXT,
+            thread_id TEXT,
+            sender TEXT,
+            recipient TEXT,
+            subject TEXT,
+            threat TEXT,
+            risk_score INTEGER DEFAULT 0,
+            risk_level TEXT,
+            findings TEXT,
+            status TEXT NOT NULL DEFAULT 'ACTIVE',
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_infrastructure_value
-            ON infrastructure(value)
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS infrastructure (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                investigation_id INTEGER NOT NULL,
-                hostname TEXT,
-                ip TEXT,
-                country TEXT,
-                region TEXT,
-                city TEXT,
-                isp TEXT,
-                organization TEXT,
-                asn TEXT,
-                latitude REAL,
-                longitude REAL,
-                vpn TEXT,
-                proxy TEXT,
-                tor TEXT,
-                confidence REAL,
-                provider TEXT,
-                raw_json TEXT,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id)
+                REFERENCES users(id)
+                ON DELETE CASCADE
+        )
+    """)
 
-                FOREIGN KEY(investigation_id)
-                    REFERENCES investigations(id)
-                    ON DELETE CASCADE
-            )
-        """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS investigation_evidence (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            investigation_id INTEGER NOT NULL,
+            evidence_type TEXT NOT NULL,
+            evidence_key TEXT,
+            evidence_value TEXT,
+            source TEXT,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY(investigation_id)
+                REFERENCES investigations(id)
+                ON DELETE CASCADE
+        )
+    """)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS investigation_iocs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            investigation_id INTEGER NOT NULL,
+            ioc_type TEXT NOT NULL,
+            value TEXT NOT NULL,
+            source TEXT,
+            confidence INTEGER DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY(investigation_id)
+                REFERENCES investigations(id)
+                ON DELETE CASCADE
+        )
+    """)
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS infrastructure (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            investigation_id INTEGER NOT NULL,
+            hostname TEXT,
+            ip TEXT,
+            country TEXT,
+            region TEXT,
+            city TEXT,
+            isp TEXT,
+            organization TEXT,
+            asn TEXT,
+            latitude REAL,
+            longitude REAL,
+            vpn TEXT,
+            proxy TEXT,
+            tor TEXT,
+            confidence REAL,
+            provider TEXT,
+            raw_json TEXT,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            FOREIGN KEY(investigation_id)
+                REFERENCES investigations(id)
+                ON DELETE CASCADE
+        )
+    """)
+
+    # =========================================================
+    # INVESTIGATION INDEXES
+    # =========================================================
+
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_investigations_user
+        ON investigations(user_id)
+    """)
+
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_investigations_gmail
+        ON investigations(gmail_message_id)
+    """)
+
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_iocs_value
+        ON investigation_iocs(value)
+    """)
+
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_infrastructure_ip
+        ON infrastructure(ip)
+    """)
+
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_infrastructure_value
+        ON infrastructure(hostname)
+    """)
 
     conn.commit()
     conn.close()
-    
+
+# =========================================================
+# INVESTIGATION DATABASE FUNCTIONS
+# =========================================================
 
 def generate_case_id():
+    """
+    Generate the next TraceMail investigation case ID.
+    """
+
     conn = get_connection()
 
     row = conn.execute("""
@@ -289,22 +298,32 @@ def generate_case_id():
         number = 142
     else:
         try:
-            number = int(row["case_id"].split("-")[-1]) + 1
+            number = (
+                int(row["case_id"].split("-")[-1])
+                + 1
+            )
         except Exception:
             number = 142
 
     return f"TM-2026-{number:05d}"
+
 
 def create_investigation(
     user_id,
     gmail_message_id,
     thread_id,
     sender,
+    recipient,
     subject,
     threat,
     risk_score,
     risk_level,
+    findings,
 ):
+    """
+    Create one persistent investigation.
+    """
+
     case_id = generate_case_id()
 
     conn = get_connection()
@@ -316,23 +335,30 @@ def create_investigation(
             gmail_message_id,
             thread_id,
             sender,
+            recipient,
             subject,
             threat,
             risk_score,
             risk_level,
+            findings,
             status
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (
+            ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?
+        )
     """, (
         case_id,
         user_id,
         gmail_message_id,
         thread_id,
         sender,
+        recipient,
         subject,
         threat,
         risk_score,
         risk_level,
+        findings,
         "ACTIVE",
     ))
 
@@ -345,9 +371,14 @@ def create_investigation(
         investigation_id
     )
 
+
 def get_investigation_by_id(
     investigation_id
 ):
+    """
+    Retrieve one investigation.
+    """
+
     conn = get_connection()
 
     row = conn.execute("""
@@ -358,10 +389,12 @@ def get_investigation_by_id(
             gmail_message_id,
             thread_id,
             sender,
+            recipient,
             subject,
             threat,
             risk_score,
             risk_level,
+            findings,
             status,
             created_at,
             updated_at
@@ -375,7 +408,15 @@ def get_investigation_by_id(
 
     return dict(row) if row else None
 
-def get_investigations_for_user(user_id):
+
+def get_investigations_for_user(
+    user_id
+):
+    """
+    Retrieve all investigations belonging
+    to one TraceMail user.
+    """
+
     conn = get_connection()
 
     rows = conn.execute("""
@@ -385,10 +426,12 @@ def get_investigations_for_user(user_id):
             gmail_message_id,
             thread_id,
             sender,
+            recipient,
             subject,
             threat,
             risk_score,
             risk_level,
+            findings,
             status,
             created_at,
             updated_at
@@ -406,6 +449,7 @@ def get_investigations_for_user(user_id):
         for row in rows
     ]
 
+
 def add_investigation_evidence(
     investigation_id,
     evidence_type,
@@ -413,9 +457,13 @@ def add_investigation_evidence(
     evidence_value,
     source,
 ):
+    """
+    Store one piece of forensic evidence.
+    """
+
     conn = get_connection()
 
-    conn.execute("""
+    cursor = conn.execute("""
         INSERT INTO investigation_evidence (
             investigation_id,
             evidence_type,
@@ -432,8 +480,13 @@ def add_investigation_evidence(
         source,
     ))
 
+    evidence_id = cursor.lastrowid
+
     conn.commit()
     conn.close()
+
+    return evidence_id
+
 
 def add_investigation_ioc(
     investigation_id,
@@ -442,9 +495,13 @@ def add_investigation_ioc(
     source,
     confidence=0,
 ):
+    """
+    Store one Indicator of Compromise.
+    """
+
     conn = get_connection()
 
-    conn.execute("""
+    cursor = conn.execute("""
         INSERT INTO investigation_iocs (
             investigation_id,
             ioc_type,
@@ -461,14 +518,18 @@ def add_investigation_ioc(
         confidence,
     ))
 
+    ioc_id = cursor.lastrowid
+
     conn.commit()
     conn.close()
+
+    return ioc_id
+
+
 def add_infrastructure(
     investigation_id,
-    ioc_type,
-    value,
-    ip=None,
-    domain=None,
+    hostname,
+    ip,
     country=None,
     region=None,
     city=None,
@@ -480,19 +541,22 @@ def add_infrastructure(
     vpn=None,
     proxy=None,
     tor=None,
-    confidence=0,
+    confidence=None,
     provider=None,
     raw_json=None,
 ):
+    """
+    Store infrastructure intelligence
+    associated with an investigation.
+    """
+
     conn = get_connection()
 
-    conn.execute("""
+    cursor = conn.execute("""
         INSERT INTO infrastructure (
             investigation_id,
-            ioc_type,
-            value,
+            hostname,
             ip,
-            domain,
             country,
             region,
             city,
@@ -508,13 +572,14 @@ def add_infrastructure(
             provider,
             raw_json
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?
+        )
     """, (
         investigation_id,
-        ioc_type,
-        value,
+        hostname,
         ip,
-        domain,
         country,
         region,
         city,
@@ -531,8 +596,58 @@ def add_infrastructure(
         raw_json,
     ))
 
+    infrastructure_id = cursor.lastrowid
+
     conn.commit()
     conn.close()
+
+    return infrastructure_id
+
+
+def get_infrastructure_for_investigation(
+    investigation_id
+):
+    """
+    Retrieve infrastructure intelligence
+    associated with one investigation.
+    """
+
+    conn = get_connection()
+
+    rows = conn.execute("""
+        SELECT
+            id,
+            investigation_id,
+            hostname,
+            ip,
+            country,
+            region,
+            city,
+            isp,
+            organization,
+            asn,
+            latitude,
+            longitude,
+            vpn,
+            proxy,
+            tor,
+            confidence,
+            provider,
+            raw_json,
+            created_at
+        FROM infrastructure
+        WHERE investigation_id = ?
+        ORDER BY id ASC
+    """, (
+        investigation_id,
+    )).fetchall()
+
+    conn.close()
+
+    return [
+        dict(row)
+        for row in rows
+    ]
 def validate_role(role):
     """
     Validate that a role is one of the roles supported
