@@ -1,5 +1,12 @@
 import json
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import (
+    FastAPI,
+    Request,
+    HTTPException,
+    Depends,
+    UploadFile,
+    File,
+)
 from pydantic import BaseModel, EmailStr
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
@@ -7,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from authlib.integrations.starlette_client import OAuth
 from contextlib import asynccontextmanager
+
 
 from .config import (
     GOOGLE_CLIENT_ID,
@@ -40,7 +48,10 @@ from .intelligence.infrastructure import (
 )
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from .forensic.parser import parse_email_message
+from .forensic.parser import (
+    parse_email_message,
+    parse_eml_message,
+)
 from .forensic.analyzer import analyze_email
 
 @asynccontextmanager
@@ -1009,7 +1020,229 @@ async def create_investigation_api(
         "ioc_count": len(urls),
     }
 
+# =========================================================
+# EML INVESTIGATION API
+# =========================================================
 
+@app.post("/api/investigations/eml")
+async def create_eml_investigation_api(
+    file: UploadFile = File(...),
+    user=Depends(get_current_user),
+):
+    """
+    Create a persistent forensic investigation
+    from an uploaded .EML file.
+
+    The EML message is normalized into the same
+    forensic structure used by Gmail.
+    """
+
+    filename = (
+        file.filename or ""
+    ).strip()
+
+    if not filename.lower().endswith(".eml"):
+
+        raise HTTPException(
+            status_code=400,
+            detail="Only .eml files are supported."
+        )
+
+    try:
+
+        raw_bytes = await file.read()
+
+    except Exception as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unable to read EML file: {exc}"
+        )
+
+    if not raw_bytes:
+
+        raise HTTPException(
+            status_code=400,
+            detail="The uploaded EML file is empty."
+        )
+
+    # -----------------------------------------------------
+    # 1. Parse EML
+    # -----------------------------------------------------
+
+    try:
+
+        forensic = parse_eml_message(
+            raw_bytes
+        )
+
+    except Exception as exc:
+
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unable to parse EML file: {exc}"
+        )
+
+    # -----------------------------------------------------
+    # 2. Run SAME deterministic analyzer
+    # -----------------------------------------------------
+
+    analysis = analyze_email(
+        forensic
+    )
+
+    # -----------------------------------------------------
+    # 3. Create persistent investigation
+    # -----------------------------------------------------
+
+    investigation = create_investigation(
+        user_id=user["id"],
+        gmail_message_id=None,
+        thread_id=None,
+        sender=forensic["headers"].get(
+            "from",
+            ""
+        ),
+        recipient=forensic["headers"].get(
+            "to",
+            ""
+        ),
+        subject=forensic.get(
+            "subject",
+            ""
+        ),
+        threat=analysis["threat"],
+        risk_score=analysis["risk_score"],
+        risk_level=analysis["risk_level"],
+        findings=json.dumps(
+            analysis["findings"]
+        ),
+    )
+
+    investigation_id = (
+        investigation["id"]
+    )
+
+    # -----------------------------------------------------
+    # 4. Save forensic evidence
+    # -----------------------------------------------------
+
+    add_investigation_evidence(
+        investigation_id=investigation_id,
+        evidence_type="headers",
+        evidence_key="headers",
+        evidence_value=json.dumps(
+            forensic.get(
+                "headers",
+                {}
+            )
+        ),
+        source="eml_parser",
+    )
+
+    add_investigation_evidence(
+        investigation_id=investigation_id,
+        evidence_type="authentication",
+        evidence_key="authentication",
+        evidence_value=json.dumps(
+            forensic.get(
+                "authentication",
+                {}
+            )
+        ),
+        source="eml_parser",
+    )
+
+    add_investigation_evidence(
+        investigation_id=investigation_id,
+        evidence_type="body",
+        evidence_key="forensic_data",
+        evidence_value=json.dumps(
+            forensic
+        ),
+        source="eml_parser",
+    )
+
+    add_investigation_evidence(
+        investigation_id=investigation_id,
+        evidence_type="attachments",
+        evidence_key="attachments",
+        evidence_value=json.dumps(
+            forensic.get(
+                "attachments",
+                []
+            )
+        ),
+        source="eml_parser",
+    )
+
+    # -----------------------------------------------------
+    # 5. Save URLs as IOCs
+    # -----------------------------------------------------
+
+    urls = forensic.get(
+        "urls",
+        []
+    )
+
+    for url in urls:
+
+        add_investigation_ioc(
+            investigation_id=investigation_id,
+            ioc_type="url",
+            value=url,
+            source="eml_file",
+            confidence=100,
+        )
+
+    # -----------------------------------------------------
+    # 6. Discover infrastructure
+    # -----------------------------------------------------
+
+    infrastructure_items = (
+        extract_public_ips(urls)
+    )
+
+    for item in infrastructure_items:
+
+        add_infrastructure(
+            investigation_id=investigation_id,
+            hostname=item.get(
+                "hostname"
+            ),
+            ip=item.get(
+                "ip"
+            ),
+            provider="dns_resolution",
+            confidence=50,
+            raw_json=json.dumps(
+                item
+            ),
+        )
+
+    # -----------------------------------------------------
+    # 7. Return SAME report data shape as Gmail
+    # -----------------------------------------------------
+
+    return {
+        "success": True,
+
+        "source": "eml",
+
+        "filename": filename,
+
+        "investigation":
+            investigation,
+
+        "forensic":
+            forensic,
+
+        "analysis":
+            analysis,
+
+        "ioc_count":
+            len(urls),
+    }
 # =========================================================
 # GET SINGLE INVESTIGATION
 # =========================================================

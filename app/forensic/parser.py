@@ -1,5 +1,7 @@
 import base64
 import re
+from email import policy
+from email.parser import BytesParser
 from email.utils import parseaddr
 
 
@@ -249,4 +251,189 @@ def parse_email_message(message):
             "sizeEstimate",
             0
         ),
+    }
+def parse_eml_message(raw_bytes):
+    """
+    Parse a raw RFC 5322 / .EML message into the same
+    normalized forensic structure used by Gmail messages.
+
+    The returned structure intentionally matches
+    parse_email_message().
+    """
+
+    message = BytesParser(
+        policy=policy.default
+    ).parsebytes(raw_bytes)
+
+    headers = {}
+
+    for key, value in message.items():
+
+        name = (
+            str(key)
+            .strip()
+            .lower()
+        )
+
+        value = (
+            str(value)
+            .strip()
+        )
+
+        if name in headers:
+
+            headers[name] += " " + value
+
+        else:
+
+            headers[name] = value
+
+    plain_parts = []
+    html_parts = []
+    attachments = []
+
+    for part in message.walk():
+
+        content_type = (
+            part.get_content_type()
+            .lower()
+        )
+
+        filename = (
+            part.get_filename()
+        )
+
+        if filename:
+
+            payload = (
+                part.get_payload(
+                    decode=True
+                )
+                or b""
+            )
+
+            attachments.append({
+                "filename": filename,
+                "mime_type": content_type,
+                "size": len(payload),
+                "attachment_id": None,
+            })
+
+            continue
+
+        if content_type == "text/plain":
+
+            try:
+
+                content = (
+                    part.get_content()
+                )
+
+            except Exception:
+
+                content = ""
+
+            if content:
+                plain_parts.append(
+                    str(content)
+                )
+
+        elif content_type == "text/html":
+
+            try:
+
+                content = (
+                    part.get_content()
+                )
+
+            except Exception:
+
+                content = ""
+
+            if content:
+                html_parts.append(
+                    str(content)
+                )
+
+    body_text = "\n".join(
+        plain_parts
+    )
+
+    body_html = "\n".join(
+        html_parts
+    )
+
+    combined_text = (
+        body_text +
+        "\n" +
+        body_html
+    )
+
+    urls = extract_urls(
+        combined_text
+    )
+
+    from_header = (
+        headers.get("from", "")
+    )
+
+    reply_to = (
+        headers.get("reply-to", "")
+    )
+
+    sender_name, sender_email = (
+        parseaddr(from_header)
+    )
+
+    _, reply_to_email = (
+        parseaddr(reply_to)
+    )
+
+    authentication = (
+        parse_authentication_headers(
+            headers
+        )
+    )
+
+    return {
+        "id": None,
+
+        "thread_id": None,
+
+        "headers": headers,
+
+        "sender": {
+            "name": sender_name,
+            "email": sender_email,
+        },
+
+        "reply_to": {
+            "email": reply_to_email,
+        },
+
+        "subject":
+            headers.get(
+                "subject",
+                ""
+            ),
+
+        "date":
+            headers.get(
+                "date",
+                ""
+            ),
+
+        "body": {
+            "text": body_text,
+            "html": body_html,
+        },
+
+        "urls": urls,
+
+        "attachments": attachments,
+
+        "authentication": authentication,
+
+        "size_estimate":
+            len(raw_bytes),
     }

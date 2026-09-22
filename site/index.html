@@ -3854,7 +3854,232 @@ function switchModalTab(btn,id){document.querySelectorAll(".modalBox .tab").forE
 function closeModal(){$("modal").classList.remove("show")}
 $("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
 function loadDemo(){$("raw").value=demoEmail;toast("Demo email loaded")}
-document.getElementById("investigationEml")?.addEventListener("change",async e=>{const f=e.target.files?.[0];if(!f)return;if(!/\.eml$/i.test(f.name)){toast("Please select a valid .eml file");return}try{const raw=await f.text();const parsed=parseEmail(raw);const ex=extract(raw);const sender=normalizeSender(parsed.h.from||"unknown");const subject=parsed.h.subject||f.name.replace(/\.eml$/i,"");const score=ex.ips.length||ex.urls.length?94:20;const threat=score>=80?"High Risk":"Likely Safe";window.currentCase={id:"EML-"+Date.now(),sender,subject,threat,score,loc:"Unknown",geoConfidence:null,status:"ACTIVE",indicators:ex.ips.length+ex.urls.length,raw};$("currentEvidenceLabel").textContent=f.name+" · local email evidence";toast("EML loaded locally — ready for forensic report")}catch(err){toast("Unable to read the EML file")}});
+document
+  .getElementById("investigationEml")
+  ?.addEventListener(
+    "change",
+    async function(event){
+
+      const file =
+        event.target.files?.[0];
+
+      if(!file){
+        return;
+      }
+
+      if(
+        !/\.eml$/i.test(
+          file.name
+        )
+      ){
+
+        toast(
+          "Please select a valid .eml file."
+        );
+
+        return;
+      }
+
+      toast(
+        "Uploading EML for forensic analysis..."
+      );
+
+      try{
+
+        const formData =
+          new FormData();
+
+        formData.append(
+          "file",
+          file
+        );
+
+        const response =
+          await fetch(
+            "/api/investigations/eml",
+            {
+              method: "POST",
+              credentials: "include",
+              body: formData
+            }
+          );
+
+        if(!response.ok){
+
+          let detail =
+            "Unable to analyze EML file.";
+
+          try{
+
+            const errorData =
+              await response.json();
+
+            if(
+              errorData.detail
+            ){
+
+              detail =
+                errorData.detail;
+            }
+
+          }catch(error){
+
+            console.error(
+              "Could not read EML error:",
+              error
+            );
+
+          }
+
+          throw new Error(
+            detail
+          );
+        }
+
+        const data =
+          await response.json();
+
+        if(!data.success){
+
+          throw new Error(
+            "EML investigation was not created."
+          );
+        }
+
+        // ---------------------------------------------------
+        // STORE THE SAME OBJECTS USED BY GMAIL
+        // ---------------------------------------------------
+
+        window.currentInvestigation =
+          data.investigation || null;
+
+        window.currentForensic =
+          data.forensic || {};
+
+        window.currentAnalysis =
+          data.analysis || {};
+
+        window.currentInvestigationIocCount =
+          data.ioc_count || 0;
+
+        // ---------------------------------------------------
+        // BUILD THE SAME CURRENT CASE STRUCTURE
+        // ---------------------------------------------------
+
+        if(
+          window.currentInvestigation
+        ){
+
+          const inv =
+            window.currentInvestigation;
+
+          window.currentCase = {
+
+            id:
+              inv.case_id ||
+              inv.id ||
+              "UNKNOWN",
+
+            sender:
+              inv.sender ||
+              "UNKNOWN",
+
+            subject:
+              inv.subject ||
+              file.name,
+
+            threat:
+              inv.threat ||
+              data.analysis?.threat ||
+              "UNKNOWN",
+
+            score:
+              inv.risk_score ??
+              data.analysis?.risk_score ??
+              0,
+
+            loc:
+              "UNKNOWN",
+
+            geoConfidence:
+              null,
+
+            status:
+              inv.status ||
+              "ACTIVE",
+
+            indicators:
+              data.ioc_count ||
+              0,
+
+            raw:
+              "",
+
+            createdAt:
+              inv.created_at ||
+              new Date().toISOString(),
+
+            investigationId:
+              inv.id,
+
+            gmailMessageId:
+              null,
+
+            source:
+              "eml",
+
+            filename:
+              file.name,
+
+            forensic:
+              data.forensic || {},
+
+            analysis:
+              data.analysis || {},
+
+            findings:
+              data.analysis?.findings ||
+              []
+          };
+        }
+
+        const evidenceLabel =
+          document.getElementById(
+            "currentEvidenceLabel"
+          );
+
+        if(evidenceLabel){
+
+          evidenceLabel.textContent =
+            file.name +
+            " · backend forensic evidence ready";
+        }
+
+        toast(
+          "EML analyzed and investigation saved."
+        );
+
+        console.log(
+          "TraceMail EML investigation:",
+          data
+        );
+
+      }catch(error){
+
+        console.error(
+          "EML investigation error:",
+          error
+        );
+
+        toast(
+          error?.message ||
+          "EML investigation failed."
+        );
+
+      }
+
+    }
+  );
 
 function parseEmail(raw){let lines=raw.replace(/\r/g,"").split("\n"),h={},bodyStart=0;for(let i=0;i<lines.length;i++){if(lines[i].trim()===""){bodyStart=i+1;break}let m=lines[i].match(/^([^:]+):\s*(.*)$/);if(m)h[m[1].toLowerCase()]=(h[m[1].toLowerCase()]?h[m[1].toLowerCase()]+" ":"")+m[2]}return {h,body:lines.slice(bodyStart).join("\n")}}
 function extract(raw){let p=parseEmail(raw),h=p.h;let ips=[...new Set((raw.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g)||[]))];let urls=[...new Set((raw.match(/https?:\/\/[^\s"'<>]+/gi)||[]))];let domains=[...new Set((raw.match(/\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b/gi)||[]))];return {p,ips,urls,domains,raw}}
