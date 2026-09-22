@@ -23,6 +23,7 @@ from .config import (
     GOOGLE_GMAIL_REDIRECT_URI,
     SESSION_SECRET,
     FRONTEND_URL,
+    INFRA_PROVIDER_API_KEY,
 )
 from .database import (
     init_db,
@@ -983,30 +984,57 @@ async def create_investigation_api(
     # We only need to perform hostname/IP discovery once.
     # -----------------------------------------------------
 
-    infrastructure_items = extract_public_ips(
-        urls
-    )
-        # -----------------------------------------------------
-    # 9C. Save discovered infrastructure candidates
-    # -----------------------------------------------------
-    # At this stage we only know:
-    #
-    # hostname + public IP
-    #
-    # We do NOT yet claim country, ISP, ASN, etc.
-    # Those fields will come from the real
-    # infrastructure intelligence provider.
-    # -----------------------------------------------------
+    infrastructure_items = extract_public_ips(urls)
 
     for item in infrastructure_items:
 
+        provider = item.get(
+            "provider",
+            "dns_resolution"
+        )
+
+        # Confidence represents confidence in the
+        # infrastructure enrichment data, NOT confidence
+        # about the attacker's physical identity/location.
+        if provider == "ipinfo":
+            confidence = 85
+        elif provider == "ipapi":
+            confidence = 70
+        else:
+            confidence = 50
+
         add_infrastructure(
             investigation_id=investigation_id,
+
             hostname=item.get("hostname"),
+
             ip=item.get("ip"),
-            provider="dns_resolution",
-            confidence=50,
-            raw_json=json.dumps(item),
+
+            country=item.get("country"),
+            region=item.get("region"),
+            city=item.get("city"),
+
+            isp=item.get("isp"),
+            organization=item.get("organization"),
+
+            asn=item.get("asn"),
+
+            latitude=item.get("latitude"),
+            longitude=item.get("longitude"),
+
+            vpn=item.get("vpn"),
+            proxy=item.get("proxy"),
+            tor=item.get("tor"),
+
+            confidence=confidence,
+
+            provider=provider,
+
+            raw_json=json.dumps(
+                item.get("raw_json")
+                or item,
+                default=str,
+            ),
         )
     # -----------------------------------------------------
     # 10. Return investigation
@@ -1199,24 +1227,53 @@ async def create_eml_investigation_api(
     # 6. Discover infrastructure
     # -----------------------------------------------------
 
-    infrastructure_items = (
-        extract_public_ips(urls)
-    )
+    infrastructure_items = extract_public_ips(urls)
 
     for item in infrastructure_items:
 
+        provider = item.get(
+            "provider",
+            "dns_resolution"
+        )
+
+        if provider == "ipinfo":
+            confidence = 85
+        elif provider == "ipapi":
+            confidence = 70
+        else:
+            confidence = 50
+
         add_infrastructure(
             investigation_id=investigation_id,
-            hostname=item.get(
-                "hostname"
-            ),
-            ip=item.get(
-                "ip"
-            ),
-            provider="dns_resolution",
-            confidence=50,
+
+            hostname=item.get("hostname"),
+
+            ip=item.get("ip"),
+
+            country=item.get("country"),
+            region=item.get("region"),
+            city=item.get("city"),
+
+            isp=item.get("isp"),
+            organization=item.get("organization"),
+
+            asn=item.get("asn"),
+
+            latitude=item.get("latitude"),
+            longitude=item.get("longitude"),
+
+            vpn=item.get("vpn"),
+            proxy=item.get("proxy"),
+            tor=item.get("tor"),
+
+            confidence=confidence,
+
+            provider=provider,
+
             raw_json=json.dumps(
-                item
+                item.get("raw_json")
+                or item,
+                default=str,
             ),
         )
 
