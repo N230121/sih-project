@@ -2879,21 +2879,77 @@ async function showForensicReportInInvestigation(){
     forensic.headers ||
     forensic.header_map ||
     {};
+  // ---------------------------------------------------------
+  // DERIVED FORENSIC INDICATORS
+  // ---------------------------------------------------------
 
-  const ips =
-    Array.isArray(forensic.ips)
-      ? forensic.ips
+  const ips = [];
+
+  const domains = [];
+
+  const received = [];
+
+  const urlList =
+    Array.isArray(forensic.urls)
+      ? forensic.urls
       : [];
 
-  const domains =
-    Array.isArray(forensic.domains)
-      ? forensic.domains
-      : [];
+  // Extract domains and IP addresses from observed URLs.
+  urlList.forEach(url => {
 
-  const received =
-    Array.isArray(forensic.received)
-      ? forensic.received
-      : [];
+    try{
+
+      const parsed =
+        new URL(url);
+
+      const hostname =
+        parsed.hostname || "";
+
+      if(hostname){
+
+        domains.push(hostname);
+
+        if(
+          /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)
+        ){
+          ips.push(hostname);
+        }
+
+      }
+
+    }catch(error){
+
+      console.warn(
+        "Could not parse forensic URL:",
+        url
+      );
+
+    }
+
+  });
+
+  // Remove duplicates.
+  const uniqueIps =
+    [...new Set(ips)];
+
+  const uniqueDomains =
+    [...new Set(domains)];
+
+  // Gmail parser currently preserves
+  // Received inside normalized headers.
+  Object.entries(headers).forEach(
+    ([key,value]) => {
+
+      if(
+        key.toLowerCase() === "received"
+      ){
+
+        received.push(value);
+
+      }
+
+    }
+  );
 
   const findings =
     Array.isArray(analysis.findings)
@@ -3051,10 +3107,22 @@ async function showForensicReportInInvestigation(){
       authentication.dmarc
     );
 
-  const authRaw =
-    valueOrUnknown(
-      authentication.raw
-    );
+    const authRaw = [
+    authentication.authentication_results
+      ? "Authentication-Results:\n" +
+        authentication.authentication_results
+      : "",
+
+    authentication.received_spf
+      ? "Received-SPF:\n" +
+        authentication.received_spf
+      : ""
+  ]
+  .filter(Boolean)
+  .join("\n\n");
+
+  const authEvidence =
+    authRaw || "UNKNOWN";
 
   // ---------------------------------------------------------
   // INVESTIGATION SUMMARY
@@ -3445,7 +3513,7 @@ async function showForensicReportInInvestigation(){
           padding:12px;
           border-radius:8px;
         "
-      >${esc(authRaw)}</pre>
+      >${esc(authEvidence)}</pre>
 
     </div>
 
@@ -3514,7 +3582,8 @@ async function showForensicReportInInvestigation(){
         <span class="badge obs">
           ${esc(
             String(
-              window.currentInvestigationIocCount || 0
+              window.currentInvestigationIocCount ??
+              urls.length
             )
           )}
           STORED
@@ -3526,7 +3595,7 @@ async function showForensicReportInInvestigation(){
       <h4>IP Addresses</h4>
 
       ${renderList(
-        ips,
+        uniqueIps,
         "IP"
       )}
 
@@ -3536,7 +3605,7 @@ async function showForensicReportInInvestigation(){
       </h4>
 
       ${renderList(
-        domains,
+        uniqueDomains,
         "Domain"
       )}
 
