@@ -6,3 +6,9 @@ tracemail.db
 *.sqlite3
 .idea/
 .vscode/
+# AI training datasets
+data/raw/
+data/processed/
+# AI generated model files
+app/ai/saved_model/
+app/ai/saved_model_smoke_test/
