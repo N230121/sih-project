@@ -12,3 +12,5 @@ data/processed/
 # AI generated model files
 app/ai/saved_model/
 app/ai/saved_model_smoke_test/
+__pycache__/
+*.pyc
