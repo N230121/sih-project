@@ -43,6 +43,7 @@ def _add_evidence(
 
     evidence.append(
         AIEvidenceItem(
+            id=f"E{len(evidence) + 1}",
             category=category,
             observation=observation,
             source=source,

@@ -35,7 +35,9 @@ class AIDeterministicAnalysis(BaseModel):
     threat: Optional[str] = None
     risk_score: Optional[float] = None
     risk_level: Optional[str] = None
-    findings: List[str] = Field(default_factory=list)
+    findings: List[str] = Field(
+        default_factory=list
+    )
 
 
 class AIInfrastructure(BaseModel):
@@ -56,70 +58,61 @@ class AIInfrastructure(BaseModel):
     provider: Optional[str] = None
 
 
+# ============================================================
+# BERT SIGNAL
+# ============================================================
+
 class AIBERTSignal(BaseModel):
     """
     Optional machine-learning signal.
 
-    This is treated as a model signal, NOT as ground truth.
+    This is treated as a model signal,
+    NOT as ground truth.
     """
 
     classification: Optional[str] = None
+
     confidence: Optional[float] = Field(
         default=None,
         ge=0.0,
         le=1.0,
     )
+
     model: Optional[str] = None
 
 
-class AIInvestigationInput(BaseModel):
-    email: AIEmailMetadata
-    body: str = ""
-
-    authentication: AIAuthenticationEvidence = Field(
-        default_factory=AIAuthenticationEvidence
-    )
-
-    urls: List[AIURL] = Field(default_factory=list)
-
-    attachments: List[AIAttachment] = Field(
-        default_factory=list
-    )
-
-    deterministic_analysis: AIDeterministicAnalysis = Field(
-        default_factory=AIDeterministicAnalysis
-    )
-
-    infrastructure: List[AIInfrastructure] = Field(
-        default_factory=list
-    )
-
-    bert_signal: Optional[AIBERTSignal] = None
-
-
 # ============================================================
-# EVIDENCE FUSION INPUT
+# EVIDENCE FUSION
 # ============================================================
 
 class AIEvidenceItem(BaseModel):
     """
-    A single observed or derived evidence item.
+    One observed or derived evidence item.
 
-    source tells Gemini where the evidence came from.
+    Each evidence item receives a stable ID so that
+    correlations can explicitly reference the evidence.
     """
 
+    id: str
+
     category: str
+
     observation: str
+
     source: str
+
     significance: Optional[str] = None
 
 
 class AIEvidenceCorrelation(BaseModel):
     """
-    Represents a relationship between multiple pieces of evidence.
+    Represents a relationship between multiple
+    evidence items.
     """
 
-    evidence: List[str] = Field(default_factory=list)
+    evidence: List[str] = Field(
+        default_factory=list
+    )
 
     conclusion: str
 
@@ -132,7 +125,8 @@ class AIEvidenceCorrelation(BaseModel):
 
 class AIEvidenceFusion(BaseModel):
     """
-    Unified evidence package supplied to the AI reasoning layer.
+    Unified evidence package supplied
+    to the AI reasoning layer.
     """
 
     observed_evidence: List[AIEvidenceItem] = Field(
@@ -151,33 +145,22 @@ class AIEvidenceFusion(BaseModel):
 
 
 # ============================================================
-# GEMINI OUTPUT SCHEMAS
+# COMPLETE AI INVESTIGATION INPUT
 # ============================================================
 
-class AIKeyFinding(BaseModel):
-    finding: str
-    explanation: str
-    evidence: Optional[str] = None
-
-
-class AISocialEngineering(BaseModel):
-    technique: str
-    confidence: Optional[float] = Field(
-        default=None,
-        ge=0.0,
-        le=1.0,
-    )
-
-
 class AIInvestigationInput(BaseModel):
+
     email: AIEmailMetadata
+
     body: str = ""
 
     authentication: AIAuthenticationEvidence = Field(
         default_factory=AIAuthenticationEvidence
     )
 
-    urls: List[AIURL] = Field(default_factory=list)
+    urls: List[AIURL] = Field(
+        default_factory=list
+    )
 
     attachments: List[AIAttachment] = Field(
         default_factory=list
@@ -194,3 +177,61 @@ class AIInvestigationInput(BaseModel):
     bert_signal: Optional[AIBERTSignal] = None
 
     evidence_fusion: Optional[AIEvidenceFusion] = None
+
+
+# ============================================================
+# GEMINI OUTPUT SCHEMAS
+# ============================================================
+
+class AIKeyFinding(BaseModel):
+
+    finding: str
+
+    explanation: str
+
+    evidence: Optional[str] = None
+
+
+class AISocialEngineering(BaseModel):
+
+    technique: str
+
+    confidence: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+
+class AIInvestigationOutput(BaseModel):
+
+    classification: str
+
+    confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    summary: str
+
+    evidence: List[AIEvidenceItem] = Field(
+        default_factory=list
+    )
+
+    correlations: List[AIEvidenceCorrelation] = Field(
+        default_factory=list
+    )
+
+    key_findings: List[AIKeyFinding] = Field(
+        default_factory=list
+    )
+
+    social_engineering: List[AISocialEngineering] = Field(
+        default_factory=list
+    )
+
+    recommended_action: Optional[str] = None
+
+    uncertainties: List[str] = Field(
+        default_factory=list
+    )

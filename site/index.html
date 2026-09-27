@@ -1281,6 +1281,7 @@ async function renderInbox(){
          * location from an email address.
          */
         const location =
+          email.infrastructureLocation ||
           "UNKNOWN";
 
         return `
@@ -1432,7 +1433,7 @@ async function renderInbox(){
       </tr>
     `;
 
-  }
+}
 
 async function openGmailEmailById(id){
 
@@ -1451,7 +1452,11 @@ async function openGmailEmailById(id){
   }
 
   const messageId =
-    String(email.id || id || "").trim();
+    String(
+      email.id ||
+      id ||
+      ""
+    ).trim();
 
   if(!messageId){
 
@@ -1463,35 +1468,34 @@ async function openGmailEmailById(id){
   }
 
   // ---------------------------------------------------------
-  // BACKEND INVESTIGATION
-  // ---------------------------------------------------------
-  // The frontend sends ONLY the Gmail message ID.
-  //
-  // The backend is responsible for:
-  // Gmail fetch → forensic parsing → threat analysis
-  // → database persistence → IOC/infrastructure extraction.
+  // RUN BACKEND FORENSIC INVESTIGATION
   // ---------------------------------------------------------
 
-  toast("Running forensic investigation...");
+  toast(
+    "Running forensic investigation..."
+  );
 
   try{
 
     const response =
-      await fetch("/api/investigations", {
+      await fetch(
+        "/api/investigations",
+        {
+          method: "POST",
 
-        method: "POST",
+          credentials: "include",
 
-        credentials: "include",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
 
-        headers: {
-          "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-          gmail_message_id: messageId
-        })
-
-      });
+          body: JSON.stringify({
+            gmail_message_id:
+              messageId
+          })
+        }
+      );
 
     // -------------------------------------------------------
     // HANDLE BACKEND ERROR
@@ -1508,7 +1512,9 @@ async function openGmailEmailById(id){
           await response.json();
 
         if(errorData.detail){
-          detail = errorData.detail;
+
+          detail =
+            errorData.detail;
         }
 
       }catch(error){
@@ -1524,7 +1530,7 @@ async function openGmailEmailById(id){
     }
 
     // -------------------------------------------------------
-    // READ BACKEND INVESTIGATION RESULT
+    // READ COMPLETE INVESTIGATION RESPONSE
     // -------------------------------------------------------
 
     const data =
@@ -1539,30 +1545,55 @@ async function openGmailEmailById(id){
     }
 
     // -------------------------------------------------------
-    // STORE THE PERSISTENT INVESTIGATION
+    // STORE BACKEND RESULTS
     // -------------------------------------------------------
 
     window.currentInvestigation =
-      data.investigation || null;
+      data.investigation ||
+      null;
+
     window.currentForensic =
-      data.forensic || {};
+      data.forensic ||
+      {};
 
     window.currentAnalysis =
-      data.analysis || {};
+      data.analysis ||
+      {};
+
+    window.currentEvidenceFusion =
+      data.evidence_fusion ||
+      null;
+
+    window.currentGeminiAnalysis =
+      data.gemini_analysis ||
+      null;
+
+    window.currentGeminiError =
+      data.gemini_error ||
+      null;
 
     window.currentInvestigationIocCount =
-      data.ioc_count || 0;
+      data.ioc_count ||
+      0;
 
 
-    /*
-    * Convert the persistent backend investigation
-    * into the structure used by the existing
-    * Investigation page/report UI.
-    */
+    // -------------------------------------------------------
+    // BUILD CURRENT CASE
+    // -------------------------------------------------------
+
     if(window.currentInvestigation){
 
       const inv =
         window.currentInvestigation;
+
+      const infrastructure =
+        getInfrastructureFromInvestigation(
+          data
+        );
+
+      const primaryInfrastructure =
+        infrastructure[0] ||
+        null;
 
       window.currentCase = {
 
@@ -1584,17 +1615,26 @@ async function openGmailEmailById(id){
         threat:
           inv.threat ||
           data.analysis?.threat ||
+          data.gemini_analysis?.classification ||
           "UNKNOWN",
 
         score:
           inv.risk_score ??
           data.analysis?.risk_score ??
-          0,
+          null,
 
-        loc:
+        riskLevel:
+          inv.risk_level ||
+          data.analysis?.risk_level ||
           "UNKNOWN",
 
+        loc:
+          getInfrastructureLocation(
+            primaryInfrastructure
+          ),
+
         geoConfidence:
+          primaryInfrastructure?.confidence ??
           null,
 
         status:
@@ -1626,6 +1666,21 @@ async function openGmailEmailById(id){
           data.analysis ||
           {},
 
+        evidenceFusion:
+          data.evidence_fusion ||
+          null,
+
+        geminiAnalysis:
+          data.gemini_analysis ||
+          null,
+
+        geminiError:
+          data.gemini_error ||
+          null,
+
+        infrastructure:
+          infrastructure,
+
         findings:
           data.analysis?.findings ||
           []
@@ -1633,23 +1688,9 @@ async function openGmailEmailById(id){
 
     }
 
+
     // -------------------------------------------------------
-    // MERGE BACKEND FORENSIC DATA INTO THE EMAIL OBJECT
-    // -------------------------------------------------------
-    //
-    // The existing openGmailEmail() function already knows
-    // how to display:
-    //
-    //   sender
-    //   subject
-    //   threat
-    //   risk
-    //   findings
-    //   authentication
-    //   URLs
-    //   attachments
-    //
-    // So we reuse it instead of rebuilding the modal.
+    // MERGE COMPLETE BACKEND DATA INTO EMAIL
     // -------------------------------------------------------
 
     const enrichedEmail = {
@@ -1665,6 +1706,23 @@ async function openGmailEmailById(id){
         data.analysis ||
         email.analysis ||
         {},
+
+      evidenceFusion:
+        data.evidence_fusion ||
+        null,
+
+      geminiAnalysis:
+        data.gemini_analysis ||
+        null,
+
+      geminiError:
+        data.gemini_error ||
+        null,
+
+      infrastructure:
+        getInfrastructureFromInvestigation(
+          data
+        ),
 
       threat:
         data.analysis?.threat ||
@@ -1688,18 +1746,21 @@ async function openGmailEmailById(id){
 
     };
 
+
     // -------------------------------------------------------
-    // OPEN THE EXISTING FORENSIC MODAL
+    // OPEN COMPLETE INVESTIGATION UI
     // -------------------------------------------------------
 
-    openGmailEmail(enrichedEmail);
+    openGmailEmail(
+      enrichedEmail
+    );
 
     toast(
       "Investigation completed and saved."
     );
 
     console.log(
-      "TraceMail investigation created:",
+      "TraceMail complete investigation:",
       data
     );
 
@@ -1718,14 +1779,105 @@ async function openGmailEmailById(id){
   }
 
 }
+function getInfrastructureFromInvestigation(data){
+
+  const fusion =
+    data?.evidence_fusion;
+
+  if(
+    fusion &&
+    Array.isArray(
+      fusion.infrastructure_evidence
+    )
+  ){
+
+    return fusion.infrastructure_evidence;
+  }
+
+  if(
+    Array.isArray(
+      data?.infrastructure
+    )
+  ){
+
+    return data.infrastructure;
+  }
+
+  return [];
+}
+
+
+function getInfrastructureLocation(
+  infrastructure
+){
+
+  if(!infrastructure){
+
+    return "UNKNOWN";
+  }
+
+  const parts = [];
+
+  if(infrastructure.city){
+
+    parts.push(
+      infrastructure.city
+    );
+  }
+
+  if(infrastructure.region){
+
+    parts.push(
+      infrastructure.region
+    );
+  }
+
+  if(infrastructure.country){
+
+    parts.push(
+      infrastructure.country
+    );
+  }
+
+  if(parts.length){
+
+    return parts.join(", ");
+  }
+
+  return "UNKNOWN";
+}
+
+
+function getInfrastructureProvider(
+  infrastructure
+){
+
+  if(!infrastructure){
+
+    return "UNKNOWN";
+  }
+
+  return (
+    infrastructure.provider ||
+    infrastructure.organization ||
+    infrastructure.isp ||
+    "UNKNOWN"
+  );
+}
+
 function openGmailEmail(email){
 
   window.currentGmailEmail =
     email;
 
+  // ---------------------------------------------------------
+  // BASIC EMAIL DATA
+  // ---------------------------------------------------------
+
   const threat =
     String(
-      email.threat || "UNKNOWN"
+      email.threat ||
+      "UNKNOWN"
     ).toUpperCase();
 
   const riskScore =
@@ -1737,29 +1889,62 @@ function openGmailEmail(email){
 
   const riskLevel =
     String(
-      email.riskLevel || "UNKNOWN"
+      email.riskLevel ||
+      "UNKNOWN"
     ).toUpperCase();
 
   const findings =
-    Array.isArray(email.findings)
+    Array.isArray(
+      email.findings
+    )
       ? email.findings
       : [];
 
   const forensic =
-    email.forensic || {};
+    email.forensic ||
+    {};
 
   const authentication =
-    forensic.authentication || {};
+    forensic.authentication ||
+    {};
 
   const urls =
-    Array.isArray(forensic.urls)
+    Array.isArray(
+      forensic.urls
+    )
       ? forensic.urls
       : [];
 
   const attachments =
-    Array.isArray(forensic.attachments)
+    Array.isArray(
+      forensic.attachments
+    )
       ? forensic.attachments
       : [];
+
+  // ---------------------------------------------------------
+  // AI DATA
+  // ---------------------------------------------------------
+
+  const gemini =
+    email.geminiAnalysis ||
+    null;
+
+  const evidenceFusion =
+    email.evidenceFusion ||
+    null;
+
+  const infrastructure =
+    Array.isArray(
+      email.infrastructure
+    )
+      ? email.infrastructure
+      : [];
+
+
+  // ---------------------------------------------------------
+  // EMAIL METADATA
+  // ---------------------------------------------------------
 
   const sender =
     email.from ||
@@ -1777,6 +1962,11 @@ function openGmailEmail(email){
     email.snippet ||
     "No message preview available.";
 
+
+  // ---------------------------------------------------------
+  // THREAT / AWARENESS
+  // ---------------------------------------------------------
+
   const hasProblem =
     ![
       "SAFE",
@@ -1786,10 +1976,19 @@ function openGmailEmail(email){
     ].includes(threat);
 
   const awareness =
-    getStaticAwareness(threat);
+    getStaticAwareness(
+      threat
+    );
+
+
+  // ---------------------------------------------------------
+  // DOM ELEMENTS
+  // ---------------------------------------------------------
 
   const modal =
-    document.getElementById("modal");
+    document.getElementById(
+      "modal"
+    );
 
   const modalTitle =
     document.getElementById(
@@ -1801,6 +2000,7 @@ function openGmailEmail(email){
       "modalBody"
     );
 
+
   if(
     !modal ||
     !modalTitle ||
@@ -1808,31 +2008,39 @@ function openGmailEmail(email){
   ){
 
     alert(
-      "From: " + sender +
-      "\nSubject: " + subject +
-      "\nThreat: " + threat +
+      "From: " +
+      sender +
+      "\nSubject: " +
+      subject +
+      "\nThreat: " +
+      threat +
       "\nRisk: " +
       (
         riskScore === null
           ? "UNKNOWN"
           : riskScore + "/100"
       ) +
-      "\nRisk Level: " + riskLevel +
-      "\nDate: " + date +
-      "\n\n" + snippet
+      "\nRisk Level: " +
+      riskLevel +
+      "\nDate: " +
+      date +
+      "\n\n" +
+      snippet
     );
 
     return;
   }
 
-  modalTitle.textContent =
-    "Email Investigation · " +
-    subject;
+
+  // ---------------------------------------------------------
+  // DISPLAY HELPERS
+  // ---------------------------------------------------------
 
   const riskDisplay =
     riskScore === null
       ? "UNKNOWN"
       : riskScore + "/100";
+
 
   const findingsHtml =
     findings.length
@@ -1856,13 +2064,13 @@ function openGmailEmail(email){
         </div>
       `;
 
+
   const urlsHtml =
     urls.length
       ? urls.map(
           url => `
             <div class="find">
               <span>URL</span>
-
               <b
                 class="mono"
                 style="
@@ -1870,7 +2078,11 @@ function openGmailEmail(email){
                   overflow-wrap:anywhere;
                 "
               >
-                ${esc(url)}
+                ${esc(
+                  typeof url === "string"
+                    ? url
+                    : url.url || ""
+                )}
               </b>
             </div>
           `
@@ -1882,6 +2094,7 @@ function openGmailEmail(email){
         </div>
       `;
 
+
   const attachmentsHtml =
     attachments.length
       ? attachments.map(
@@ -1890,6 +2103,7 @@ function openGmailEmail(email){
               <span>
                 ${esc(
                   attachment.mime_type ||
+                  attachment.content_type ||
                   "UNKNOWN TYPE"
                 )}
               </span>
@@ -1910,15 +2124,149 @@ function openGmailEmail(email){
         </div>
       `;
 
+
+  // ---------------------------------------------------------
+  // INFRASTRUCTURE HTML
+  // ---------------------------------------------------------
+
+  const infrastructureHtml =
+    infrastructure.length
+      ? infrastructure.map(
+          item => {
+
+            const location =
+              getInfrastructureLocation(
+                item
+              );
+
+            const provider =
+              getInfrastructureProvider(
+                item
+              );
+
+            return `
+              <div class="find">
+                <span>IP</span>
+                <b class="mono">
+                  ${esc(
+                    item.ip ||
+                    "UNKNOWN"
+                  )}
+                </b>
+              </div>
+
+              <div class="find">
+                <span>Hostname</span>
+                <b class="mono">
+                  ${esc(
+                    item.hostname ||
+                    "UNKNOWN"
+                  )}
+                </b>
+              </div>
+
+              <div class="find">
+                <span>Observed Location</span>
+                <b>
+                  ${esc(
+                    location
+                  )}
+                  <i class="source enr">
+                    ENRICHED
+                  </i>
+                </b>
+              </div>
+
+              <div class="find">
+                <span>Provider</span>
+                <b>
+                  ${esc(
+                    provider
+                  )}
+                </b>
+              </div>
+
+              <div class="find">
+                <span>ASN</span>
+                <b class="mono">
+                  ${esc(
+                    item.asn ||
+                    "UNKNOWN"
+                  )}
+                </b>
+              </div>
+
+              <div class="find">
+                <span>Confidence</span>
+                <b>
+                  ${
+                    item.confidence == null
+                      ? "UNKNOWN"
+                      : esc(
+                          item.confidence +
+                          "%"
+                        )
+                  }
+                </b>
+              </div>
+            `;
+
+          }
+        ).join("")
+      : `
+        <div class="authorize">
+          No infrastructure intelligence was
+          returned for this investigation.
+        </div>
+      `;
+
+
+  // ---------------------------------------------------------
+  // GEMINI AI HTML
+  // ---------------------------------------------------------
+
+  const geminiHtml =
+    buildGeminiAnalysisHtml(
+      gemini,
+      email.geminiError
+    );
+
+
+  // ---------------------------------------------------------
+  // EVIDENCE FUSION HTML
+  // ---------------------------------------------------------
+
+  const fusionHtml =
+    buildEvidenceFusionHtml(
+      evidenceFusion
+    );
+
+
+  // ---------------------------------------------------------
+  // MODAL TITLE
+  // ---------------------------------------------------------
+
+  modalTitle.textContent =
+    "Email Investigation · " +
+    subject;
+
+
+  // ---------------------------------------------------------
+  // COMPLETE INVESTIGATION UI
+  // ---------------------------------------------------------
+
   modalBody.innerHTML = `
 
-    <!-- EMAIL SUMMARY -->
+    <!-- =====================================================
+         EMAIL SUMMARY
+         ===================================================== -->
 
     <div class="card section">
 
       <div class="sectionHead">
 
         <div>
+
           <div class="ey">
             GMAIL MESSAGE
           </div>
@@ -1926,6 +2274,7 @@ function openGmailEmail(email){
           <h3>
             ${esc(subject)}
           </h3>
+
         </div>
 
         <span
@@ -1936,19 +2285,23 @@ function openGmailEmail(email){
 
       </div>
 
+
       <div class="two">
 
         <div>
 
           <div class="find">
             <span>Sender</span>
+
             <b>
               ${esc(sender)}
             </b>
           </div>
 
+
           <div class="find">
             <span>Date</span>
+
             <b>
               ${esc(date)}
             </b>
@@ -1956,26 +2309,32 @@ function openGmailEmail(email){
 
         </div>
 
+
         <div>
 
           <div class="find">
             <span>Risk score</span>
+
             <b>
               ${esc(riskDisplay)}
             </b>
           </div>
 
+
           <div class="find">
             <span>Risk level</span>
+
             <b>
               ${esc(riskLevel)}
             </b>
           </div>
 
+
           <div class="find">
             <span>Analysis status</span>
+
             <b>
-              DETERMINISTIC FORENSIC ANALYSIS
+              DETERMINISTIC + AI
             </b>
           </div>
 
@@ -1986,7 +2345,9 @@ function openGmailEmail(email){
     </div>
 
 
-    <!-- MESSAGE PREVIEW -->
+    <!-- =====================================================
+         MESSAGE PREVIEW
+         ===================================================== -->
 
     <div class="card section">
 
@@ -2015,14 +2376,16 @@ function openGmailEmail(email){
     </div>
 
 
-    <!-- INVESTIGATION FINDING -->
+    <!-- =====================================================
+         DETERMINISTIC INVESTIGATION
+         ===================================================== -->
 
     <div class="card section">
 
       <div class="sectionHead">
 
         <h3>
-          Investigation Finding
+          Deterministic Investigation
         </h3>
 
         <span
@@ -2033,22 +2396,34 @@ function openGmailEmail(email){
 
       </div>
 
+
       <div class="find">
         <span>Threat</span>
-        <b>${esc(threat)}</b>
+        <b>
+          ${esc(threat)}
+        </b>
       </div>
+
 
       <div class="find">
         <span>Risk score</span>
-        <b>${esc(riskDisplay)}</b>
+        <b>
+          ${esc(riskDisplay)}
+        </b>
       </div>
+
 
       <div class="find">
         <span>Risk level</span>
-        <b>${esc(riskLevel)}</b>
+        <b>
+          ${esc(riskLevel)}
+        </b>
       </div>
 
-      <div style="margin-top:14px">
+
+      <div
+        style="margin-top:14px"
+      >
 
         <div class="ey">
           DETECTED EVIDENCE
@@ -2058,25 +2433,36 @@ function openGmailEmail(email){
 
       </div>
 
+
       ${
         hasProblem
           ? `
             <div class="find">
-              <span>Detected issue</span>
+
+              <span>
+                Detected issue
+              </span>
+
               <b>
                 ${esc(
                   awareness.shortTitle
                 )}
               </b>
+
             </div>
 
             <div class="find">
-              <span>Why it matters</span>
+
+              <span>
+                Why it matters
+              </span>
+
               <b>
                 ${esc(
                   awareness.summary
                 )}
               </b>
+
             </div>
           `
           : `
@@ -2085,8 +2471,9 @@ function openGmailEmail(email){
               style="margin-top:14px"
             >
               ✓ No problem requiring
-              contextual awareness was identified
-              by the current prototype rules.
+              contextual awareness was
+              identified by the current
+              deterministic rules.
             </div>
           `
       }
@@ -2094,7 +2481,23 @@ function openGmailEmail(email){
     </div>
 
 
-    <!-- AUTHENTICATION -->
+    <!-- =====================================================
+         GEMINI AI ANALYSIS
+         ===================================================== -->
+
+    ${geminiHtml}
+
+
+    <!-- =====================================================
+         EVIDENCE FUSION
+         ===================================================== -->
+
+    ${fusionHtml}
+
+
+    <!-- =====================================================
+         AUTHENTICATION
+         ===================================================== -->
 
     <div class="card section">
 
@@ -2110,10 +2513,12 @@ function openGmailEmail(email){
 
       </div>
 
+
       <div class="three">
 
         <div class="find">
           <span>SPF</span>
+
           <b>
             ${esc(
               String(
@@ -2124,8 +2529,10 @@ function openGmailEmail(email){
           </b>
         </div>
 
+
         <div class="find">
           <span>DKIM</span>
+
           <b>
             ${esc(
               String(
@@ -2136,8 +2543,10 @@ function openGmailEmail(email){
           </b>
         </div>
 
+
         <div class="find">
           <span>DMARC</span>
+
           <b>
             ${esc(
               String(
@@ -2153,7 +2562,45 @@ function openGmailEmail(email){
     </div>
 
 
-    <!-- URLS -->
+    <!-- =====================================================
+         INFRASTRUCTURE
+         ===================================================== -->
+
+    <div class="card section">
+
+      <div class="sectionHead">
+
+        <h3>
+          Infrastructure Intelligence
+        </h3>
+
+        <span class="badge enr">
+          OBSERVED / ENRICHED
+        </span>
+
+      </div>
+
+      ${infrastructureHtml}
+
+      <div
+        class="authorize"
+        style="
+          margin-top:12px;
+          line-height:1.6;
+        "
+      >
+        Infrastructure location describes the
+        observed network resource. It does not
+        establish the physical location of the
+        sender or attacker.
+      </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         URLS
+         ===================================================== -->
 
     <div class="card section">
 
@@ -2174,7 +2621,9 @@ function openGmailEmail(email){
     </div>
 
 
-    <!-- ATTACHMENTS -->
+    <!-- =====================================================
+         ATTACHMENTS
+         ===================================================== -->
 
     <div class="card section">
 
@@ -2195,7 +2644,9 @@ function openGmailEmail(email){
     </div>
 
 
-    <!-- KNOW MORE -->
+    <!-- =====================================================
+         KNOW MORE
+         ===================================================== -->
 
     ${
       hasProblem
@@ -2217,16 +2668,995 @@ function openGmailEmail(email){
 
   `;
 
-  modal.classList.add("show");
+
+  // ---------------------------------------------------------
+  // SHOW MODAL
+  // ---------------------------------------------------------
+
+  modal.classList.add(
+    "show"
+  );
 
   modal.setAttribute(
     "aria-hidden",
     "false"
   );
 
+
+  // ---------------------------------------------------------
+  // STORE AWARENESS
+  // ---------------------------------------------------------
+
   window.currentGmailAwareness =
     awareness;
+
 }
+
+function buildGeminiAnalysisHtml(
+  gemini,
+  geminiError
+){
+
+  if(!gemini){
+
+    if(geminiError){
+
+      return `
+        <div class="card section">
+
+          <div class="sectionHead">
+
+            <h3>
+              AI Forensic Analysis
+            </h3>
+
+            <span class="badge unknown">
+              UNAVAILABLE
+            </span>
+
+          </div>
+
+          <div class="authorize">
+
+            Gemini analysis could not be completed
+            for this investigation.
+
+            <br><br>
+
+            Deterministic forensic analysis remains
+            available.
+
+          </div>
+
+        </div>
+      `;
+    }
+
+
+    return `
+      <div class="card section">
+
+        <div class="sectionHead">
+
+          <h3>
+            AI Forensic Analysis
+          </h3>
+
+          <span class="badge unknown">
+            NOT AVAILABLE
+          </span>
+
+        </div>
+
+        <div class="authorize">
+
+          No AI analysis was returned for this
+          investigation.
+
+        </div>
+
+      </div>
+    `;
+  }
+
+
+  const classification =
+    String(
+      gemini.classification ||
+      "UNCERTAIN"
+    ).toUpperCase();
+
+
+  const confidence =
+    gemini.confidence == null
+      ? "UNKNOWN"
+      : Math.round(
+          Number(
+            gemini.confidence
+          ) * 100
+        ) + "%";
+
+
+  const summary =
+    gemini.summary ||
+    "No AI summary was returned.";
+
+
+  const recommendedAction =
+    gemini.recommended_action ||
+    "No defensive action recommendation was returned.";
+
+
+  const keyFindings =
+    Array.isArray(
+      gemini.key_findings
+    )
+      ? gemini.key_findings
+      : [];
+
+
+  const socialEngineering =
+    Array.isArray(
+      gemini.social_engineering
+    )
+      ? gemini.social_engineering
+      : [];
+
+
+  const uncertainties =
+    Array.isArray(
+      gemini.uncertainties
+    )
+      ? gemini.uncertainties
+      : [];
+
+
+  const keyFindingsHtml =
+    keyFindings.length
+      ? keyFindings.map(
+          finding => `
+
+            <div class="find">
+
+              <span>
+                ${esc(
+                  finding.finding ||
+                  "Finding"
+                )}
+              </span>
+
+              <b>
+                ${esc(
+                  finding.explanation ||
+                  ""
+                )}
+              </b>
+
+            </div>
+
+            ${
+              finding.evidence
+                ? `
+                  <div
+                    class="small muted"
+                    style="
+                      margin:4px 0 10px;
+                    "
+                  >
+                    Evidence:
+                    ${esc(
+                      finding.evidence
+                    )}
+                  </div>
+                `
+                : ""
+            }
+
+          `
+        ).join("")
+      : `
+        <div class="authorize">
+          No additional key findings were
+          returned by the AI layer.
+        </div>
+      `;
+
+
+  const socialEngineeringHtml =
+    socialEngineering.length
+      ? socialEngineering.map(
+          item => `
+
+            <div class="find">
+
+              <span>
+                ${esc(
+                  item.technique ||
+                  "Technique"
+                )}
+              </span>
+
+              <b>
+                ${
+                  item.confidence == null
+                    ? "UNKNOWN"
+                    : Math.round(
+                        Number(
+                          item.confidence
+                        ) * 100
+                      ) + "%"
+                }
+              </b>
+
+            </div>
+
+          `
+        ).join("")
+      : `
+        <div class="authorize">
+          No supported social-engineering
+          technique was identified.
+        </div>
+      `;
+
+
+  const uncertaintyHtml =
+    uncertainties.length
+      ? uncertainties.map(
+          item => `
+
+            <div class="find">
+
+              <span>
+                Uncertainty
+              </span>
+
+              <b>
+                ${esc(item)}
+              </b>
+
+            </div>
+
+          `
+        ).join("")
+      : `
+        <div class="find">
+
+          <span>
+            Uncertainty
+          </span>
+
+          <b>
+            No additional uncertainty returned.
+          </b>
+
+        </div>
+      `;
+
+
+  let classificationClass =
+    "unknown";
+
+  if(
+    classification ===
+    "PHISHING"
+  ){
+
+    classificationClass =
+      "critical";
+
+  }else if(
+    classification ===
+    "BENIGN"
+  ){
+
+    classificationClass =
+      "safe";
+
+  }else if(
+    classification ===
+    "UNCERTAIN"
+  ){
+
+    classificationClass =
+      "medium";
+  }
+
+
+  return `
+
+    <div
+      class="card section"
+      style="
+        border-color:
+          rgba(79,124,255,.35);
+      "
+    >
+
+      <div class="sectionHead">
+
+        <div>
+
+          <div class="ey">
+            TRACE MAIL AI · AI FORENSIC ANALYSIS
+          </div>
+
+          <h3>
+            Gemini Investigation
+          </h3>
+
+        </div>
+
+        <span
+          class="badge ${classificationClass}"
+        >
+          ${esc(classification)}
+        </span>
+
+      </div>
+
+
+      <!-- AI SUMMARY -->
+
+      <div class="two">
+
+        <div>
+
+          <div class="find">
+
+            <span>
+              AI Classification
+            </span>
+
+            <b>
+              ${esc(classification)}
+            </b>
+
+          </div>
+
+
+          <div class="find">
+
+            <span>
+              AI Confidence
+            </span>
+
+            <b>
+              ${esc(confidence)}
+            </b>
+
+          </div>
+
+        </div>
+
+
+        <div>
+
+          <div class="find">
+
+            <span>
+              Reasoning Mode
+            </span>
+
+            <b>
+              EVIDENCE-GROUNDED
+            </b>
+
+          </div>
+
+
+          <div class="find">
+
+            <span>
+              Model Role
+            </span>
+
+            <b>
+              INTERPRETATION LAYER
+            </b>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- SUMMARY -->
+
+      <div
+        class="section"
+        style="
+          margin-top:16px;
+        "
+      >
+
+        <div class="ey">
+          AI SUMMARY
+        </div>
+
+        <p
+          class="muted"
+          style="
+            line-height:1.75;
+            margin:8px 0 0;
+          "
+        >
+          ${esc(summary)}
+        </p>
+
+      </div>
+
+
+      <!-- KEY FINDINGS -->
+
+      <div
+        class="section"
+        style="
+          margin-top:16px;
+        "
+      >
+
+        <div class="ey">
+          KEY FINDINGS
+        </div>
+
+        <div
+          style="
+            margin-top:8px;
+          "
+        >
+
+          ${keyFindingsHtml}
+
+        </div>
+
+      </div>
+
+
+      <!-- SOCIAL ENGINEERING -->
+
+      <div
+        class="section"
+        style="
+          margin-top:16px;
+        "
+      >
+
+        <div class="ey">
+          SOCIAL ENGINEERING
+        </div>
+
+        <div
+          style="
+            margin-top:8px;
+          "
+        >
+
+          ${socialEngineeringHtml}
+
+        </div>
+
+      </div>
+
+
+      <!-- RECOMMENDED ACTION -->
+
+      <div
+        class="authorize"
+        style="
+          margin-top:16px;
+          line-height:1.7;
+        "
+      >
+
+        <b>
+          🛡 Recommended Defensive Action
+        </b>
+
+        <br><br>
+
+        ${esc(
+          recommendedAction
+        )}
+
+      </div>
+
+
+      <!-- UNCERTAINTIES -->
+
+      <div
+        class="section"
+        style="
+          margin-top:16px;
+        "
+      >
+
+        <div class="ey">
+          UNCERTAINTIES
+        </div>
+
+        <div
+          style="
+            margin-top:8px;
+          "
+        >
+
+          ${uncertaintyHtml}
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+}
+
+function buildEvidenceFusionHtml(
+  fusion
+){
+
+  if(!fusion){
+
+    return `
+      <div class="card section">
+
+        <div class="sectionHead">
+
+          <h3>
+            Evidence Fusion
+          </h3>
+
+          <span class="badge unknown">
+            NOT AVAILABLE
+          </span>
+
+        </div>
+
+        <div class="authorize">
+
+          No evidence-fusion package was returned
+          by the backend.
+
+        </div>
+
+      </div>
+    `;
+  }
+
+
+  const observedEvidence =
+    Array.isArray(
+      fusion.observed_evidence
+    )
+      ? fusion.observed_evidence
+      : [];
+
+
+  const correlations =
+    Array.isArray(
+      fusion.correlations
+    )
+      ? fusion.correlations
+      : [];
+
+
+  const infrastructure =
+    Array.isArray(
+      fusion.infrastructure_evidence
+    )
+      ? fusion.infrastructure_evidence
+      : [];
+
+
+  // ---------------------------------------------------------
+  // OBSERVED EVIDENCE
+  // ---------------------------------------------------------
+
+  const evidenceHtml =
+    observedEvidence.length
+      ? observedEvidence.map(
+          (item, index) => {
+
+            const evidenceId =
+              item.id ||
+              "E" + (index + 1);
+
+            return `
+
+              <div
+                class="find"
+                style="
+                  align-items:flex-start;
+                  gap:12px;
+                "
+              >
+
+                <span
+                  class="badge obs"
+                  style="
+                    flex:none;
+                  "
+                >
+                  ${esc(
+                    evidenceId
+                  )}
+                </span>
+
+                <b
+                  style="
+                    text-align:right;
+                    line-height:1.55;
+                  "
+                >
+                  ${esc(
+                    item.observation ||
+                    "No observation"
+                  )}
+                </b>
+
+              </div>
+
+              <div
+                class="small muted"
+                style="
+                  margin:
+                    -4px 0
+                    8px
+                    0;
+                  padding-left:4px;
+                "
+              >
+                Source:
+                ${esc(
+                  item.source ||
+                  "UNKNOWN"
+                )}
+
+                ${
+                  item.significance
+                    ? `
+                      ·
+                      ${esc(
+                        item.significance
+                      )}
+                    `
+                    : ""
+                }
+
+              </div>
+
+            `;
+
+          }
+        ).join("")
+      : `
+        <div class="authorize">
+          No observed evidence items were returned.
+        </div>
+      `;
+
+
+  // ---------------------------------------------------------
+  // CORRELATIONS
+  // ---------------------------------------------------------
+
+  const correlationHtml =
+    correlations.length
+      ? correlations.map(
+          correlation => `
+
+            <div
+              class="card"
+              style="
+                margin-top:10px;
+                padding:12px;
+              "
+            >
+
+              <div
+                class="small"
+                style="
+                  color:var(--cyan);
+                  font-weight:800;
+                  letter-spacing:.08em;
+                "
+              >
+                EVIDENCE CORRELATION
+              </div>
+
+              <div
+                style="
+                  margin-top:7px;
+                  font-size:11px;
+                  line-height:1.6;
+                "
+              >
+
+                <b>
+                  Evidence:
+                </b>
+
+                ${esc(
+                  Array.isArray(
+                    correlation.evidence
+                  )
+                    ? correlation.evidence.join(
+                        ", "
+                      )
+                    : "UNKNOWN"
+                )}
+
+              </div>
+
+              <div
+                style="
+                  margin-top:6px;
+                  font-size:11px;
+                  line-height:1.6;
+                "
+              >
+
+                <b>
+                  Interpretation:
+                </b>
+
+                ${esc(
+                  correlation.conclusion ||
+                  "No conclusion provided."
+                )}
+
+              </div>
+
+              <div
+                class="small muted"
+                style="
+                  margin-top:6px;
+                "
+              >
+
+                Confidence:
+
+                ${
+                  correlation.confidence == null
+                    ? "UNKNOWN"
+                    : Math.round(
+                        Number(
+                          correlation.confidence
+                        ) * 100
+                      ) + "%"
+                }
+
+              </div>
+
+            </div>
+
+          `
+        ).join("")
+      : `
+        <div class="authorize">
+
+          No evidence correlations were returned
+          by the AI reasoning layer.
+
+        </div>
+      `;
+
+
+  // ---------------------------------------------------------
+  // INFRASTRUCTURE
+  // ---------------------------------------------------------
+
+  const infrastructureHtml =
+    infrastructure.length
+      ? infrastructure.map(
+          item => `
+
+            <div class="find">
+
+              <span>
+                ${
+                  esc(
+                    item.ip ||
+                    item.hostname ||
+                    "Infrastructure"
+                  )
+                }
+              </span>
+
+              <b>
+
+                ${
+                  esc(
+                    getInfrastructureLocation(
+                      item
+                    )
+                  )
+                }
+
+                ${
+                  item.provider
+                    ? `
+                      ·
+                      ${esc(
+                        item.provider
+                      )}
+                    `
+                    : ""
+                }
+
+              </b>
+
+            </div>
+
+          `
+        ).join("")
+      : `
+        <div class="find">
+
+          <span>
+            Infrastructure
+          </span>
+
+          <b>
+            NONE OBSERVED
+          </b>
+
+        </div>
+      `;
+
+
+  return `
+
+    <div class="card section">
+
+      <div class="sectionHead">
+
+        <div>
+
+          <div class="ey">
+            TRACE MAIL AI · EVIDENCE FUSION
+          </div>
+
+          <h3>
+            Evidence Package
+          </h3>
+
+        </div>
+
+        <span class="badge obs">
+          STRUCTURED
+        </span>
+
+      </div>
+
+
+      <!-- TAXONOMY -->
+
+      <div
+        class="evidence-taxonomy"
+      >
+
+        <span class="obs">
+          OBSERVED
+        </span>
+
+        <span class="enr">
+          ENRICHED
+        </span>
+
+        <span class="inf">
+          INFERRED
+        </span>
+
+        <span class="unk">
+          UNKNOWN
+        </span>
+
+      </div>
+
+
+      <!-- OBSERVED EVIDENCE -->
+
+      <div
+        class="section"
+        style="
+          margin-top:14px;
+        "
+      >
+
+        <div class="ey">
+          OBSERVED EVIDENCE
+        </div>
+
+        <div
+          style="
+            margin-top:8px;
+          "
+        >
+
+          ${evidenceHtml}
+
+        </div>
+
+      </div>
+
+
+      <!-- CORRELATIONS -->
+
+      <div
+        class="section"
+        style="
+          margin-top:18px;
+        "
+      >
+
+        <div class="ey">
+          AI EVIDENCE CORRELATIONS
+        </div>
+
+        <div
+          style="
+            margin-top:8px;
+          "
+        >
+
+          ${correlationHtml}
+
+        </div>
+
+      </div>
+
+
+      <!-- INFRASTRUCTURE -->
+
+      <div
+        class="section"
+        style="
+          margin-top:18px;
+        "
+      >
+
+        <div class="ey">
+          INFRASTRUCTURE EVIDENCE
+        </div>
+
+        <div
+          style="
+            margin-top:8px;
+          "
+        >
+
+          ${infrastructureHtml}
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="authorize"
+        style="
+          margin-top:16px;
+          line-height:1.6;
+        "
+      >
+
+        Evidence items are supplied by TraceMail's
+        forensic and intelligence layers.
+
+        AI correlations represent interpretation
+        of supplied evidence and are not themselves
+        raw observations.
+
+      </div>
+
+    </div>
+
+  `;
+}
+
 function gmailThreatClass(threat){
 
   const t =

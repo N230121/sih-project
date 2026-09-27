@@ -62,11 +62,13 @@ from .ai.schemas import (
     AIAttachment,
     AIDeterministicAnalysis,
     AIInfrastructure,
+    AIBERTSignal,
 )
 from .ai.fusion import build_evidence_package
 
 from .ai.gemini import (
     analyze_with_gemini,
+    get_gemini_status,
 )
 
 @asynccontextmanager
@@ -1125,11 +1127,25 @@ async def create_investigation_api(
                 ),
             )
         )
+     # -----------------------------------------------------
+        # 10B. BUILD BERT SIGNAL
+        # -----------------------------------------------------
+    
+    bert_signal = None
+    # -----------------------------------------------------
+    # 10C. BUILD EVIDENCE FUSION PACKAGE
+    # -----------------------------------------------------
 
+    evidence_fusion = build_evidence_package(
+        parsed_email=forensic,
+        deterministic_analysis=analysis,
+        infrastructure=infrastructure_items,
+        bert_signal=bert_signal,
+    )
     # -----------------------------------------------------
     # 11. BUILD COMPLETE AI INPUT
     # -----------------------------------------------------
-
+   
     ai_input = AIInvestigationInput(
 
         email=AIEmailMetadata(
@@ -1217,6 +1233,14 @@ async def create_investigation_api(
         ),
 
         infrastructure=ai_infrastructure,
+
+        bert_signal=(
+            AIBERTSignal(**bert_signal)
+            if bert_signal
+            else None
+        ),
+
+        evidence_fusion=evidence_fusion,
     )
 
     # -----------------------------------------------------
@@ -1240,7 +1264,27 @@ async def create_investigation_api(
         # the deterministic forensic investigation.
 
         gemini_error = str(exc)
+    # -----------------------------------------------------
+    # 12B. SAVE EVIDENCE FUSION PACKAGE
+    # -----------------------------------------------------
 
+    add_investigation_evidence(
+
+        investigation_id=(
+            investigation_id
+        ),
+
+        evidence_type="ai_evidence_fusion",
+
+        evidence_key="evidence_fusion",
+
+        evidence_value=(
+            evidence_fusion
+            .model_dump_json()
+        ),
+
+        source="evidence_fusion",
+    )
     # -----------------------------------------------------
     # 13. SAVE GEMINI RESULT AS EVIDENCE
     # -----------------------------------------------------
@@ -1287,12 +1331,19 @@ async def create_investigation_api(
             if gemini_analysis
             else None
         ),
+        "evidence_fusion": (
+            evidence_fusion.model_dump()
+            if evidence_fusion
+            else None
+        ),
 
         "gemini_error":
             gemini_error,
 
         "ioc_count":
             len(urls),
+            
+        "ai_status": get_gemini_status(),
     }
 
 # =========================================================
