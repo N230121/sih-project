@@ -63,6 +63,7 @@ from .ai.schemas import (
     AIDeterministicAnalysis,
     AIInfrastructure,
 )
+from .ai.fusion import build_evidence_package
 
 from .ai.gemini import (
     analyze_with_gemini,
@@ -971,7 +972,7 @@ async def create_investigation_api(
         ),
         source="gmail_parser",
     )
-        # -----------------------------------------------------
+    # -----------------------------------------------------
     # 9. Save extracted URLs as IOCs
     # -----------------------------------------------------
 
@@ -1049,246 +1050,250 @@ async def create_investigation_api(
                 default=str,
             ),
         )
-        # -----------------------------------------------------
-        # 10. PREPARE AI INVESTIGATION INPUT
-        # -----------------------------------------------------
+    # -----------------------------------------------------
+    # 10. PREPARE AI INVESTIGATION INPUT
+    # -----------------------------------------------------
 
-        ai_infrastructure = []
+    ai_infrastructure = []
 
-        for item in infrastructure_items:
+    for item in infrastructure_items:
 
-            ai_infrastructure.append(
-                AIInfrastructure(
-                    hostname=item.get("hostname"),
-                    ip=item.get("ip"),
-                    country=item.get("country"),
-                    region=item.get("region"),
-                    city=item.get("city"),
-                    isp=item.get("isp"),
-                    organization=item.get("organization"),
-                    asn=item.get("asn"),
-                    latitude=item.get("latitude"),
-                    longitude=item.get("longitude"),
-                    vpn=item.get("vpn"),
-                    proxy=item.get("proxy"),
-                    tor=item.get("tor"),
-                    confidence=item.get("confidence"),
-                    provider=item.get("provider"),
-                )
+        ai_infrastructure.append(
+            AIInfrastructure(
+                hostname=item.get("hostname"),
+                ip=item.get("ip"),
+                country=item.get("country"),
+                region=item.get("region"),
+                city=item.get("city"),
+                isp=item.get("isp"),
+                organization=item.get("organization"),
+                asn=item.get("asn"),
+                latitude=item.get("latitude"),
+                longitude=item.get("longitude"),
+                vpn=item.get("vpn"),
+                proxy=item.get("proxy"),
+                tor=item.get("tor"),
+                confidence=(
+                    85 if item.get("provider") == "ipinfo"
+                    else 70 if item.get("provider") == "ipapi"
+                    else 50
+                ),
+                provider=item.get("provider"),
             )
-
-        ai_urls = []
-
-        for url in urls:
-
-            hostname = None
-
-            try:
-                from urllib.parse import urlparse
-
-                hostname = (
-                    urlparse(url).hostname
-                )
-
-            except Exception:
-                hostname = None
-
-            ai_urls.append(
-                AIURL(
-                    url=url,
-                    hostname=hostname,
-                )
-            )
-
-        ai_attachments = []
-
-        for attachment in forensic.get(
-            "attachments",
-            []
-        ):
-
-            ai_attachments.append(
-                AIAttachment(
-                    filename=attachment.get(
-                        "filename"
-                    ),
-                    content_type=attachment.get(
-                        "mime_type"
-                    ),
-                    size=attachment.get(
-                        "size"
-                    ),
-                )
-            )
-
-        # -----------------------------------------------------
-        # 11. BUILD COMPLETE AI INPUT
-        # -----------------------------------------------------
-
-        ai_input = AIInvestigationInput(
-
-            email=AIEmailMetadata(
-                sender=forensic[
-                    "headers"
-                ].get(
-                    "from",
-                    ""
-                ),
-
-                reply_to=forensic[
-                    "headers"
-                ].get(
-                    "reply-to",
-                    ""
-                ),
-
-                subject=forensic.get(
-                    "subject",
-                    ""
-                ),
-
-                date=forensic.get(
-                    "date",
-                    ""
-                ),
-            ),
-
-            body=(
-                forensic.get(
-                    "body",
-                    {}
-                ).get(
-                    "text",
-                    ""
-                )
-            ),
-
-            authentication=AIAuthenticationEvidence(
-                spf=forensic.get(
-                    "authentication",
-                    {}
-                ).get(
-                    "spf"
-                ),
-
-                dkim=forensic.get(
-                    "authentication",
-                    {}
-                ).get(
-                    "dkim"
-                ),
-
-                dmarc=forensic.get(
-                    "authentication",
-                    {}
-                ).get(
-                    "dmarc"
-                ),
-            ),
-
-            urls=ai_urls,
-
-            attachments=ai_attachments,
-
-            deterministic_analysis=(
-                AIDeterministicAnalysis(
-                    threat=analysis.get(
-                        "threat"
-                    ),
-
-                    risk_score=analysis.get(
-                        "risk_score"
-                    ),
-
-                    risk_level=analysis.get(
-                        "risk_level"
-                    ),
-
-                    findings=analysis.get(
-                        "findings",
-                        []
-                    ),
-                )
-            ),
-
-            infrastructure=ai_infrastructure,
         )
 
-        # -----------------------------------------------------
-        # 12. RUN GEMINI ANALYSIS
-        # -----------------------------------------------------
+    ai_urls = []
 
-        gemini_analysis = None
-        gemini_error = None
+    for url in urls:
+
+        hostname = None
 
         try:
+            from urllib.parse import urlparse
 
-            gemini_analysis = (
-                analyze_with_gemini(
-                    ai_input
-                )
+            hostname = (
+                urlparse(url).hostname
             )
 
-        except Exception as exc:
+        except Exception:
+            hostname = None
 
-            # Gemini failure must NOT destroy
-            # the deterministic forensic investigation.
-
-            gemini_error = str(exc)
-
-        # -----------------------------------------------------
-        # 13. SAVE GEMINI RESULT AS EVIDENCE
-        # -----------------------------------------------------
-
-        if gemini_analysis:
-
-            add_investigation_evidence(
-
-                investigation_id=(
-                    investigation_id
-                ),
-
-                evidence_type="ai_analysis",
-
-                evidence_key="gemini",
-
-                evidence_value=(
-                    gemini_analysis
-                    .model_dump_json()
-                ),
-
-                source="gemini",
+        ai_urls.append(
+            AIURL(
+                url=url,
+                hostname=hostname,
             )
+        )
 
-        # -----------------------------------------------------
-        # 14. RETURN COMPLETE INVESTIGATION
-        # -----------------------------------------------------
+    ai_attachments = []
 
-        return {
+    for attachment in forensic.get(
+        "attachments",
+        []
+    ):
 
-            "success": True,
+        ai_attachments.append(
+            AIAttachment(
+                filename=attachment.get(
+                    "filename"
+                ),
+                content_type=attachment.get(
+                    "mime_type"
+                ),
+                size=attachment.get(
+                    "size"
+                ),
+            )
+        )
 
-            "investigation":
-                investigation,
+    # -----------------------------------------------------
+    # 11. BUILD COMPLETE AI INPUT
+    # -----------------------------------------------------
 
-            "forensic":
-                forensic,
+    ai_input = AIInvestigationInput(
 
-            "analysis":
-                analysis,
-
-            "gemini_analysis": (
-                gemini_analysis.model_dump()
-                if gemini_analysis
-                else None
+        email=AIEmailMetadata(
+            sender=forensic[
+                "headers"
+            ].get(
+                "from",
+                ""
             ),
 
-            "gemini_error":
-                gemini_error,
+            reply_to=forensic[
+                "headers"
+            ].get(
+                "reply-to",
+                ""
+            ),
 
-            "ioc_count":
-                len(urls),
-        }
+            subject=forensic.get(
+                "subject",
+                ""
+            ),
+
+            date=forensic.get(
+                "date",
+                ""
+            ),
+        ),
+
+        body=(
+            forensic.get(
+                "body",
+                {}
+            ).get(
+                "text",
+                ""
+            )
+        ),
+
+        authentication=AIAuthenticationEvidence(
+            spf=forensic.get(
+                "authentication",
+                {}
+            ).get(
+                "spf"
+            ),
+
+            dkim=forensic.get(
+                "authentication",
+                {}
+            ).get(
+                "dkim"
+            ),
+
+            dmarc=forensic.get(
+                "authentication",
+                {}
+            ).get(
+                "dmarc"
+            ),
+        ),
+
+        urls=ai_urls,
+
+        attachments=ai_attachments,
+
+        deterministic_analysis=(
+            AIDeterministicAnalysis(
+                threat=analysis.get(
+                    "threat"
+                ),
+
+                risk_score=analysis.get(
+                    "risk_score"
+                ),
+
+                risk_level=analysis.get(
+                    "risk_level"
+                ),
+
+                findings=analysis.get(
+                    "findings",
+                    []
+                ),
+            )
+        ),
+
+        infrastructure=ai_infrastructure,
+    )
+
+    # -----------------------------------------------------
+    # 12. RUN GEMINI ANALYSIS
+    # -----------------------------------------------------
+
+    gemini_analysis = None
+    gemini_error = None
+
+    try:
+
+        gemini_analysis = (
+            analyze_with_gemini(
+                ai_input
+            )
+        )
+
+    except Exception as exc:
+
+        # Gemini failure must NOT destroy
+        # the deterministic forensic investigation.
+
+        gemini_error = str(exc)
+
+    # -----------------------------------------------------
+    # 13. SAVE GEMINI RESULT AS EVIDENCE
+    # -----------------------------------------------------
+
+    if gemini_analysis:
+
+        add_investigation_evidence(
+
+            investigation_id=(
+                investigation_id
+            ),
+
+            evidence_type="ai_analysis",
+
+            evidence_key="gemini",
+
+            evidence_value=(
+                gemini_analysis
+                .model_dump_json()
+            ),
+
+            source="gemini",
+        )
+
+    # -----------------------------------------------------
+    # 14. RETURN COMPLETE INVESTIGATION
+    # -----------------------------------------------------
+
+    return {
+
+        "success": True,
+
+        "investigation":
+            investigation,
+
+        "forensic":
+            forensic,
+
+        "analysis":
+            analysis,
+
+        "gemini_analysis": (
+            gemini_analysis.model_dump()
+            if gemini_analysis
+            else None
+        ),
+
+        "gemini_error":
+            gemini_error,
+
+        "ioc_count":
+            len(urls),
+    }
 
 # =========================================================
 # EML INVESTIGATION API

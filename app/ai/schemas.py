@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 # ============================================================
-# OBSERVED EMAIL EVIDENCE
+# INPUT SCHEMAS
 # ============================================================
 
 class AIEmailMetadata(BaseModel):
@@ -31,10 +31,6 @@ class AIAttachment(BaseModel):
     size: Optional[int] = None
 
 
-# ============================================================
-# DETERMINISTIC FORENSIC ANALYSIS
-# ============================================================
-
 class AIDeterministicAnalysis(BaseModel):
     threat: Optional[str] = None
     risk_score: Optional[float] = None
@@ -42,40 +38,42 @@ class AIDeterministicAnalysis(BaseModel):
     findings: List[str] = Field(default_factory=list)
 
 
-# ============================================================
-# INFRASTRUCTURE INTELLIGENCE
-# ============================================================
-
 class AIInfrastructure(BaseModel):
     hostname: Optional[str] = None
     ip: Optional[str] = None
-
     country: Optional[str] = None
     region: Optional[str] = None
     city: Optional[str] = None
-
     isp: Optional[str] = None
     organization: Optional[str] = None
     asn: Optional[str] = None
-
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-
     vpn: Optional[bool] = None
     proxy: Optional[bool] = None
     tor: Optional[bool] = None
-
     confidence: Optional[float] = None
     provider: Optional[str] = None
 
 
-# ============================================================
-# COMPLETE INPUT SENT TO THE AI LAYER
-# ============================================================
+class AIBERTSignal(BaseModel):
+    """
+    Optional machine-learning signal.
+
+    This is treated as a model signal, NOT as ground truth.
+    """
+
+    classification: Optional[str] = None
+    confidence: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+    model: Optional[str] = None
+
 
 class AIInvestigationInput(BaseModel):
     email: AIEmailMetadata
-
     body: str = ""
 
     authentication: AIAuthenticationEvidence = Field(
@@ -96,9 +94,64 @@ class AIInvestigationInput(BaseModel):
         default_factory=list
     )
 
+    bert_signal: Optional[AIBERTSignal] = None
+
 
 # ============================================================
-# AI INTERPRETATION
+# EVIDENCE FUSION INPUT
+# ============================================================
+
+class AIEvidenceItem(BaseModel):
+    """
+    A single observed or derived evidence item.
+
+    source tells Gemini where the evidence came from.
+    """
+
+    category: str
+    observation: str
+    source: str
+    significance: Optional[str] = None
+
+
+class AIEvidenceCorrelation(BaseModel):
+    """
+    Represents a relationship between multiple pieces of evidence.
+    """
+
+    evidence: List[str] = Field(default_factory=list)
+
+    conclusion: str
+
+    confidence: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+
+class AIEvidenceFusion(BaseModel):
+    """
+    Unified evidence package supplied to the AI reasoning layer.
+    """
+
+    observed_evidence: List[AIEvidenceItem] = Field(
+        default_factory=list
+    )
+
+    deterministic_findings: List[str] = Field(
+        default_factory=list
+    )
+
+    infrastructure_evidence: List[AIInfrastructure] = Field(
+        default_factory=list
+    )
+
+    bert_signal: Optional[AIBERTSignal] = None
+
+
+# ============================================================
+# GEMINI OUTPUT SCHEMAS
 # ============================================================
 
 class AIKeyFinding(BaseModel):
@@ -109,29 +162,35 @@ class AIKeyFinding(BaseModel):
 
 class AISocialEngineering(BaseModel):
     technique: str
-    confidence: Optional[float] = None
-
-
-class AIInvestigationOutput(BaseModel):
-    classification: str
-
-    confidence: float = Field(
+    confidence: Optional[float] = Field(
+        default=None,
         ge=0.0,
-        le=1.0
+        le=1.0,
     )
 
-    summary: str
 
-    key_findings: List[AIKeyFinding] = Field(
+class AIInvestigationInput(BaseModel):
+    email: AIEmailMetadata
+    body: str = ""
+
+    authentication: AIAuthenticationEvidence = Field(
+        default_factory=AIAuthenticationEvidence
+    )
+
+    urls: List[AIURL] = Field(default_factory=list)
+
+    attachments: List[AIAttachment] = Field(
         default_factory=list
     )
 
-    social_engineering: List[AISocialEngineering] = Field(
+    deterministic_analysis: AIDeterministicAnalysis = Field(
+        default_factory=AIDeterministicAnalysis
+    )
+
+    infrastructure: List[AIInfrastructure] = Field(
         default_factory=list
     )
 
-    recommended_action: Optional[str] = None
+    bert_signal: Optional[AIBERTSignal] = None
 
-    uncertainties: List[str] = Field(
-        default_factory=list
-    )
+    evidence_fusion: Optional[AIEvidenceFusion] = None
