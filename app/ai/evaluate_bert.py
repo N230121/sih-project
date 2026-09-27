@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import torch
 from datasets import Dataset
 from sklearn.metrics import (
     accuracy_score,
@@ -17,42 +16,18 @@ from transformers import (
     TrainingArguments,
 )
 
-
-# ============================================================
-# CONFIGURATION
-# ============================================================
-
-MODEL_DIR = Path("app/ai/saved_model_smoke_test")
+MODEL_DIR = Path("app/ai/saved_model_finetuned")
 TEST_FILE = Path("data/processed/test.csv")
-
 MAX_LENGTH = 128
+LABEL_NAMES = {0: "BENIGN", 1: "PHISHING"}
 
-LABEL_NAMES = {
-    0: "BENIGN",
-    1: "PHISHING",
-}
-
-
-# ============================================================
-# DEVICE
-# ============================================================
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
-print("=" * 60)
-print("TRACEMAIL BERT EVALUATION")
-print("=" * 60)
-
-print(f"Device: {device}")
-
-
-# ============================================================
-# CHECK FILES
-# ============================================================
+print("=" * 70)
+print("TRACEMAIL BERT FINAL EVALUATION")
+print("=" * 70)
 
 if not MODEL_DIR.exists():
     raise FileNotFoundError(
-        f"Trained model not found: {MODEL_DIR}"
+        f"Fine-tuned model not found: {MODEL_DIR}"
     )
 
 if not TEST_FILE.exists():
@@ -60,31 +35,13 @@ if not TEST_FILE.exists():
         f"Test dataset not found: {TEST_FILE}"
     )
 
-
-# ============================================================
-# LOAD TEST DATA
-# ============================================================
-
-print("\nLoading test dataset...")
+print("\nLoading complete test dataset...")
 
 test_df = pd.read_csv(TEST_FILE)
 
-print(f"Test examples: {len(test_df)}")
-# ============================================================
-# CPU EVALUATION SMOKE TEST
-# ============================================================
+print(f"Test examples loaded: {len(test_df)}")
 
-test_df = test_df.sample(
-    n=min(500, len(test_df)),
-    random_state=42,
-).reset_index(drop=True)
-
-print(f"Smoke-test examples: {len(test_df)}")
-
-required_columns = [
-    "model_text",
-    "label",
-]
+required_columns = ["model_text", "label"]
 
 missing_columns = [
     column
@@ -107,11 +64,9 @@ test_df["model_text"] = (
     .astype(str)
 )
 
-test_df["label"] = (
-    pd.to_numeric(
-        test_df["label"],
-        errors="coerce",
-    )
+test_df["label"] = pd.to_numeric(
+    test_df["label"],
+    errors="coerce"
 )
 
 test_df = test_df[
@@ -131,34 +86,30 @@ print(
 
 
 # ============================================================
-# CONVERT TO HUGGING FACE DATASET
+# CONVERT TO DATASET
 # ============================================================
 
 test_dataset = Dataset.from_pandas(
     test_df,
-    preserve_index=False,
+    preserve_index=False
 )
 
 test_dataset = test_dataset.rename_column(
     "label",
-    "labels",
+    "labels"
 )
 
 
 # ============================================================
-# LOAD TOKENIZER
+# TOKENIZER
 # ============================================================
 
-print("\nLoading tokenizer...")
+print("\nLoading fine-tuned tokenizer...")
 
 tokenizer = AutoTokenizer.from_pretrained(
     MODEL_DIR
 )
 
-
-# ============================================================
-# TOKENIZE TEST DATA
-# ============================================================
 
 def tokenize_function(examples):
     return tokenizer(
@@ -176,29 +127,28 @@ tokenized_test = test_dataset.map(
     remove_columns=["model_text"],
 )
 
-print("Tokenization complete.")
+print("Test tokenization complete.")
 
 
 # ============================================================
-# LOAD TRAINED MODEL
+# MODEL
 # ============================================================
 
-print("\nLoading trained model...")
+print("\nLoading fine-tuned model...")
 
 model = AutoModelForSequenceClassification.from_pretrained(
     MODEL_DIR
 )
 
-print("Model loaded successfully.")
+print("Fine-tuned model loaded successfully.")
 
 
 # ============================================================
-# CREATE TRAINER
+# EVALUATION CONFIG
 # ============================================================
 
 evaluation_args = TrainingArguments(
     output_dir="app/ai/evaluation_output",
-    use_cpu=True,
     report_to="none",
 )
 
@@ -211,12 +161,12 @@ trainer = Trainer(
 
 
 # ============================================================
-# RUN PREDICTIONS
+# PREDICTION
 # ============================================================
 
-print("\n" + "=" * 60)
-print("RUNNING PREDICTIONS")
-print("=" * 60)
+print("\n" + "=" * 70)
+print("RUNNING FINAL TEST PREDICTIONS")
+print("=" * 70)
 
 prediction_output = trainer.predict(
     tokenized_test
@@ -226,19 +176,19 @@ logits = prediction_output.predictions
 
 predictions = np.argmax(
     logits,
-    axis=1,
+    axis=1
 )
 
 actual_labels = prediction_output.label_ids
 
 
 # ============================================================
-# BASIC METRICS
+# METRICS
 # ============================================================
 
 accuracy = accuracy_score(
     actual_labels,
-    predictions,
+    predictions
 )
 
 precision, recall, f1, _ = (
@@ -252,12 +202,12 @@ precision, recall, f1, _ = (
 
 
 # ============================================================
-# PRINT METRICS
+# FINAL RESULTS
 # ============================================================
 
-print("\n" + "=" * 60)
-print("EVALUATION RESULTS")
-print("=" * 60)
+print("\n" + "=" * 70)
+print("FINAL BERT RESULTS")
+print("=" * 70)
 
 print(f"\nAccuracy : {accuracy:.4f}")
 print(f"Precision: {precision:.4f}")
@@ -272,20 +222,26 @@ print(f"F1 Score : {f1:.4f}")
 matrix = confusion_matrix(
     actual_labels,
     predictions,
-    labels=[0, 1],
+    labels=[0, 1]
 )
 
-print("\n" + "=" * 60)
+print("\n" + "=" * 70)
 print("CONFUSION MATRIX")
-print("=" * 60)
+print("=" * 70)
 
-print("\n                Predicted")
-print("              BENIGN  PHISHING")
+print("\n                    Predicted")
+print("                 BENIGN  PHISHING")
+
 print(
-    f"Actual BENIGN   {matrix[0][0]:6d}  {matrix[0][1]:8d}"
+    f"Actual BENIGN     "
+    f"{matrix[0][0]:6d}  "
+    f"{matrix[0][1]:8d}"
 )
+
 print(
-    f"Actual PHISHING {matrix[1][0]:6d}  {matrix[1][1]:8d}"
+    f"Actual PHISHING   "
+    f"{matrix[1][0]:6d}  "
+    f"{matrix[1][1]:8d}"
 )
 
 
@@ -293,9 +249,9 @@ print(
 # CLASSIFICATION REPORT
 # ============================================================
 
-print("\n" + "=" * 60)
+print("\n" + "=" * 70)
 print("CLASSIFICATION REPORT")
-print("=" * 60)
+print("=" * 70)
 
 print(
     classification_report(
@@ -304,7 +260,7 @@ print(
         labels=[0, 1],
         target_names=[
             "BENIGN",
-            "PHISHING",
+            "PHISHING"
         ],
         zero_division=0,
     )
@@ -312,63 +268,90 @@ print(
 
 
 # ============================================================
-# PREDICTION DISTRIBUTION
-# ============================================================
-
-print("=" * 60)
-print("PREDICTION DISTRIBUTION")
-print("=" * 60)
-
-prediction_counts = pd.Series(
-    predictions
-).value_counts().sort_index()
-
-# ============================================================
 # ERROR ANALYSIS
 # ============================================================
 
-print("\n" + "=" * 60)
+print("\n" + "=" * 70)
 print("ERROR ANALYSIS")
-print("=" * 60)
+print("=" * 70)
 
 results_df = test_df.copy()
 
 results_df["actual"] = actual_labels
 results_df["predicted"] = predictions
 
+
 false_positives = results_df[
     (results_df["actual"] == 0)
-    & (results_df["predicted"] == 1)
+    &
+    (results_df["predicted"] == 1)
 ]
 
 false_negatives = results_df[
     (results_df["actual"] == 1)
-    & (results_df["predicted"] == 0)
+    &
+    (results_df["predicted"] == 0)
 ]
 
-print(f"\nFalse Positives: {len(false_positives)}")
-print(f"False Negatives: {len(false_negatives)}")
+
+print(
+    f"\nFalse Positives: "
+    f"{len(false_positives)}"
+)
+
+print(
+    f"False Negatives: "
+    f"{len(false_negatives)}"
+)
+
 
 print("\n--- Sample False Positives ---")
 
-for index, row in false_positives.head(3).iterrows():
+for _, row in false_positives.head(5).iterrows():
+
     print("\nEmail:")
-    print(row["model_text"][:500])
+
+    print(
+        row["model_text"][:700]
+    )
+
 
 print("\n--- Sample False Negatives ---")
 
-for index, row in false_negatives.head(3).iterrows():
+for _, row in false_negatives.head(5).iterrows():
+
     print("\nEmail:")
-    print(row["model_text"][:500])
+
+    print(
+        row["model_text"][:700]
+    )
+
+
+# ============================================================
+# PREDICTION DISTRIBUTION
+# ============================================================
+
+print("\n" + "=" * 70)
+print("PREDICTION DISTRIBUTION")
+print("=" * 70)
+
+prediction_counts = (
+    pd.Series(predictions)
+    .value_counts()
+    .sort_index()
+)
 
 for label_id, count in prediction_counts.items():
-    label_name = LABEL_NAMES[int(label_id)]
+
+    label_name = LABEL_NAMES[
+        int(label_id)
+    ]
 
     print(
         f"{label_name}: {count}"
     )
 
 
-print("\n" + "=" * 60)
-print("3E EVALUATION COMPLETE")
-print("=" * 60)
+print("\n" + "=" * 70)
+print("3E FINAL EVALUATION COMPLETE")
+print("=" * 70)

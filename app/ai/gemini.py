@@ -457,16 +457,17 @@ CORRELATION RULES
 
 12. Every major conclusion must be traceable to
     supplied evidence IDs.
+
 CORRELATION FORMAT
 ==================
 
 For each meaningful correlation, return:
 
-{
+{{
     "evidence": ["E1", "E3"],
     "conclusion": "Explain the relationship between E1 and E3.",
     "confidence": 0.0
-}
+}}
 
 Use only evidence IDs that exist in
 evidence_fusion.observed_evidence.

@@ -1559,7 +1559,9 @@ async function openGmailEmailById(id){
     window.currentAnalysis =
       data.analysis ||
       {};
-
+    window.currentBertSignal =
+      data.bert_signal ||
+      null;
     window.currentEvidenceFusion =
       data.evidence_fusion ||
       null;
@@ -1666,6 +1668,10 @@ async function openGmailEmailById(id){
           data.analysis ||
           {},
 
+        bertSignal:
+          data.bert_signal ||
+          null,
+
         evidenceFusion:
           data.evidence_fusion ||
           null,
@@ -1706,6 +1712,10 @@ async function openGmailEmailById(id){
         data.analysis ||
         email.analysis ||
         {},
+      
+      bertSignal:
+        data.bert_signal ||
+        null,
 
       evidenceFusion:
         data.evidence_fusion ||
@@ -1925,7 +1935,9 @@ function openGmailEmail(email){
   // ---------------------------------------------------------
   // AI DATA
   // ---------------------------------------------------------
-
+  const bertSignal =
+    email.bertSignal ||
+    null;
   const gemini =
     email.geminiAnalysis ||
     null;
@@ -2224,7 +2236,10 @@ function openGmailEmail(email){
   // ---------------------------------------------------------
   // GEMINI AI HTML
   // ---------------------------------------------------------
-
+  const bertHtml =
+    buildBertSignalHtml(
+      bertSignal
+    );
   const geminiHtml =
     buildGeminiAnalysisHtml(
       gemini,
@@ -2482,8 +2497,15 @@ function openGmailEmail(email){
 
 
     <!-- =====================================================
-         GEMINI AI ANALYSIS
-         ===================================================== -->
+     BERT MACHINE LEARNING SIGNAL
+     ===================================================== -->
+
+    ${bertHtml}
+
+
+    <!-- =====================================================
+        GEMINI AI ANALYSIS
+        ===================================================== -->
 
     ${geminiHtml}
 
@@ -2690,6 +2712,211 @@ function openGmailEmail(email){
   window.currentGmailAwareness =
     awareness;
 
+}
+function buildBertSignalHtml(
+  bertSignal
+){
+
+  // ---------------------------------------------------------
+  // NO BERT RESULT
+  // ---------------------------------------------------------
+
+  if(!bertSignal){
+
+    return `
+      <div class="card section">
+
+        <div class="sectionHead">
+
+          <div>
+
+            <div class="ey">
+              TRACE MAIL AI · MACHINE LEARNING
+            </div>
+
+            <h3>
+              BERT Phishing Signal
+            </h3>
+
+          </div>
+
+          <span class="badge unknown">
+            NOT AVAILABLE
+          </span>
+
+        </div>
+
+        <div class="authorize">
+
+          The fine-tuned BERT model did not return
+          a prediction for this investigation.
+
+          <br><br>
+
+          Other forensic analysis remains available.
+
+        </div>
+
+      </div>
+    `;
+  }
+
+
+  // ---------------------------------------------------------
+  // READ BERT RESULT
+  // ---------------------------------------------------------
+
+  const classification =
+    String(
+      bertSignal.classification ||
+      "UNKNOWN"
+    ).toUpperCase();
+
+
+  const confidence =
+    bertSignal.confidence == null
+      ? "UNKNOWN"
+      : Math.round(
+          Number(
+            bertSignal.confidence
+          ) * 100
+        ) + "%";
+
+
+  const model =
+    bertSignal.model ||
+    "TraceMail Fine-Tuned DistilBERT";
+
+
+  // ---------------------------------------------------------
+  // CLASSIFICATION STYLE
+  // ---------------------------------------------------------
+
+  let classificationClass =
+    "unknown";
+
+
+  if(
+    classification ===
+    "PHISHING"
+  ){
+
+    classificationClass =
+      "critical";
+
+  }else if(
+    classification ===
+    "BENIGN"
+  ){
+
+    classificationClass =
+      "safe";
+  }
+
+
+  // ---------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------
+
+  return `
+
+    <div
+      class="card section"
+      style="
+        border-color:
+          rgba(23,105,170,.28);
+      "
+    >
+
+      <div class="sectionHead">
+
+        <div>
+
+          <div class="ey">
+            TRACE MAIL AI · MACHINE LEARNING
+          </div>
+
+          <h3>
+            BERT Phishing Signal
+          </h3>
+
+        </div>
+
+        <span
+          class="badge ${classificationClass}"
+        >
+          ${esc(classification)}
+        </span>
+
+      </div>
+
+
+      <!-- SIGNAL DETAILS -->
+
+      <div class="three">
+
+        <div class="find">
+
+          <span>
+            Classification
+          </span>
+
+          <b>
+            ${esc(classification)}
+          </b>
+
+        </div>
+
+
+        <div class="find">
+
+          <span>
+            Confidence
+          </span>
+
+          <b>
+            ${esc(confidence)}
+          </b>
+
+        </div>
+
+
+        <div class="find">
+
+          <span>
+            Model
+          </span>
+
+          <b>
+            ${esc(model)}
+          </b>
+
+        </div>
+
+      </div>
+
+
+      <!-- MODEL EXPLANATION -->
+
+      <div
+        class="authorize"
+        style="
+          margin-top:12px;
+          line-height:1.6;
+        "
+      >
+
+        BERT provides a semantic machine-learning
+        signal based on the email content.
+
+        It is used as supporting evidence and is
+        <strong>not treated as ground truth or the
+        final security decision.</strong>
+
+
+    </div>
+
+  `;
 }
 
 function buildGeminiAnalysisHtml(
@@ -3248,8 +3475,9 @@ function buildEvidenceFusionHtml(
     )
       ? fusion.infrastructure_evidence
       : [];
-
-
+  const bertSignal =
+    fusion.bert_signal ||
+    null;
   // ---------------------------------------------------------
   // OBSERVED EVIDENCE
   // ---------------------------------------------------------
@@ -3556,7 +3784,83 @@ function buildEvidenceFusionHtml(
 
       </div>
 
+      ${
+        bertSignal
+          ? `
+            <div
+              class="card"
+              style="
+                margin-top:12px;
+                padding:12px;
+                border-color:#2d6072;
+              "
+            >
 
+              <div
+                class="small"
+                style="
+                  color:var(--cyan);
+                  font-weight:800;
+                  letter-spacing:.08em;
+                "
+              >
+                MACHINE LEARNING SIGNAL
+              </div>
+
+              <div
+                class="find"
+                style="margin-top:8px"
+              >
+
+                <span>
+                  BERT
+                </span>
+
+                <b>
+                  ${esc(
+                    String(
+                      bertSignal.classification ||
+                      "UNKNOWN"
+                    ).toUpperCase()
+                  )}
+
+                  ·
+
+                  ${
+                    bertSignal.confidence == null
+                      ? "UNKNOWN"
+                      : Math.round(
+                          Number(
+                            bertSignal.confidence
+                          ) * 100
+                        ) + "%"
+                  }
+                </b>
+
+              </div>
+
+              <div
+                class="small muted"
+                style="
+                  margin-top:6px;
+                  line-height:1.5;
+                "
+              >
+                ${
+                  esc(
+                    bertSignal.model ||
+                    "TraceMail Fine-Tuned DistilBERT"
+                  )
+                }
+
+                · Supporting ML evidence,
+                not final ground truth.
+              </div>
+
+            </div>
+          `
+          : ""
+      }
       <!-- OBSERVED EVIDENCE -->
 
       <div

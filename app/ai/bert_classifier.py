@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Dict
 
 import torch
@@ -7,77 +8,162 @@ from transformers import (
 )
 
 
-MODEL_NAME = "distilbert-base-uncased"
+# ============================================================
+# FINE-TUNED TRACEMAIL BERT MODEL
+# ============================================================
+
+MODEL_DIR = (
+    Path(__file__).resolve().parent
+    / "saved_model_finetuned"
+)
+
+MAX_LENGTH = 128
 
 
 class BERTClassifier:
     """
-    Phase 3B baseline NLP classifier.
+    TraceMail fine-tuned DistilBERT classifier.
 
-    IMPORTANT:
-    This model is pretrained but NOT fine-tuned for
-    TraceMail yet.
+    The model was fine-tuned on the phishing/benign
+    email dataset and is used only as a supporting
+    machine-learning signal.
 
-    It is currently only a baseline/test model.
+    It does NOT make the final security decision.
     """
 
     def __init__(self):
+
+        if not MODEL_DIR.exists():
+            raise FileNotFoundError(
+                f"Fine-tuned BERT model not found at: {MODEL_DIR}"
+            )
+
+        # ----------------------------------------------------
+        # Load tokenizer
+        # ----------------------------------------------------
+
         self.tokenizer = AutoTokenizer.from_pretrained(
-            MODEL_NAME
+            str(MODEL_DIR)
         )
 
-        self.model = AutoModelForSequenceClassification.from_pretrained(
-            MODEL_NAME,
-            num_labels=2,
+        # ----------------------------------------------------
+        # Load fine-tuned model
+        # ----------------------------------------------------
+
+        self.model = (
+            AutoModelForSequenceClassification
+            .from_pretrained(
+                str(MODEL_DIR)
+            )
         )
+
+        # ----------------------------------------------------
+        # Production inference mode
+        # ----------------------------------------------------
 
         self.model.eval()
+
+        # ----------------------------------------------------
+        # Label mapping used during training
+        # ----------------------------------------------------
 
         self.labels = {
             0: "BENIGN",
             1: "PHISHING",
         }
 
-    def predict(self, text: str) -> Dict:
+    def predict(
+        self,
+        text: str,
+    ) -> Dict:
         """
-        Run a baseline prediction on email text.
+        Predict whether an email is BENIGN or PHISHING.
+
+        Returns:
+            classification
+            confidence
+            model
         """
 
+        # ----------------------------------------------------
+        # Empty input
+        # ----------------------------------------------------
+
         if not text or not text.strip():
+
             return {
                 "classification": "UNKNOWN",
                 "confidence": 0.0,
-                "note": "No email text supplied.",
+                "model": "TraceMail-FineTuned-DistilBERT",
             }
+
+        # ----------------------------------------------------
+        # Tokenize
+        # ----------------------------------------------------
 
         inputs = self.tokenizer(
             text,
             return_tensors="pt",
             truncation=True,
-            max_length=512,
+            max_length=MAX_LENGTH,
+            padding=True,
         )
 
+        # ----------------------------------------------------
+        # Inference
+        # ----------------------------------------------------
+
         with torch.no_grad():
-            outputs = self.model(**inputs)
+
+            outputs = self.model(
+                **inputs
+            )
+
+        # ----------------------------------------------------
+        # Convert logits → probabilities
+        # ----------------------------------------------------
 
         probabilities = torch.softmax(
             outputs.logits,
             dim=-1,
         )[0]
 
+        # ----------------------------------------------------
+        # Find predicted class
+        # ----------------------------------------------------
+
         predicted_id = int(
-            torch.argmax(probabilities).item()
+            torch.argmax(
+                probabilities
+            ).item()
         )
 
         confidence = float(
-            probabilities[predicted_id].item()
+            probabilities[
+                predicted_id
+            ].item()
+        )
+
+        classification = self.labels.get(
+            predicted_id,
+            "UNKNOWN",
         )
 
         return {
-            "classification": self.labels[predicted_id],
-            "confidence": round(confidence, 4),
+            "classification": classification,
+            "confidence": round(
+                confidence,
+                4,
+            ),
+            "model": (
+                "TraceMail-FineTuned-DistilBERT"
+            ),
         }
 
+
+# ============================================================
+# SIMPLE LOCAL TEST
+# ============================================================
 
 if __name__ == "__main__":
 
@@ -91,9 +177,22 @@ if __name__ == "__main__":
     immediately to prevent account closure.
     """
 
-    result = classifier.predict(test_email)
+    result = classifier.predict(
+        test_email
+    )
 
-    print("TraceMail BERT Baseline")
-    print("-----------------------")
-    print(f"Classification: {result['classification']}")
-    print(f"Confidence: {result['confidence']}")
+    print()
+    print("TraceMail Fine-Tuned BERT")
+    print("=========================")
+    print(
+        f"Classification: "
+        f"{result['classification']}"
+    )
+    print(
+        f"Confidence: "
+        f"{result['confidence']}"
+    )
+    print(
+        f"Model: "
+        f"{result['model']}"
+    )

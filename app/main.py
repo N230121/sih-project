@@ -70,6 +70,22 @@ from .ai.gemini import (
     analyze_with_gemini,
     get_gemini_status,
 )
+from .ai.bert_classifier import BERTClassifier
+
+# =========================================================
+# BERT CLASSIFIER
+# =========================================================
+
+bert_classifier = None
+
+
+def get_bert_classifier():
+    global bert_classifier
+
+    if bert_classifier is None:
+        bert_classifier = BERTClassifier()
+
+    return bert_classifier
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -902,6 +918,77 @@ async def create_investigation_api(
     analysis = analyze_email(
         forensic
     )
+    # -----------------------------------------------------
+    # 6B. RUN FINE-TUNED BERT
+    # -----------------------------------------------------
+
+    bert_signal = None
+
+    try:
+
+        body_data = forensic.get(
+            "body",
+            {}
+        )
+
+        if isinstance(body_data, dict):
+
+            email_text = body_data.get(
+                "text",
+                ""
+            )
+
+            if not email_text:
+                email_text = body_data.get(
+                    "html",
+                    ""
+                )
+
+        else:
+
+            email_text = str(
+                body_data or ""
+            )
+
+        # Include subject because it is useful
+        # semantic information for classification.
+
+        subject = forensic.get(
+            "subject",
+            ""
+        )
+
+        combined_text = (
+            f"Subject: {subject}\n\n"
+            f"{email_text}"
+        )
+
+        bert_result = get_bert_classifier().predict(
+            combined_text
+        )
+
+        bert_signal = {
+            "classification": bert_result.get(
+                "classification"
+            ),
+            "confidence": bert_result.get(
+                "confidence"
+            ),
+            "model": bert_result.get(
+                "model"
+            ),
+        }
+
+    except Exception as exc:
+
+        # BERT failure must NOT destroy the
+        # deterministic investigation.
+
+        print(
+            f"BERT prediction failed: {exc}"
+        )
+
+        bert_signal = None
 
     # -----------------------------------------------------
     # 7. Create persistent investigation
@@ -1127,11 +1214,6 @@ async def create_investigation_api(
                 ),
             )
         )
-     # -----------------------------------------------------
-        # 10B. BUILD BERT SIGNAL
-        # -----------------------------------------------------
-    
-    bert_signal = None
     # -----------------------------------------------------
     # 10C. BUILD EVIDENCE FUSION PACKAGE
     # -----------------------------------------------------
@@ -1325,6 +1407,12 @@ async def create_investigation_api(
 
         "analysis":
             analysis,
+
+        "bert_signal": (
+            bert_signal
+            if bert_signal
+            else None
+        ),
 
         "gemini_analysis": (
             gemini_analysis.model_dump()

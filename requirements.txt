@@ -12,3 +12,5 @@ google-auth-httplib2
 argon2-cffi
 email-validator
 google-genai
+torch
+transformers
